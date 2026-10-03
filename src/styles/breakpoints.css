@@ -1,0 +1,12 @@
+/*
+ * Breakpoints. Custom properties can't be used inside media queries, so this
+ * @theme block is the single source for Tailwind's sm:/md:/lg:/xl:/2xl: variants;
+ * JS reads the same values from src/lib/constants.ts (BREAKPOINTS).
+ */
+@theme static {
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
+}

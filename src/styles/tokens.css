@@ -1,0 +1,46 @@
+/*
+ * Design tokens. `@theme static` both emits the custom properties on :root and
+ * generates the matching Tailwind utilities (bg-bg, text-ink, rounded-pill, ease-out-expo…).
+ */
+@theme static {
+  /* Colour */
+  --color-bg: #c8d1ec;
+  --color-bg-top: #d6dcf2;
+  --color-bg-edge: #bcc6e6;
+  --color-glow-warm: #fff1ea;
+  --color-glow-lavender: #e9ddf3;
+  --color-ink: #0b0d14;
+  --color-ink-soft: #2a2d3e;
+  --color-button: #17151f;
+
+  /* Radii */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.5rem;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-soft: 0 1px 2px rgb(11 13 20 / 6%), 0 8px 24px -8px rgb(11 13 20 / 12%);
+  --shadow-lift: 0 2px 4px rgb(11 13 20 / 8%), 0 24px 48px -16px rgb(11 13 20 / 22%);
+  --shadow-button: 0 10px 30px -10px rgb(23 21 31 / 55%);
+
+  /* Easing */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+:root {
+  /* z-index scale (canvas sits behind DOM content, overlays above) */
+  --z-canvas: 0;
+  --z-content: 1;
+  --z-header: 40;
+  --z-menu: 50;
+  --z-cursor: 60;
+  --z-progress: 70;
+
+  /* Hero / showcase atmosphere — shared so the two sections read as one surface */
+  --gradient-atmosphere:
+    radial-gradient(60% 55% at 50% 38%, var(--color-glow-warm) 0%, transparent 70%),
+    radial-gradient(45% 45% at 78% 62%, var(--color-glow-lavender) 0%, transparent 72%),
+    linear-gradient(180deg, var(--color-bg-top) 0%, var(--color-bg) 55%, var(--color-bg-edge) 100%);
+}

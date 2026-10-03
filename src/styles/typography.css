@@ -1,0 +1,47 @@
+/*
+ * Fluid type scale. Body steps use clamp(); display steps are viewport-relative
+ * (vw) with rem floors/ceilings so they stay legible at both extremes.
+ */
+@theme static {
+  --font-display: var(--font-montserrat), var(--font-inter), system-ui, sans-serif;
+  --font-body: var(--font-montserrat), var(--font-inter), system-ui, sans-serif;
+  --font-ui: var(--font-inter), system-ui, sans-serif;
+
+  --text-xs: clamp(0.6875rem, 0.66rem + 0.12vw, 0.75rem);
+  --text-sm: clamp(0.8125rem, 0.78rem + 0.15vw, 0.9rem);
+  --text-base: clamp(0.9375rem, 0.9rem + 0.2vw, 1.0625rem);
+  --text-lg: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 1.1rem + 0.7vw, 1.75rem);
+  --text-2xl: clamp(1.625rem, 1.3rem + 1.4vw, 2.5rem);
+  --text-3xl: clamp(2rem, 1.5rem + 2.4vw, 3.75rem);
+
+  --text-display-md: clamp(2.25rem, 5.2vw, 5rem);
+  --text-display-lg: clamp(2.75rem, 6.6vw, 7rem);
+  --text-display-xl: clamp(3rem, 8.2vw, 9.5rem);
+
+  --tracking-display: -0.02em;
+  --tracking-label: 0.22em;
+  --leading-display: 0.98;
+}
+
+html {
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  letter-spacing: var(--tracking-display);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
