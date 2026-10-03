@@ -2,6 +2,7 @@
   "name": "ravens",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -20,7 +21,10 @@
     "assets:hero": "node scripts/assets/hero-assets.mjs",
     "prepare": "husky",
     "cycles": "madge --circular --extensions ts,tsx --ts-config tsconfig.json src",
-    "assets:icons": "node scripts/assets/icons.mjs"
+    "assets:icons": "node scripts/assets/icons.mjs",
+    "prove:boundaries": "node scripts/dev/prove-boundaries.mjs",
+    "qa:initial-js": "node scripts/qa/check-initial-js.mjs",
+    "qa:compare": "node scripts/qa/compare-images.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
