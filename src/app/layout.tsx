@@ -17,6 +17,8 @@ const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-inter",
+  // Fallback UI font only: fetched on demand instead of competing with Montserrat for first paint.
+  preload: false,
 });
 
 export const metadata: Metadata = {

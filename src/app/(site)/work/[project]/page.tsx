@@ -8,8 +8,6 @@ import { JsonLd, creativeWorkJsonLd } from "@/components/seo/JsonLd";
 
 import { createMetadata } from "@/lib/metadata";
 
-export const dynamicParams = false;
-
 export async function generateStaticParams() {
   return (await getProjects()).map((project) => ({ project: project.slug }));
 }

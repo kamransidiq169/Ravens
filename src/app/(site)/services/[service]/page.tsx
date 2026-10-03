@@ -6,8 +6,6 @@ import { ServiceDetail, getService, getServices } from "@/features/services";
 
 import { createMetadata } from "@/lib/metadata";
 
-export const dynamicParams = false;
-
 export async function generateStaticParams() {
   return (await getServices()).map((service) => ({ service: service.slug }));
 }

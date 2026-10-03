@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 
-import { siteConfig } from "@/config/site";
+import { publicSite } from "@/config/navigation";
 
 import { RavensLogo } from "../brand/RavensLogo";
 import { Link } from "../ui/Link";
@@ -18,7 +18,7 @@ export function Header() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-(--z-header) flex h-(--header-height) items-center justify-between px-gutter">
-        <Link href="/" aria-label={`${siteConfig.name} — home`} className="text-ink">
+        <Link href="/" aria-label={`${publicSite.name} — home`} className="text-ink">
           <RavensLogo className="h-5 w-auto sm:h-6" aria-hidden="true" role="presentation" title="" />
         </Link>
         <button

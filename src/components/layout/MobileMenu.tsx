@@ -6,7 +6,7 @@ import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
 
 import { cn } from "@/lib/cn";
 
-import { siteConfig } from "@/config/site";
+import { publicSite } from "@/config/navigation";
 
 import { RavensLogo } from "../brand/RavensLogo";
 import { useSmoothScroll } from "../providers/SmoothScrollProvider";
@@ -81,13 +81,19 @@ export function MobileMenu({ open, onClose, id }: MobileMenuProps) {
       aria-modal="true"
       aria-label="Site menu"
       inert={!open}
+      // Visibility flips instantly on open (so focus() works at once) and after the fade on close.
+      style={{
+        transitionProperty: "opacity, visibility",
+        transitionDuration: "0.5s, 0s",
+        transitionDelay: open ? "0s, 0s" : "0s, 0.5s",
+      }}
       className={cn(
-        "fixed inset-0 z-(--z-menu) flex flex-col bg-bg-top px-gutter pt-8 pb-12 transition-[opacity,visibility] duration-500 ease-out-expo",
+        "fixed inset-0 z-(--z-menu) flex flex-col bg-bg-top px-gutter pt-8 pb-12 ease-out-expo",
         open ? "visible opacity-100" : "invisible opacity-0",
       )}
     >
       <div className="flex items-center justify-between">
-        <Link href="/" onClick={onClose} aria-label={`${siteConfig.name} — home`}>
+        <Link href="/" onClick={onClose} aria-label={`${publicSite.name} — home`}>
           <RavensLogo className="h-5 w-auto text-ink" title="" aria-hidden="true" role="presentation" />
         </Link>
         <button
@@ -102,7 +108,7 @@ export function MobileMenu({ open, onClose, id }: MobileMenuProps) {
 
       <nav aria-label="Primary" className="my-auto">
         <ul className="flex flex-col gap-2">
-          {siteConfig.nav.map((item, index) => (
+          {publicSite.nav.map((item, index) => (
             <li key={item.href} className="overflow-hidden">
               <Link
                 href={item.href}
@@ -121,11 +127,11 @@ export function MobileMenu({ open, onClose, id }: MobileMenuProps) {
       </nav>
 
       <div className="flex flex-wrap items-center justify-between gap-6 text-sm text-ink-soft">
-        <Link href={`mailto:${siteConfig.email}`} variant="inline">
-          {siteConfig.email}
+        <Link href={`mailto:${publicSite.email}`} variant="inline">
+          {publicSite.email}
         </Link>
         <ul className="flex gap-6">
-          {siteConfig.socials.map((social) => (
+          {publicSite.socials.map((social) => (
             <li key={social.href}>
               <Link href={social.href} className="hover:text-ink">
                 {social.label}

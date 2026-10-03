@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+// Skip zod's eval-based fast path: it would trip our CSP (no 'unsafe-eval') and log a violation.
+z.config({ jitless: true });
+
 /** Shared by the client form (instant feedback) and the Server Action (the real gate). */
 export const contactSchema = z.object({
   name: z.string().trim().min(2, "Please tell us your name."),
@@ -12,7 +15,7 @@ export const contactSchema = z.object({
     .max(4000, "Please keep your message under 4,000 characters."),
 });
 
-export type ContactInput = z.infer<typeof contactSchema>;
+type ContactInput = z.infer<typeof contactSchema>;
 export type ContactField = keyof ContactInput;
 
 /** Name of the hidden spam-trap field. Real users never see or fill it. */

@@ -5,8 +5,6 @@ import { InsightArticle, getInsight, getInsights } from "@/features/insights";
 
 import { createMetadata } from "@/lib/metadata";
 
-export const dynamicParams = false;
-
 export async function generateStaticParams() {
   return (await getInsights()).map((insight) => ({ slug: insight.slug }));
 }
