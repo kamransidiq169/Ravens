@@ -11,11 +11,4 @@ test.describe("404s", () => {
       await expect(page.getByRole("link", { name: /Back home/ })).toBeVisible();
     });
   }
-
-  test("(dev) routes do not exist in a production build", async ({ page, request }) => {
-    expect((await request.get("/hero-lab")).status()).toBe(404);
-    const response = await page.goto("/hero-lab");
-    expect(response?.status()).toBe(404);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Lost in flight");
-  });
 });

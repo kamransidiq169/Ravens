@@ -1,0 +1,50 @@
+[
+  {
+    "viewport": "desktop",
+    "maxVisualCentreJumpFractionOfDiagonal": 0.039,
+    "at": 0.575,
+    "progressWithBothPosesVisible": [
+      0.5,
+      0.525,
+      0.55
+    ],
+    "endsGone": true,
+    "maxOverflowX": 0,
+    "returnsToRest": true,
+    "pose1OpacityAtRest": 1,
+    "pose2OpacityAtRest": 0,
+    "console": []
+  },
+  {
+    "viewport": "tablet-portrait",
+    "maxVisualCentreJumpFractionOfDiagonal": 0.033,
+    "at": 0.925,
+    "progressWithBothPosesVisible": [
+      0.5,
+      0.525,
+      0.55
+    ],
+    "endsGone": true,
+    "maxOverflowX": 0,
+    "returnsToRest": true,
+    "pose1OpacityAtRest": 1,
+    "pose2OpacityAtRest": 0,
+    "console": []
+  },
+  {
+    "viewport": "mobile",
+    "maxVisualCentreJumpFractionOfDiagonal": 0.033,
+    "at": 0.95,
+    "progressWithBothPosesVisible": [
+      0.5,
+      0.525,
+      0.55
+    ],
+    "endsGone": true,
+    "maxOverflowX": 0,
+    "returnsToRest": true,
+    "pose1OpacityAtRest": 1,
+    "pose2OpacityAtRest": 0,
+    "console": []
+  }
+]

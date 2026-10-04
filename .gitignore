@@ -26,3 +26,6 @@ playwright-report
 tmp-*
 *.tsbuildinfo
 .vercel
+
+# hero dev overlay copy of the reference (never shipped)
+public/dev/

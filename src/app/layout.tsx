@@ -8,7 +8,7 @@ import { siteConfig } from "@/config/site";
 // Exposed as --font-montserrat / --font-inter; styles/typography.css maps them to --font-display, --font-body and --font-ui.
 const montserrat = Montserrat({
   subsets: ["latin"],
-  weight: ["200", "300", "400", "500", "600"],
+  weight: ["200", "300", "400", "500", "600", "700"],
   display: "swap",
   variable: "--font-montserrat",
 });

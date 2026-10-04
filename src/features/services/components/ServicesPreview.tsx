@@ -12,7 +12,7 @@ export function ServicesPreview({ services }: { services: Service[] }) {
       <SectionHeader
         id="services-preview-heading"
         eyebrow="What we do"
-        title="One studio, every layer of your digital presence"
+        title="One studio, every layer of your digital presene"
       />
       <ol className="mt-16 border-t border-ink/15">
         {services.map((service, index) => (

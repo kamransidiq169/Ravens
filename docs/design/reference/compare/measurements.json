@@ -1,0 +1,592 @@
+{
+  "viewport": {
+    "width": 1505,
+    "height": 812
+  },
+  "note": "Brief values are the source of truth; vertical reference comparison pending the full-size original.",
+  "referenceCrossCheck": [
+    {
+      "id": "DESIGN",
+      "refLeft": 5.7,
+      "refRight": 33.9,
+      "ourLeft": 6.11,
+      "ourRight": 34.29
+    },
+    {
+      "id": "THAT",
+      "refLeft": 39.1,
+      "refRight": 59,
+      "ourLeft": 39.47,
+      "ourRight": 58.94
+    },
+    {
+      "id": "ELEVATES",
+      "refLeft": 5.7,
+      "refRight": 43.4,
+      "ourLeft": 6.11,
+      "ourRight": 43.92
+    },
+    {
+      "id": "YOUR",
+      "refLeft": 66.6,
+      "refRight": 87.2,
+      "ourLeft": 66.84,
+      "ourRight": 86.84
+    }
+  ],
+  "heatmaps": [
+    {
+      "band": "line1",
+      "horizontalInkIoU": 0.786,
+      "mismatchedPx": 15720,
+      "note": "heatmap is qualitative (cap heights differ with the cropped reference); IoU compares horizontal extent only"
+    },
+    {
+      "band": "line2",
+      "horizontalInkIoU": 0.727,
+      "mismatchedPx": 25869,
+      "note": "heatmap is qualitative (cap heights differ with the cropped reference); IoU compares horizontal extent only"
+    }
+  ],
+  "logs": {
+    "tier1": []
+  },
+  "rows": [
+    {
+      "group": "headline",
+      "name": "DESIGN left",
+      "spec": 6.1,
+      "actual": 6.11,
+      "delta": 0.01,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "DESIGN right",
+      "spec": 34.3,
+      "actual": 34.29,
+      "delta": -0.01,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "THAT left",
+      "spec": 39.5,
+      "actual": 39.47,
+      "delta": -0.03,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "THAT right",
+      "spec": 59,
+      "actual": 58.94,
+      "delta": -0.06,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "ELEVATES left",
+      "spec": 6.1,
+      "actual": 6.11,
+      "delta": 0.01,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "ELEVATES right",
+      "spec": 43.9,
+      "actual": 43.92,
+      "delta": 0.02,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "YOUR left",
+      "spec": 66.8,
+      "actual": 66.84,
+      "delta": 0.04,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "YOUR right",
+      "spec": 87,
+      "actual": 86.84,
+      "delta": -0.16,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "DIGITAL left",
+      "spec": 6.1,
+      "actual": 6.11,
+      "delta": 0.01,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "DIGITAL right",
+      "spec": 34.6,
+      "actual": 34.49,
+      "delta": -0.11,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "PRESENCE left",
+      "spec": 55,
+      "actual": 55.02,
+      "delta": 0.02,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "PRESENCE right",
+      "spec": 93.7,
+      "actual": 93.69,
+      "delta": -0.01,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "cap-top line 1 (DIGITAL top excluded; DESIGN)",
+      "spec": 16.4,
+      "actual": 16.26,
+      "delta": -0.14,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "cap height",
+      "spec": 5.45,
+      "actual": 5.51,
+      "delta": 0.06,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "line pitch (line1→line2 cap-top)",
+      "spec": 6.9,
+      "actual": 6.91,
+      "delta": 0.01,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "headline",
+      "name": "line pitch (line2→line3 cap-top)",
+      "spec": 6.9,
+      "actual": 6.84,
+      "delta": -0.06,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "logo left",
+      "spec": 3.9,
+      "actual": 3.9,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "logo vertical centre",
+      "spec": 6.5,
+      "actual": 6.5,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "logo cap height (px, ≈0.9vw clamp 12–18)",
+      "spec": 0.9,
+      "actual": 0.9,
+      "delta": 0,
+      "tol": 0.15,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "MENU group right edge",
+      "spec": 95.4,
+      "actual": 95.4,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "MENU hairline length",
+      "spec": 1.95,
+      "actual": 1.95,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "MENU gap to hairline",
+      "spec": 1.3,
+      "actual": 1.3,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "MENU vertical centre vs logo",
+      "spec": 6.498229679802956,
+      "actual": 6.5,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "paragraph left",
+      "spec": 80.3,
+      "actual": 80.3,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "paragraph top",
+      "spec": 73.6,
+      "actual": 73.6,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "paragraph width (13.6vw, min 240px → 240px)",
+      "spec": 15.946843853820598,
+      "actual": 15.95,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "SCROLL centre x",
+      "spec": 49.8,
+      "actual": 49.8,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "SCROLL label centre y",
+      "spec": 89.9,
+      "actual": 89.9,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "scroll line top",
+      "spec": 91.4,
+      "actual": 91.4,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "scroll line bottom",
+      "spec": 95.5,
+      "actual": 95.5,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "ui",
+      "name": "scroll ring size (px)",
+      "spec": 7,
+      "actual": 7,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "px",
+      "pass": true
+    },
+    {
+      "group": "raven",
+      "name": "head crest x (beak pinned at 53.5vw)",
+      "spec": 53.5,
+      "actual": 52.23,
+      "delta": -1.27,
+      "tol": 1.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "raven",
+      "name": "head crest y (beak pinned at 29vh)",
+      "spec": 27.4,
+      "actual": 27.34,
+      "delta": -0.06,
+      "tol": 1,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "raven",
+      "name": "head sits in the ELEVATES↔YOUR gap (x between 43.9 and 66.8vw)",
+      "spec": 1,
+      "actual": 1,
+      "delta": 0,
+      "tol": 0,
+      "unit": "bool",
+      "pass": true
+    },
+    {
+      "group": "raven",
+      "name": "wings bleed left (x<0)",
+      "spec": 1,
+      "actual": 1,
+      "delta": 0,
+      "tol": 0,
+      "unit": "bool",
+      "pass": true
+    },
+    {
+      "group": "raven",
+      "name": "wings bleed right (x>100%)",
+      "spec": 1,
+      "actual": 1,
+      "delta": 0,
+      "tol": 0,
+      "unit": "bool",
+      "pass": true
+    },
+    {
+      "group": "raven",
+      "name": "tail fully dissolved at the bottom edge (mist on)",
+      "spec": 1,
+      "actual": 1,
+      "delta": 0,
+      "tol": 0,
+      "unit": "bool",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 1 centre x",
+      "spec": 81.5,
+      "actual": 81.5,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 1 centre y",
+      "spec": 18,
+      "actual": 18,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 2 centre x",
+      "spec": 92.7,
+      "actual": 92.7,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 2 centre y",
+      "spec": 24.5,
+      "actual": 24.5,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 3 centre x",
+      "spec": 19.3,
+      "actual": 19.3,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 3 centre y",
+      "spec": 15,
+      "actual": 15,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 4 centre x",
+      "spec": 1.5,
+      "actual": 1.5,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 4 centre y",
+      "spec": 29.5,
+      "actual": 29.5,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 5 centre x",
+      "spec": 14.3,
+      "actual": 14.3,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 5 centre y",
+      "spec": 84,
+      "actual": 84,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 6 centre x",
+      "spec": 28,
+      "actual": 28,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 6 centre y",
+      "spec": 87.5,
+      "actual": 87.5,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 7 centre x",
+      "spec": 70.5,
+      "actual": 70.5,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 7 centre y",
+      "spec": 90,
+      "actual": 90,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 8 centre x",
+      "spec": 86.5,
+      "actual": 86.5,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vw",
+      "pass": true
+    },
+    {
+      "group": "feathers",
+      "name": "feather 8 centre y",
+      "spec": 98.5,
+      "actual": 98.5,
+      "delta": 0,
+      "tol": 0.5,
+      "unit": "vh",
+      "pass": true
+    }
+  ],
+  "scores": {
+    "headline": "16/16",
+    "ui": "15/15",
+    "raven": "6/6",
+    "feathers": "16/16"
+  }
+}

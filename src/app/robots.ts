@@ -4,7 +4,7 @@ import { absoluteUrl } from "@/lib/url";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/hero-lab"] },
+    rules: { userAgent: "*", allow: "/" },
     sitemap: absoluteUrl("/sitemap.xml"),
   };
 }

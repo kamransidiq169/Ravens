@@ -1,0 +1,34 @@
+{
+  "reducedMotion": {
+    "tier": "1",
+    "intro": "done",
+    "ringAnimation": "none",
+    "wordTransform": "none",
+    "ravenOpacity": "1",
+    "canvasMounted": false,
+    "console": []
+  },
+  "webglDisabled": {
+    "tier": "1",
+    "intro": "done",
+    "canvasMounted": false,
+    "h1": "DESIGN THAT ELEVATES YOUR DIGITAL PRESENCE",
+    "console": []
+  },
+  "keyboard": {
+    "tabOrder": [
+      "a:Skip to conten",
+      "a[Ravens — home]",
+      "button:Menu",
+      "button[Scroll to content]"
+    ],
+    "focusStyle": {
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "outlineColor": "rgb(11, 13, 20)"
+    },
+    "scrollYAfterEnter": 812,
+    "heroHeight": 812,
+    "console": []
+  }
+}

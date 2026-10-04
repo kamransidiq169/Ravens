@@ -2,7 +2,7 @@
 
 Website for **Ravens**, an independent design and development studio. Next.js (App Router) · TypeScript · Tailwind CSS 4 · GSAP + Lenis · React Three Fiber (shared canvas).
 
-> This repository is the production **foundation**. The WebGL hero is built separately and plugs into `src/features/hero/`, `src/webgl/canvas/` and `assets-src/hero/` — see [Where the hero plugs in](#where-the-hero-plugs-in).
+> The home-page hero lives in `src/features/hero/` — see [The hero](#the-hero) and [`docs/design/reference/HERO-ANALYSIS.md`](docs/design/reference/HERO-ANALYSIS.md).
 
 ## Prerequisites
 
@@ -47,7 +47,6 @@ Validated with zod in [`src/config/env.ts`](src/config/env.ts); invalid values f
 | `pnpm knip`                    | Unused files / exports / dependencies                                                  |
 | `pnpm cycles`                  | Circular-dependency check (madge)                                                      |
 | `pnpm check`                   | typecheck + lint + knip + unit tests                                                   |
-| `pnpm assets:hero`             | `assets-src/hero/*` → responsive AVIF/WebP + LQIP + `public/hero/manifest.json`        |
 | `pnpm assets:icons`            | Regenerates favicon / PNG icons in `public/`                                           |
 | `pnpm prove:boundaries`        | Writes violating imports, asserts ESLint rejects each, cleans up                       |
 | `pnpm qa:initial-js`           | After a build: asserts no route ships three.js in its initial JS                       |
@@ -64,10 +63,9 @@ Playwright starts the production server itself (`scripts/dev/serve-prod.mjs`, bu
 .husky/                    pre-commit (lint-staged) and commit-msg (commitlint)
 docs/architecture/         ARCHITECTURE.md + ADRs
 docs/design/reference/     mockups — never shipped
-assets-src/hero/           raw hero art → processed into public/hero
-public/                    static files; hero/ is generated output only
+public/                    static files
 scripts/{assets,qa,dev}/   asset pipelines · QA tools · dev tooling
-src/app/                   routes only — (site) pages, (dev) hero-lab, metadata files
+src/app/                   routes only — (site) pages, metadata files
 src/features/<name>/       one folder per product feature (see below)
 src/components/            shared UI: ui, layout, brand, motion, seo, providers
 src/webgl/                 the single shared R3F canvas + WebGL utils
@@ -101,29 +99,22 @@ Data reaches pages through each feature's repository (`features/<name>/lib/repos
 6. Add unit tests for pure logic, an e2e spec for behaviour, and a case in `tests/visual/routes.spec.ts`.
 7. `pnpm check && pnpm build && pnpm test:e2e`.
 
-## Hero asset pipeline
+## The hero
 
-Drop raw art (PNG/JPG/WebP/TIFF/AVIF) into `assets-src/hero/`, then `pnpm assets:hero`. For each file it writes `public/hero/<name>-<width>.{avif,webp}` at 1280 / 1920 / 2560 / 3840 px (never upscaled), a 24px blurred LQIP, and `public/hero/manifest.json`:
+The home page opens with one sticky scroll stage (`src/features/hero`) that carries two chapters: the headline hero and the
+featured project (`src/features/showcase`, passed in as `chapter`). The stage sits inside a tall wrapper (`340svh` desktop, `250svh`
+phones) and is `position: sticky`, so scrolling stays native and the stage is released by the browser at the end.
 
-```json
-{
-  "<name>": {
-    "width": 4000,
-    "height": 2250,
-    "lqip": "data:image/webp;base64,…",
-    "sources": [{ "width": 1280, "format": "avif", "src": "/hero/<name>-1280.avif" }]
-  }
-}
-```
-
-`public/hero/` is generated output — edit sources, not outputs.
-
-## Where the hero plugs in
-
-- `src/features/hero/` — `Hero.tsx` is a DOM placeholder (headline as real text). Replace its internals but **keep the export signature**. Subfolders `scene/{layers,shaders}`, `hooks/`, `lib/`, `dev/` are ready (`.gitkeep`). `*.glsl` imports are typed in `src/types/vendor/shaders.d.ts` (add the bundler loader when shaders land).
-- `src/webgl/canvas/` — `SharedCanvas` (one fixed R3F canvas, drei `View` tunnel, DPR ≤ 1.75, `PerformanceMonitor`) and `LazySharedCanvas` (`next/dynamic`, `ssr: false`). Mount `LazySharedCanvas` only on routes that render WebGL, and import any file that uses drei/three **lazily** (see `features/hero/dev/CanvasSmoke.tsx`) so three.js stays out of initial JS. `pnpm qa:initial-js` guards this.
-- `src/app/(dev)/hero-lab` — playground (`notFound()` in production) with a canvas smoke test.
-- `assets-src/hero/` → `pnpm assets:hero` → `public/hero/`.
+- **One timeline:** `hooks/useJourney.ts` scrubs a single GSAP timeline with a single ScrollTrigger. It only carries a 0 → 1 proxy;
+  `lib/journey.ts › journeyAt(p)` is a pure function that returns every moving value (headline zoom and fall, jellyfish path, project
+  title and meta), applied with transforms and opacity only. Reversing the scroll reverses the sequence.
+- **Jellyfish:** a procedural Three.js animal (`scene/jellyfish.ts`, shaders inline) rendered as a drei `<View>` into the shared canvas
+  (`scene/JellyScene.tsx`). It reads `lib/journey.store.ts` inside its own frame loop, so scrolling causes no React renders. The server
+  renders an SVG version (`components/JellySprite.tsx`) as the first paint and as the fallback for no WebGL, reduced motion and
+  save-data; the 3D scene loads after idle and the sprite crossfades away once its first frame is up.
+- **Reduced motion / no JS:** CSS stacks the two chapters in normal flow; no timeline, no WebGL.
+- **Background:** the stage has none. The page's pale lavender (`--color-bg`) shows through for the whole sequence.
+- The raven photos in `public/hero/images/` are no longer used by the site; they are kept on disk untouched.
 
 ## Deployment
 
@@ -142,4 +133,4 @@ Multi-stage build (deps → build with `BUILD_STANDALONE=1` → minimal non-root
 
 ## Security headers
 
-`next.config.ts` sets CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy` and `Permissions-Policy`. Fonts are self-hosted by `next/font`, so no Google Fonts origin is allowed. `script-src` needs `'unsafe-inline'` for Next's bootstrap scripts (nonce-based CSP would force dynamic rendering); `'unsafe-eval'` is dev-only. `blob:` / `worker-src` are open for troika text workers.
+`next.config.ts` sets CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy` and `Permissions-Policy`. Fonts are self-hosted by `next/font`, so no Google Fonts origin is allowed. `script-src` needs `'unsafe-inline'` for Next's bootstrap scripts (nonce-based CSP would force dynamic rendering); `'unsafe-eval'` is dev-only.

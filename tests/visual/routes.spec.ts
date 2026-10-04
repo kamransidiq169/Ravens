@@ -23,9 +23,10 @@ async function settle(page: Page) {
     window.scrollTo(0, 0);
     await document.fonts.ready;
     await Promise.all(
-      Array.from(document.images).map((img) =>
-        img.complete ? null : new Promise((r) => img.addEventListener("load", r, { once: true })),
-      ),
+      Array.from(document.images)
+        // Images that are not rendered (display: none) are lazy and never load.
+        .filter((img) => img.getClientRects().length > 0)
+        .map((img) => (img.complete ? null : new Promise((r) => img.addEventListener("load", r, { once: true })))),
     );
   });
 }

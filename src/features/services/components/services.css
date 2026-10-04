@@ -1,0 +1,289 @@
+/* Services: minimal editorial page with a five-panel arched gallery. */
+.sv-page {
+  --sv-bg: #fafaf8;
+  --sv-ink: #0b0b0b;
+  background: var(--sv-bg);
+  color: var(--sv-ink);
+  overflow-x: clip;
+  padding: 1.25rem 0 7rem;
+  min-height: 100svh;
+}
+
+.sv-nav {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+}
+.sv-back {
+  display: grid;
+  place-items: center;
+  width: clamp(48px, 4.4vw, 64px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #000;
+  color: #fff;
+  transition:
+    transform 0.4s var(--ease-out-expo),
+    background-color 0.3s;
+}
+.sv-back:hover,
+.sv-back:focus-visible {
+  transform: scale(1.06);
+  background: #222;
+}
+.sv-mark {
+  padding: 0.4rem;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+.sv-mark:hover,
+.sv-mark:focus-visible {
+  opacity: 1;
+}
+.sv-cta {
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: opacity 0.3s;
+}
+.sv-cta:hover {
+  opacity: 0.7;
+}
+
+.sv-head {
+  text-align: center;
+  margin-top: clamp(0.5rem, 2vw, 1.5rem);
+  padding: 0 1rem;
+}
+.sv-title {
+  font-weight: 800;
+  font-size: clamp(2.6rem, min(4.4vw, 7vh), 4.6rem);
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+}
+.sv-title span {
+  display: block;
+}
+.sv-sub {
+  margin: 1.5rem auto 0;
+  font-size: 0.8125rem;
+  color: #3a3a3a;
+}
+
+.sv-gallery {
+  list-style: none;
+  margin: clamp(2.5rem, 5vw, 4.5rem) 0 0;
+  padding: 0;
+  display: grid;
+  gap: 3.5rem;
+}
+.sv-item {
+  width: min(72%, 20rem);
+  margin-left: 1.25rem;
+}
+.sv-item:nth-child(even) {
+  margin-left: auto;
+  margin-right: 1.25rem;
+}
+/* Gallery geometry. --a / --b are how far the left / right edge of a panel is inset (top and bottom)
+   from the full panel height; --bow pulls the mid-point of each edge inward so edges read as shallow curves.
+   Insets grow toward the centre, so the strip wraps like a shallow concave surface (outer edges tallest). */
+.sv-item {
+  --a: 0%;
+  --b: 1.5%;
+  --bow: 0.35%;
+  --m: calc((var(--a) + var(--b)) / 2 + var(--bow));
+}
+.sv-item:nth-child(even) {
+  --a: 1.5%;
+  --b: 0%;
+}
+.sv-photo {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  background: #e8e6e0;
+  clip-path: polygon(
+    0 var(--a),
+    50% var(--m),
+    100% var(--b),
+    100% calc(100% - var(--b)),
+    50% calc(100% - var(--m)),
+    0 calc(100% - var(--a))
+  );
+}
+.sv-photo img {
+  transition: transform 0.6s var(--ease-out-expo);
+}
+.sv-caption {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #7a7a78;
+}
+.sv-caption span:first-child {
+  opacity: 0.5;
+}
+
+.sv-foot {
+  margin: clamp(1.5rem, 3.5vh, 3rem) auto 0;
+  max-width: 36rem;
+  padding: 0 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: #3a3a3a;
+}
+.sv-links {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  margin-top: 1.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sv-ink);
+}
+.sv-links a {
+  text-underline-offset: 6px;
+}
+.sv-links a:hover,
+.sv-links a:focus-visible {
+  text-decoration: underline;
+}
+
+@media (min-width: 768px) {
+  .sv-nav {
+    padding: 0 1.5rem;
+  }
+  .sv-gallery {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    perspective: 1400px;
+    align-items: start;
+    gap: clamp(0.85rem, 1vw, 1.1rem);
+    width: min(94vw, 1850px);
+    margin-top: clamp(1.5rem, 4vh, 3rem);
+    margin-inline: auto;
+  }
+  .sv-gallery {
+    align-items: start;
+  }
+  .sv-item {
+    width: auto;
+    margin: 0;
+    transition: opacity 0.6s ease;
+  }
+  .sv-item:nth-child(even) {
+    margin: 0;
+  }
+  /* Inward-wrapping strip (matches the reference): panels share one shallow concave surface. Outer panels
+     turn toward the centre (rotateY about their inner edge) and are tallest; the centre is upright and sits a
+     touch deeper. Tops/bottoms stay nearly aligned. --k scales tilt on tablet. */
+  .sv-item {
+    --k: 0.6;
+    transform: translateX(calc(var(--x, 0px) * var(--k))) translateY(calc(var(--y, 0px) * var(--k)))
+      translateZ(var(--tz, 0px)) scale(var(--s, 1)) rotateY(calc(var(--ry, 0deg) * var(--k)))
+      rotateZ(calc(var(--rz, 0deg) * var(--k)));
+  }
+  .sv-item:nth-child(1) {
+    --s: 1.009;
+    --tz: -12px;
+    --a: 0%;
+    --b: 3.9%;
+    --ry: 10deg;
+    --rz: -0.3deg;
+    transform-origin: right center;
+  }
+  .sv-item:nth-child(2) {
+    --x: 1.5px;
+    --a: 3.9%;
+    --b: 6.5%;
+    --tz: -58px;
+    --s: 1.041;
+    --y: 3px;
+    --ry: 5deg;
+    --rz: -0.15deg;
+    transform-origin: right center;
+  }
+  .sv-item:nth-child(3) {
+    --a: 6.5%;
+    --b: 6.5%;
+    --bow: 0%;
+    --y: 6px;
+    --tz: -130px; /* deeper into the composition */
+    --s: 1.07;
+  }
+  .sv-item:nth-child(4) {
+    --x: -1.5px;
+    --a: 6.5%;
+    --tz: -58px;
+    --s: 1.041;
+    --b: 3.9%;
+    --y: 3px;
+    --ry: -5deg;
+    --rz: 0.15deg;
+    transform-origin: left center;
+  }
+  .sv-item:nth-child(5) {
+    --s: 1.009;
+    --tz: -12px;
+    --a: 3.9%;
+    --b: 0%;
+    --ry: -10deg;
+    --rz: 0.3deg;
+    transform-origin: left center;
+  }
+
+  .sv-gallery:has(.sv-item:hover, .sv-item:focus-within) .sv-item:not(:hover, :focus-within) {
+    opacity: 0.55;
+  }
+  .sv-caption {
+    margin-top: 1.25rem;
+    font-size: clamp(0.5rem, 0.62vw, 0.6875rem);
+    letter-spacing: 0.12em;
+    gap: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sv-item:hover .sv-photo img {
+    transform: scale(1.02);
+  }
+  .sv-in {
+    animation: sv-in 0.8s var(--ease-out-expo) both;
+    animation-delay: var(--sv-delay, 0s);
+  }
+  .sv-item .sv-photo,
+  .sv-item .sv-caption {
+    animation: sv-photo 0.9s var(--ease-out-expo) both;
+    animation-delay: calc(0.3s + var(--i) * 0.09s);
+  }
+  @keyframes sv-in {
+    from {
+      opacity: 0;
+      transform: translateY(1.25rem);
+    }
+  }
+  @keyframes sv-photo {
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.97);
+    }
+  }
+}
+
+@media (min-width: 1280px) {
+  .sv-item {
+    --k: 1;
+  }
+}

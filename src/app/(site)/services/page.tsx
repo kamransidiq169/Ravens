@@ -1,5 +1,4 @@
-import { ContactCta } from "@/features/contact";
-import { ServicesIndex, getServices } from "@/features/services";
+import { ServicesIndex } from "@/features/services";
 
 import { createMetadata } from "@/lib/metadata";
 
@@ -9,11 +8,6 @@ export const metadata = createMetadata({
   path: "/services",
 });
 
-export default async function ServicesPage() {
-  return (
-    <>
-      <ServicesIndex services={await getServices()} />
-      <ContactCta />
-    </>
-  );
+export default function ServicesPage() {
+  return <ServicesIndex />;
 }

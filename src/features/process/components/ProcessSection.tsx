@@ -1,26 +1,24 @@
-import { FadeUp } from "@/components/motion/FadeUp";
-import { Section } from "@/components/ui/Section";
-import { SectionHeader } from "@/components/ui/SectionHeader";
+import "../process.css";
 
+import { toStages } from "../lib/process.data";
 import { getProcessSteps } from "../lib/repository";
 
+import { ProcessExperience } from "./ProcessExperience";
+import { ProcessIntro } from "./ProcessIntro";
+
+const HEADING_ID = "process-heading";
+
+/** Server shell: loads the steps and renders the intro; the scroll film is isolated in the client stage. */
 export async function ProcessSection() {
   const steps = await getProcessSteps();
 
   return (
-    <Section aria-labelledby="process-heading">
-      <SectionHeader id="process-heading" eyebrow="How we work" title="A calm process with no surprises" />
-      <ol className="mt-16 grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-        {steps.map((step, index) => (
-          <li key={step.id}>
-            <FadeUp delay={index * 0.08}>
-              <p className="text-sm text-ink-soft">{String(index + 1).padStart(2, "0")}</p>
-              <h3 className="mt-4 border-t border-ink/30 pt-4 text-2xl font-light text-ink">{step.title}</h3>
-              <p className="mt-3 text-ink-soft">{step.description}</p>
-            </FadeUp>
-          </li>
-        ))}
-      </ol>
-    </Section>
+    <section aria-labelledby={HEADING_ID} className="proc-section">
+      <ProcessExperience stages={toStages(steps)} intro={<ProcessIntro headingId={HEADING_ID} />} />
+      {/* Without JS the pinned stage can't run, so fall back to the stacked layout. */}
+      <noscript>
+        <style>{`.proc{height:auto!important}.proc__stage{position:static!important;height:auto!important;overflow:visible!important}.proc__rig,.proc__guides,.proc__glow,.proc__tint,.proc__index,.proc__whisper,.proc__word--front{display:none!important}.proc__still{display:block!important}.proc__intro,.proc__word,.proc__desc{position:static!important;opacity:1!important;transform:none!important;mix-blend-mode:normal!important}.proc__word,.proc__statement{color:#111!important}`}</style>
+      </noscript>
+    </section>
   );
 }

@@ -1,0 +1,11 @@
+{
+  "frames": 481,
+  "avgFps": 60.1,
+  "p95ms": 16.8,
+  "maxMs": 16.8,
+  "over33ms": 0,
+  "over50ms": 0,
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3, Unspecified Version)",
+  "console": [],
+  "caveat": "Full Chromium on the local GPU via ANGLE/Metal, 1505×812, DPR 1, pointer moving. One machine, not a mid-range laptop."
+}

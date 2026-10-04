@@ -1,30 +1,25 @@
-import { FadeUp } from "@/components/motion/FadeUp";
-import { Button } from "@/components/ui/Button";
-import { Section } from "@/components/ui/Section";
-import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Link } from "@/components/ui/Link";
+
+import { withPlaceholderCovers } from "@/content/placeholder-images";
 
 import type { Project } from "@/types/domain/project";
 
-import { ProjectCard } from "./ProjectCard";
+import { editorialSerif } from "./selected-work/fonts";
+import { SelectedWorkGallery } from "./selected-work/SelectedWorkGallery";
+import { SelectedWorkHeader } from "./selected-work/SelectedWorkHeader";
+
+const HEADING_ID = "selected-work-heading";
 
 export function SelectedWork({ projects }: { projects: Project[] }) {
   return (
-    <Section aria-labelledby="selected-work-heading">
-      <SectionHeader id="selected-work-heading" eyebrow="Selected work" title="Brands and products we're proud of" />
-      <ul className="mt-16 grid gap-x-8 gap-y-16 md:grid-cols-2">
-        {projects.map((project, index) => (
-          <li key={project.slug} className={index % 2 === 1 ? "md:mt-24" : undefined}>
-            <FadeUp>
-              <ProjectCard project={project} />
-            </FadeUp>
-          </li>
-        ))}
-      </ul>
-      <div className="mt-20">
-        <Button href="/work" variant="outline" arrow>
-          All work
-        </Button>
-      </div>
-    </Section>
+    <section aria-labelledby={HEADING_ID} className={`sw-section ${editorialSerif.variable} relative z-(--z-content)`}>
+      <SelectedWorkGallery projects={withPlaceholderCovers(projects)} labelledBy={HEADING_ID}>
+        <SelectedWorkHeader id={HEADING_ID} />
+      </SelectedWorkGallery>
+
+      <p className="sw__all">
+        <Link href="/work">View all work</Link>
+      </p>
+    </section>
   );
 }

@@ -14,7 +14,7 @@ describe("content integrity", () => {
     expect(projects).toHaveLength(4);
     expect(services).toHaveLength(5);
     expect(insights).toHaveLength(3);
-    expect(testimonials).toHaveLength(3);
+    expect(testimonials).toHaveLength(5);
   });
 
   it.each([
