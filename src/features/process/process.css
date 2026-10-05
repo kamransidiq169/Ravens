@@ -7,27 +7,27 @@
  *
  * Layers, back to front:
  *   atmosphere (1) → intro (1) → type (1) → raven (2) → type, selected letters (3) → wing piece (4) → labels (6)
- * The canvas is near-white and bridged to the page's lavender above; the stage ends on its own pale canvas, which the
- * testimonials section (white) fades into.
+ * The canvas is the home hero's own background (`--color-bg`, the page's pale blue), so the two sections read as one
+ * continuous world with no seam. The headline and labels use one near-black violet (`--proc-ink`); the chapter words
+ * are difference-blended, so `--proc-blend` is derived from the background to land on that same ink.
  */
 
 .proc-section {
-  --proc-bg: #f7f8fc;
+  /* The exact hero background: the same token the page and the home hero sit on. */
+  --proc-bg: var(--color-bg);
   --proc-mist: #d9ddf0;
-  --proc-ink: #111;
+  /* The one type colour: near-black with a deep violet undertone (not a purple you would call purple). */
+  --proc-ink: #1b1030;
+  /* difference-blend colour for the chapter words: |blend - backdrop| per channel. Chosen so the result is the same
+     dark over the base canvas (#c8d1ec -> #180430) and over the bloom's pale centre (~#f8f0f2 -> #182336): R sits midway
+     between the two backdrops, B gives the violet, and G is pulled down a little so that where the type crosses the
+     bird it reads as warm bronze (like the undersides of its feathers) rather than olive. */
+  --proc-blend: #e0cdbc;
   --proc-gutter: var(--spacing-gutter);
   position: relative;
   z-index: var(--z-content);
   background: var(--proc-bg);
   color: var(--proc-ink);
-}
-
-/* The page above is lavender: grow out of it instead of cutting. */
-.proc-section::before {
-  content: "";
-  display: block;
-  height: clamp(5rem, 14vw, 12rem);
-  background: linear-gradient(180deg, var(--color-bg), var(--proc-bg));
 }
 
 .proc {
@@ -58,7 +58,113 @@
   height: 100svh;
   overflow: clip;
   /* Solid: the type blends against everything drawn inside the stage, so the canvas has to be part of it. */
-  background: radial-gradient(60% 55% at 50% 45%, rgb(217 221 240 / 0.45), transparent 70%), var(--proc-bg);
+  background: var(--proc-bg);
+}
+
+/* The atmosphere: soft studio light diffusing through a pale lavender room. Behind every layer of content (z-index -1
+   inside the stage's own stacking context, so it paints over the stage background and under everything else).
+   Not one gradient: a warm bloom, a cooler wash set slightly off-centre so it never reads as a perfect ellipse, and a
+   barely-there cool falloff at the edges. Every ramp uses many eased stops so no ring or band shows. The vertical radius
+   stays inside the stage so the light is already gone at its top and bottom edges: no seam with the neighbouring
+   sections. CSS only; the slow drift is transform-only. */
+.proc__stage::after {
+  content: "";
+  position: absolute;
+  inset: -4% -6%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    /* warm bloom, almost white with a trace of peach */
+    radial-gradient(
+      ellipse 56% 44% at 50% 46%,
+      rgb(255 246 242 / 90%) 0%,
+      rgb(255 246 242 / 82%) 10%,
+      rgb(255 246 242 / 66%) 22%,
+      rgb(255 246 242 / 47%) 34%,
+      rgb(255 246 242 / 30%) 46%,
+      rgb(255 246 242 / 17%) 58%,
+      rgb(255 246 242 / 8%) 70%,
+      rgb(255 246 242 / 3%) 83%,
+      transparent 100%
+    ),
+    /* pale cool wash, offset a little right and low */
+    radial-gradient(
+        ellipse 66% 48% at 55% 52%,
+        rgb(228 233 250 / 52%) 0%,
+        rgb(228 233 250 / 42%) 16%,
+        rgb(228 233 250 / 29%) 32%,
+        rgb(228 233 250 / 17%) 48%,
+        rgb(228 233 250 / 8%) 64%,
+        rgb(228 233 250 / 2%) 82%,
+        transparent 100%
+      ),
+    /* the edges settle a touch cooler and deeper than the base */
+    radial-gradient(
+        ellipse 92% 80% at 50% 50%,
+        transparent 52%,
+        rgb(168 184 230 / 4%) 66%,
+        rgb(168 184 230 / 10%) 80%,
+        rgb(168 184 230 / 17%) 100%
+      );
+  animation: proc-air 28s linear infinite;
+}
+
+/* A few viewport percent, endlessly slow; linear, with the turn built into the keyframes so there is never a visible
+   reversal. */
+@keyframes proc-air {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: translate3d(1.6vw, -0.8svh, 0) scale(1.012);
+    opacity: 0.96;
+  }
+  50% {
+    transform: translate3d(2.2vw, 0.9svh, 0) scale(1.02);
+    opacity: 0.93;
+  }
+  75% {
+    transform: translate3d(0.6vw, 1.4svh, 0) scale(1.01);
+    opacity: 0.97;
+  }
+}
+
+/* Phones are tall and narrow: stretch the light across the width instead of letting it shrink to a bright circle. */
+@media (max-width: 767px) {
+  .proc__stage::after {
+    background:
+      radial-gradient(
+        ellipse 120% 40% at 50% 44%,
+        rgb(255 246 242 / 90%) 0%,
+        rgb(255 246 242 / 80%) 10%,
+        rgb(255 246 242 / 63%) 22%,
+        rgb(255 246 242 / 45%) 34%,
+        rgb(255 246 242 / 28%) 46%,
+        rgb(255 246 242 / 15%) 58%,
+        rgb(255 246 242 / 7%) 70%,
+        rgb(255 246 242 / 2%) 83%,
+        transparent 100%
+      ),
+      radial-gradient(
+        ellipse 140% 44% at 56% 52%,
+        rgb(228 233 250 / 50%) 0%,
+        rgb(228 233 250 / 40%) 16%,
+        rgb(228 233 250 / 27%) 32%,
+        rgb(228 233 250 / 16%) 48%,
+        rgb(228 233 250 / 7%) 64%,
+        rgb(228 233 250 / 2%) 82%,
+        transparent 100%
+      ),
+      radial-gradient(
+        ellipse 120% 70% at 50% 50%,
+        transparent 54%,
+        rgb(168 184 230 / 4%) 68%,
+        rgb(168 184 230 / 10%) 82%,
+        rgb(168 184 230 / 16%) 100%
+      );
+  }
 }
 
 /* Soft veil under the fixed header so the logo and menu stay readable over the wings. */
@@ -72,12 +178,9 @@
   pointer-events: none;
 }
 
+/* The old white bloom would lift the canvas off the hero's background; the plate stays in the DOM, unused. */
 .proc__glow {
-  position: absolute;
-  inset: -10% 0;
-  background: radial-gradient(38% 36% at 50% 50%, rgb(255 255 255 / 0.85), transparent 70%);
-  opacity: 0.55;
-  pointer-events: none;
+  display: none;
 }
 
 /* ---- Intro ----------------------------------------------------------------------------------------------------- */
@@ -85,11 +188,12 @@
 .proc__intro {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  /* Above the bird: the opening headline is never covered by a wing. */
+  z-index: 3;
   display: grid;
-  align-content: center;
-  gap: clamp(1.25rem, 3vw, 2.5rem);
-  padding: var(--header-height) var(--proc-gutter) 0;
+  align-content: end;
+  gap: clamp(1rem, 2.4vw, 2rem);
+  padding: var(--header-height) var(--proc-gutter) clamp(5.5rem, 9vw, 7.5rem);
   pointer-events: none;
 }
 
@@ -98,7 +202,7 @@
     grid-template-columns: repeat(12, minmax(0, 1fr));
     grid-template-rows: auto auto;
     column-gap: 2rem;
-    row-gap: clamp(1.25rem, 2.5vw, 2.5rem);
+    row-gap: clamp(1rem, 2vw, 1.75rem);
   }
   .proc__eyebrow,
   .proc__statement {
@@ -118,7 +222,8 @@
   font-weight: 500;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
-  color: var(--color-ink-soft);
+  color: var(--proc-ink);
+  opacity: 0.72;
 }
 
 .proc__statement {
@@ -131,6 +236,7 @@
   letter-spacing: -0.055em;
   text-transform: uppercase;
   text-wrap: nowrap;
+  color: var(--proc-ink);
 }
 
 .proc__statement-line {
@@ -143,7 +249,123 @@
   font-size: var(--text-lg);
   font-weight: 300;
   line-height: 1.55;
-  color: var(--color-ink-soft);
+  color: var(--proc-ink);
+  opacity: 0.8;
+}
+
+/* The scroll marker, bottom-left: a small ring, a hairline, the word. */
+.proc__scroll {
+  position: absolute;
+  left: var(--proc-gutter);
+  bottom: clamp(1.75rem, 4.5vw, 3.5rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--proc-ink);
+}
+
+.proc__scroll-dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 1px solid currentcolor;
+  border-radius: 50%;
+}
+
+.proc__scroll-line {
+  width: 2.5rem;
+  height: 1px;
+  background: currentcolor;
+  opacity: 0.5;
+}
+
+/* ---- Feathers: separate vector shapes drifting around the bird ------------------------------------------------- */
+
+.proc__feather-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.proc__feathers {
+  position: absolute;
+  inset: 0;
+  font-size: clamp(0.95rem, 1.5vw, 1.6rem);
+  color: #151b34;
+  pointer-events: none;
+}
+
+/* Outer: the feather's starting place (its `top` is its height in svh, which the fall keyframes use) and presence. */
+.feather {
+  position: absolute;
+  left: var(--x);
+  top: calc(var(--y) * 1svh);
+  width: calc(var(--size) * 0.2);
+  height: var(--size);
+  opacity: calc(0.34 + 0.5 * var(--depth));
+}
+
+.feather__fall,
+.feather__sway,
+.feather svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The fall: linear and endless. It starts and ends beyond the stage by --m svh, so the loop restarts out of sight. */
+.feather__fall {
+  animation: feather-fall var(--fall-s) linear var(--fall-delay) infinite;
+}
+
+/* A small, slow sway about the quill: not an oscillation you would notice, just air. */
+.feather__sway {
+  /* The resting tilt lives HERE, not on the falling element: an individual `rotate` is applied before `transform`, so on
+     the faller it would turn the fall's own axis and send a tilted feather down a diagonal. */
+  rotate: var(--rot);
+  transform-origin: 50% 20%;
+  animation: feather-sway var(--sway-s) cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+}
+
+@keyframes feather-fall {
+  from {
+    transform: translate3d(0, calc((var(--y) + var(--m)) * -1svh), 0) rotate(calc(var(--spin) * -0.5));
+  }
+  to {
+    transform: translate3d(var(--wind), calc((100 - var(--y) + var(--m)) * 1svh), 0) rotate(calc(var(--spin) * 0.5));
+  }
+}
+
+@keyframes feather-sway {
+  from {
+    transform: rotate(calc(var(--sway) * -1));
+  }
+  to {
+    transform: rotate(var(--sway));
+  }
+}
+
+/* Phones: fewer, calmer feathers. */
+@media (max-width: 767px) {
+  .proc__feathers {
+    font-size: 0.8rem;
+  }
+  .feather:nth-child(n + 5) {
+    display: none;
+  }
+  .feather__fall {
+    animation-duration: calc(var(--fall-s) * 1.25);
+    /* Same starting place, same off-screen margin: only the pace changes, so the delay scales with it. */
+    animation-delay: calc(var(--fall-delay) * 1.25);
+  }
+}
+
+.proc__feathers--still {
+  display: none;
 }
 
 /* ---- Raven ----------------------------------------------------------------------------------------------------- */
@@ -155,7 +377,7 @@
   left: 50%;
   top: 50%;
   width: var(--proc-raven-w);
-  aspect-ratio: 1537 / 1023;
+  aspect-ratio: 1536 / 1024;
   opacity: 0;
   pointer-events: none;
 }
@@ -189,7 +411,9 @@
 
 .proc__word {
   position: absolute;
-  inset: 0;
+  /* Wider than the stage on both sides, so the slit reveal's clip-path (which clips to this box) can never trim letters
+     sideways, however far the word is spread or offset. The stage still clips whatever genuinely leaves the viewport. */
+  inset: 0 -60%;
   z-index: 1;
   display: grid;
   place-items: center;
@@ -201,8 +425,8 @@
   line-height: 0.85;
   text-transform: uppercase;
   white-space: nowrap;
-  /* White + difference reads as #111 on the pale canvas and flips to light wherever the bird is behind it. */
-  color: #fff;
+  /* --proc-blend + difference reads as --proc-ink on the canvas and flips to light wherever the bird is behind it. */
+  color: var(--proc-blend);
   mix-blend-mode: difference;
   opacity: 0;
   pointer-events: none;
@@ -240,7 +464,7 @@
   font-size: var(--text-base);
   font-weight: 400;
   line-height: 1.5;
-  color: #fff;
+  color: var(--proc-blend);
   mix-blend-mode: difference;
   opacity: 0;
 }
@@ -255,7 +479,7 @@
   font-weight: 500;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
-  color: #fff;
+  color: var(--proc-blend);
   mix-blend-mode: difference;
   opacity: 0;
 }
@@ -285,7 +509,7 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  background: rgb(17 17 17 / 0.28);
+  background: rgb(27 16 48 / 0.28);
 }
 
 .proc__guide--h {
@@ -316,7 +540,7 @@
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.18em;
-  color: #fff;
+  color: var(--proc-blend);
   mix-blend-mode: difference;
   opacity: 0;
 }
@@ -339,7 +563,7 @@
 .proc__bar {
   width: 100%;
   height: 1px;
-  background: #fff;
+  background: var(--proc-blend);
   transform: scaleX(0);
   transform-origin: 0 50%;
 }
@@ -366,10 +590,16 @@
   }
 
   .proc__stage {
-    position: static;
+    /* A containing block and a sideways clip, so the (oversized, still) atmosphere can never widen the page. */
+    position: relative;
     height: auto;
     overflow: visible;
+    overflow-x: clip;
     padding: clamp(2rem, 5vw, 4rem) var(--proc-gutter) clamp(5rem, 11vw, 9rem);
+  }
+
+  .proc__stage::after {
+    animation: none;
   }
 
   .proc__stage::before,
@@ -379,7 +609,9 @@
   .proc__tint,
   .proc__index,
   .proc__whisper,
-  .proc__word--front {
+  .proc__word--front,
+  .proc__feather-scene,
+  .proc__scroll {
     display: none;
   }
 
@@ -398,6 +630,7 @@
   }
 
   .proc__still {
+    position: relative;
     display: block;
     max-width: 52rem;
     margin: 0 auto clamp(3rem, 7vw, 6rem);
@@ -406,6 +639,16 @@
   .proc__still img {
     width: 100%;
     height: auto;
+  }
+
+  /* Still, but present: the same feathers, motionless, around the picture. */
+  .proc__feathers--still {
+    display: block;
+    font-size: clamp(0.8rem, 2.2vw, 1.4rem);
+  }
+  .feather__fall,
+  .feather__sway {
+    animation: none;
   }
 
   .proc__steps {

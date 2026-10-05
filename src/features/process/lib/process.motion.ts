@@ -4,7 +4,8 @@
  * `processAt(p)` is the single source of truth for every moving part, so scrolling backwards is just evaluating the
  * same function at smaller values. The hook only writes the returned numbers to the DOM (transforms, opacity, clip).
  *
- *   0.00 – 0.14  INTRO     the statement holds, drifts up; its copy leaves first
+ *   0.00 – 0.14  INTRO     the statement holds, drifts up; its copy leaves first. The bird starts high on the right with
+ *                          its wings across the top, and eases into DISCOVER's opening pose as the camera pushes in
  *   0.14 – 0.23  ENTER     the camera pushes into the heading until it fills the screen, the lines split, a slit opens
  *   0.20 – 0.95  WORDS     DISCOVER, DEFINE, DESIGN, DELIVER each run the same typography choreography (`wordAt`):
  *                          slit reveal → off-centre hero → camera push → exit up and to the right
@@ -81,6 +82,8 @@ export interface ProcessState {
   /** Progress label near the edge. */
   meta: number;
   glow: { x: number; opacity: number };
+  /** The loose feathers of the opening composition: they leave with the headline (their fall is ambient CSS). */
+  feathers: { opacity: number };
   /** Pale wash that dissolves whatever is left of the bird at the very end. */
   tint: number;
   /** Chapter 0–3, or -1 before the first. */
@@ -138,7 +141,9 @@ function wordAt(p: number, i: number, compact: boolean): WordState {
     open: s(p, a - 0.005, a + 0.05),
     spread: 0.09 * (1 - s(t, 0, 0.3)),
     exit: 0,
-    front: { amount: s(t, 0.18, 0.34) * (1 - s(t, 0.88, 1)), line: range(t, 0.25, 0.9), dir: 1 },
+    // The sweep must reach past the LAST letter (positions run to ~0.94, so the line runs to 1.1) and finish while the word
+    // is still well inside the frame; otherwise the final letter is left behind the bird, whose wing then hides it.
+    front: { amount: s(t, 0.18, 0.34) * (1 - s(t, 0.88, 1)), line: range(t, 0.22, 0.62) * 1.1, dir: 1 },
     caption: s(t, 0.3, 0.42) * (1 - s(t, 0.9, 1)),
   };
 }
@@ -171,6 +176,22 @@ export function processAt(progress: number, { compact }: ProcessLayout): Process
   let scaleX = lerp(0.9, 0.93, pull);
   let yaw = 0;
   const opacity = 0.28 * s(p, 0.22, 0.27) + 0.72 * s(p, 0.27, 0.34);
+
+  // Opening composition: the bird is already in flight, high on the right with its wings across the top of the frame,
+  // and eases into DISCOVER's opening pose while the camera pushes into the headline.
+  const arrive = 1 - easeInOutSine(range(p, 0.09, 0.235));
+  if (arrive > 0) {
+    const open = compact
+      ? { x: 0.04, y: -0.52, scale: 1, rotate: 0, tiltX: 0, scaleX: 1 }
+      : { x: 0.15, y: -0.17, scale: 0.94, rotate: 0, tiltX: 0, scaleX: 1 };
+    scale = lerp(scale, open.scale, arrive);
+    x = lerp(x, open.x, arrive);
+    y = lerp(y, open.y, arrive);
+    rotate = lerp(rotate, open.rotate, arrive);
+    tiltX = lerp(tiltX, open.tiltX, arrive);
+    scaleX = lerp(scaleX, open.scaleX, arrive);
+  }
+  const rigOpacity = lerp(opacity, 1, arrive);
 
   // DEFINE: squares up fast, then holds dead still; one small turn right before the next word.
   const def = range(p, 0.4, 0.58);
@@ -215,13 +236,14 @@ export function processAt(progress: number, { compact }: ProcessLayout): Process
   return {
     intro,
     words,
-    rig: { x, y, scale: scale * k, scaleX, rotate, tiltX, yaw, opacity },
+    rig: { x, y, scale: scale * k, scaleX, rotate, tiltX, yaw, opacity: rigOpacity },
     // Phones keep the type clear of the wing: the bird stays behind it throughout.
     front: compact ? 0 : s(des, 0.08, 0.2) * (1 - s(des, 0.5, 0.62)),
     guides: s(def, 0.3, 0.5) * (1 - s(def, 0.85, 1)),
     whisper: s(p, 0.3, 0.34) * (1 - s(p, 0.37, 0.395)),
     meta: s(p, 0.18, 0.22) * (1 - s(p, 0.96, 0.99)),
     glow: { x: lerp(0.35, 0.65, p), opacity: 0.55 + 0.25 * Math.sin(p * Math.PI) },
+    feathers: { opacity: 1 - s(p, 0.1, 0.2) },
     tint: s(p, 0.95, 1),
     active,
     progress: p,

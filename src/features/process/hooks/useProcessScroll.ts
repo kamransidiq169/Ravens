@@ -5,6 +5,14 @@ import { STAGES, processAt } from "../lib/process.motion";
 // matchMedia only runs its callback when at least one named condition matches, so both sides are listed.
 const CONDITIONS = { compact: "(max-width: 767px)", wide: "(min-width: 768px)" };
 
+/**
+ * How much of a viewport the film keeps playing after the sticky stage has been released. The raven leaves on the
+ * film's last frames; if the film ended exactly at the release, the stage would scroll away empty (a blank screen)
+ * before the next section arrived. Ending the film this far past the release lets the exit play while the stage
+ * rises and the following section is already coming in beneath it.
+ */
+const RELEASE_OVERLAP = 0.7;
+
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
@@ -32,6 +40,7 @@ export function useProcessScroll(root: RefObject<HTMLElement | null>, reduced: b
     const guideH = q("[data-p='guide-h']");
     const guideV = q("[data-p='guide-v']");
     const glow = q("[data-p='glow']");
+    const feathers = q("[data-p='feathers']");
     const tint = q("[data-p='tint']");
     const bar = q("[data-p='bar']");
     const meta = q("[data-p='meta']");
@@ -46,7 +55,20 @@ export function useProcessScroll(root: RefObject<HTMLElement | null>, reduced: b
     const names = all("[data-p='name']");
     const letters = words.map((word) => all("[data-p='letter']", word));
     const twinLetters = twins.map((twin) => all("[data-p='letter-front']", twin));
-    if (!stage || !back || !front || !guides || !guideH || !guideV || !glow || !tint || !bar || !meta || !whisper)
+    if (
+      !stage ||
+      !back ||
+      !front ||
+      !guides ||
+      !guideH ||
+      !guideV ||
+      !glow ||
+      !tint ||
+      !bar ||
+      !meta ||
+      !whisper ||
+      !feathers
+    )
       return;
     if (!intro || introLines.length !== 3 || words.length !== STAGES || twins.length !== STAGES) return;
 
@@ -115,6 +137,8 @@ export function useProcessScroll(root: RefObject<HTMLElement | null>, reduced: b
           // Intro: the statement drifts up and swells; the camera pushes into it, the lines split apart.
           gsap.set(intro, { y: s.intro.y * stageH, scale: s.intro.scale, opacity: s.intro.opacity, force3D: false });
           gsap.set(introCopy, { opacity: s.intro.copy, y: (1 - s.intro.copy) * -24 });
+          // The loose feathers leave with the headline. Their fall is ambient CSS, independent of this timeline.
+          gsap.set(feathers, { opacity: s.feathers.opacity });
           const [top, mid, bottom] = introLines;
           if (top && mid && bottom) {
             // Lines live inside the scaled title, so convert stage-height fractions back into its coordinate space.
@@ -193,7 +217,7 @@ export function useProcessScroll(root: RefObject<HTMLElement | null>, reduced: b
           scrollTrigger: {
             trigger: wrapper,
             start: "top top",
-            end: "bottom bottom",
+            end: () => `bottom bottom-=${Math.round(window.innerHeight * RELEASE_OVERLAP)}`,
             scrub: 0.8,
             invalidateOnRefresh: true,
             onToggle: (self) => wrapper.classList.toggle("is-live", self.isActive),

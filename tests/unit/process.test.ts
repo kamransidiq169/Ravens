@@ -8,13 +8,55 @@ const compact = { compact: true };
 const steps = Array.from({ length: 401 }, (_, i) => i / 400);
 
 describe("processAt", () => {
-  it("opens on the intro statement alone", () => {
+  it("opens on the intro composition: the statement and the bird in flight, no chapter word yet", () => {
     const s = processAt(0, wide);
     expect(s.active).toBe(-1);
     expect(s.intro).toMatchObject({ y: 0, scale: 1, opacity: 1, copy: 1 });
     expect(s.words.every((w) => w.opacity === 0)).toBe(true);
-    expect(s.rig.opacity).toBe(0);
+    expect(s.rig.opacity).toBe(1);
+    expect(s.feathers).toEqual({ opacity: 1 });
     expect(s.tint).toBe(0);
+  });
+
+  it("starts the bird high and to the right (wings across the top), higher still on phones", () => {
+    const desktop = processAt(0, wide).rig;
+    const phone = processAt(0, { compact: true }).rig;
+    expect(desktop.x).toBeGreaterThan(0.1);
+    expect(desktop.y).toBeLessThan(-0.1);
+    expect(phone.y).toBeLessThan(desktop.y);
+  });
+
+  it("eases the bird from its opening pose into DISCOVER's, continuously, with no jump", () => {
+    let previous = processAt(0, wide).rig;
+    for (let p = 0.001; p <= 0.3; p += 0.001) {
+      const rig = processAt(p, wide).rig;
+      expect(Math.abs(rig.x - previous.x)).toBeLessThan(0.02);
+      expect(Math.abs(rig.y - previous.y)).toBeLessThan(0.02);
+      expect(Math.abs(rig.scale - previous.scale)).toBeLessThan(0.05);
+      expect(Math.abs(rig.opacity - previous.opacity)).toBeLessThan(0.05);
+      previous = rig;
+    }
+  });
+
+  it("lets the loose feathers leave with the headline, never coming back", () => {
+    expect(processAt(0.25, wide).feathers.opacity).toBe(0);
+    let last = 1;
+    for (let p = 0; p <= 0.4; p += 0.005) {
+      const { opacity } = processAt(p, wide).feathers;
+      expect(opacity).toBeLessThanOrEqual(last + 1e-12);
+      last = opacity;
+    }
+  });
+
+  it("brings every letter in front of the bird, the last one included, before the word nears the frame's edge", () => {
+    for (let i = 0; i < STAGES; i += 1) {
+      const slot = [0.2, 0.4, 0.58, 0.77][i]!;
+      const span = [0.2, 0.18, 0.19, 0.18][i]!;
+      // The last letter of the longest word sits at ~0.94 of the word; by t = 0.66 the line must be past it.
+      const line = processAt(slot + span * 0.66, wide).words[i]!.front;
+      expect(line.line).toBeGreaterThan(0.95);
+      expect(line.amount).toBe(1);
+    }
   });
 
   it("pushes the camera into the heading, then hands over to DISCOVER", () => {

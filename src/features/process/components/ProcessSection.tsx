@@ -17,7 +17,7 @@ export async function ProcessSection() {
       <ProcessExperience stages={toStages(steps)} intro={<ProcessIntro headingId={HEADING_ID} />} />
       {/* Without JS the pinned stage can't run, so fall back to the stacked layout. */}
       <noscript>
-        <style>{`.proc{height:auto!important}.proc__stage{position:static!important;height:auto!important;overflow:visible!important}.proc__rig,.proc__guides,.proc__glow,.proc__tint,.proc__index,.proc__whisper,.proc__word--front{display:none!important}.proc__still{display:block!important}.proc__intro,.proc__word,.proc__desc{position:static!important;opacity:1!important;transform:none!important;mix-blend-mode:normal!important}.proc__word,.proc__statement{color:#111!important}`}</style>
+        <style>{`.proc{height:auto!important}.proc__stage{position:static!important;height:auto!important;overflow:visible!important}.proc__rig,.proc__guides,.proc__glow,.proc__tint,.proc__feather-scene,.proc__scroll,.proc__index,.proc__whisper,.proc__word--front{display:none!important}.proc__still{display:block!important}.proc__intro,.proc__word,.proc__desc{position:static!important;opacity:1!important;transform:none!important;mix-blend-mode:normal!important}.proc__word,.proc__statement{color:#1b1030!important}`}</style>
       </noscript>
     </section>
   );

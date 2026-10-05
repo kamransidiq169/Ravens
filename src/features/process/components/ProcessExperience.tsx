@@ -8,9 +8,10 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useProcessScroll } from "../hooks/useProcessScroll";
 import { WHISPER, type ProcessStage as Stage } from "../lib/process.data";
 
+import { FloatingFeathers } from "./FloatingFeathers";
 import { ProcessStage } from "./ProcessStage";
 
-const RAVEN = "/hero/images/raven11.png";
+const RAVEN = "/hero/images/raven3.png";
 const SIZES = "(min-width: 768px) 92vw, 100vw";
 
 /** The raven. Drawn twice from one photo: the whole bird between the type layers, and a feathered wing piece above all. */
@@ -27,7 +28,8 @@ function Raven({ layer }: { layer: "back" | "front" }) {
  * intro, passed in as a slot); `useProcessScroll` then scrubs everything from the scroll position, writing transforms,
  * opacity and clip-path only.
  *
- * Layers, back to front: atmosphere → intro → type → raven → type (selected letters) → wing piece → guides → labels.
+ * Layers, back to front: atmosphere → feathers → type → raven → intro → type (selected letters) → wing piece → guides →
+ * labels. The raven is `raven3.png`, drawn twice from the one photograph; the feathers are separate vector shapes.
  */
 export function ProcessExperience({ stages, intro }: { stages: Stage[]; intro: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
@@ -39,6 +41,10 @@ export function ProcessExperience({ stages, intro }: { stages: Stage[]; intro: R
     <div ref={root} className="proc">
       <div className="proc__stage" data-p="stage">
         <div className="proc__glow" data-p="glow" aria-hidden="true" />
+
+        <div className="proc__feather-scene" data-p="feathers" aria-hidden="true">
+          <FloatingFeathers />
+        </div>
 
         {intro}
 
@@ -61,7 +67,8 @@ export function ProcessExperience({ stages, intro }: { stages: Stage[]; intro: R
         </p>
 
         <figure className="proc__still" aria-hidden="true">
-          <Image src={RAVEN} alt="" width={1537} height={1023} sizes="(min-width: 768px) 80vw, 100vw" />
+          <Image src={RAVEN} alt="" width={1536} height={1024} sizes="(min-width: 768px) 80vw, 100vw" />
+          <FloatingFeathers className="proc__feathers--still" />
         </figure>
 
         <div className="proc__index" data-p="meta" aria-hidden="true">

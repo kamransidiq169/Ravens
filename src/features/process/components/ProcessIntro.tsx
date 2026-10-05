@@ -1,5 +1,6 @@
 /**
- * Editorial opening: a statement on the left, one short paragraph on the right. Server-rendered; the scroll film
+ * Editorial opening, set low in the frame so the raven owns the top: eyebrow and statement on the left, one short
+ * paragraph on the right, and the scroll marker bottom-left. Server-rendered; the scroll film
  * (hooks/useProcessScroll.ts) then carries it upward and pushes the camera into the heading.
  */
 export function ProcessIntro({ headingId }: { headingId: string }) {
@@ -25,6 +26,12 @@ export function ProcessIntro({ headingId }: { headingId: string }) {
         We move from discovery to clarity, from strategy to craft, and from craft to a digital experience built to
         perform.
       </p>
+
+      <span className="proc__scroll" data-p="intro-copy" aria-hidden="true">
+        <span className="proc__scroll-dot" />
+        <span className="proc__scroll-line" />
+        Scroll
+      </span>
     </div>
   );
 }

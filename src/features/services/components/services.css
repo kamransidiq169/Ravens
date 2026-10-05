@@ -1,7 +1,9 @@
 /* Services: minimal editorial page with a five-panel arched gallery. */
 .sv-page {
-  --sv-bg: #fafaf8;
-  --sv-ink: #0b0b0b;
+  /* Same world as the Process chapter: the page background token, and the near-black violet ink used there
+     (--proc-ink in features/process/process.css). */
+  --sv-bg: var(--color-bg);
+  --sv-ink: #1b1030;
   background: var(--sv-bg);
   color: var(--sv-ink);
   overflow-x: clip;
@@ -21,8 +23,8 @@
   width: clamp(48px, 4.4vw, 64px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: #000;
-  color: #fff;
+  background: var(--sv-ink);
+  color: var(--color-bg-top);
   transition:
     transform 0.4s var(--ease-out-expo),
     background-color 0.3s;
@@ -30,7 +32,7 @@
 .sv-back:hover,
 .sv-back:focus-visible {
   transform: scale(1.06);
-  background: #222;
+  background: #2c1f47;
 }
 .sv-mark {
   padding: 0.4rem;
@@ -43,8 +45,8 @@
 }
 .sv-cta {
   border-radius: 999px;
-  background: #000;
-  color: #fff;
+  background: var(--sv-ink);
+  color: var(--color-bg-top);
   padding: 0.35rem 0.8rem;
   font-size: 0.625rem;
   font-weight: 600;
@@ -61,10 +63,10 @@
   padding: 0 1rem;
 }
 .sv-title {
-  font-weight: 800;
+  font-weight: 400;
   font-size: clamp(2.6rem, min(4.4vw, 7vh), 4.6rem);
-  line-height: 0.95;
-  letter-spacing: -0.045em;
+  line-height: 0.88;
+  letter-spacing: -0.055em;
   text-transform: uppercase;
 }
 .sv-title span {
@@ -73,41 +75,90 @@
 .sv-sub {
   margin: 1.5rem auto 0;
   font-size: 0.8125rem;
-  color: #3a3a3a;
+  font-weight: 300;
+  opacity: 0.8;
 }
 
+/*
+ * Gallery: ONE composition at every width. All depth/offset values below are unitless numbers in "desktop pixels"
+ * (designed at a 1440px viewport) multiplied by --u, so a phone is the same camera on the same artwork, scaled.
+ * --u is 1px from tablet up (unchanged desktop) and 1/1440 of the viewport width on phones.
+ * --a / --b: how far the left / right edge of a panel is inset (top and bottom) from the full panel height;
+ * --bow pulls each edge's mid-point inward so edges read as shallow curves. Insets grow toward the centre, so the
+ * strip wraps like a concave surface (outer edges tallest); the centre is upright and deepest (translateZ).
+ */
 .sv-gallery {
+  --u: 0.06944vw;
+  --k: 1;
   list-style: none;
-  margin: clamp(2.5rem, 5vw, 4.5rem) 0 0;
+  margin: clamp(1.5rem, 4vh, 3rem) auto 0;
   padding: 0;
   display: grid;
-  gap: 3.5rem;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: start;
+  gap: calc(var(--u) * 14.4);
+  width: 94vw;
+  perspective: calc(var(--u) * 1400);
 }
 .sv-item {
-  width: min(72%, 20rem);
-  margin-left: 1.25rem;
-}
-.sv-item:nth-child(even) {
-  margin-left: auto;
-  margin-right: 1.25rem;
-}
-/* Gallery geometry. --a / --b are how far the left / right edge of a panel is inset (top and bottom)
-   from the full panel height; --bow pulls the mid-point of each edge inward so edges read as shallow curves.
-   Insets grow toward the centre, so the strip wraps like a shallow concave surface (outer edges tallest). */
-.sv-item {
-  --a: 0%;
-  --b: 1.5%;
   --bow: 0.35%;
   --m: calc((var(--a) + var(--b)) / 2 + var(--bow));
+  transform: translateX(calc(var(--x, 0) * var(--u) * var(--k))) translateY(calc(var(--y, 0) * var(--u) * var(--k)))
+    translateZ(calc(var(--tz, 0) * var(--u))) scale(var(--s, 1)) rotateY(calc(var(--ry, 0deg) * var(--k)))
+    rotateZ(calc(var(--rz, 0deg) * var(--k)));
 }
-.sv-item:nth-child(even) {
-  --a: 1.5%;
+.sv-item:nth-child(1) {
+  --s: 1.009;
+  --tz: -12;
+  --a: 0%;
+  --b: 3.9%;
+  --ry: 10deg;
+  --rz: -0.3deg;
+  transform-origin: right center;
+}
+.sv-item:nth-child(2) {
+  --x: 1.5;
+  --a: 3.9%;
+  --b: 6.5%;
+  --tz: -58;
+  --s: 1.041;
+  --y: 3;
+  --ry: 5deg;
+  --rz: -0.15deg;
+  transform-origin: right center;
+}
+.sv-item:nth-child(3) {
+  --a: 6.5%;
+  --b: 6.5%;
+  --bow: 0%;
+  --y: 6;
+  --tz: -130; /* deepest point of the composition */
+  --s: 1.07;
+}
+.sv-item:nth-child(4) {
+  --x: -1.5;
+  --a: 6.5%;
+  --b: 3.9%;
+  --tz: -58;
+  --s: 1.041;
+  --y: 3;
+  --ry: -5deg;
+  --rz: 0.15deg;
+  transform-origin: left center;
+}
+.sv-item:nth-child(5) {
+  --s: 1.009;
+  --tz: -12;
+  --a: 3.9%;
   --b: 0%;
+  --ry: -10deg;
+  --rz: 0.3deg;
+  transform-origin: left center;
 }
 .sv-photo {
   position: relative;
-  aspect-ratio: 3 / 4;
-  background: #e8e6e0;
+  aspect-ratio: 0.56;
+  background: rgb(27 16 48 / 0.08);
   clip-path: polygon(
     0 var(--a),
     50% var(--m),
@@ -118,16 +169,20 @@
   );
 }
 .sv-photo img {
-  transition: transform 0.6s var(--ease-out-expo);
+  transition: transform 0.7s var(--ease-out-expo);
 }
 .sv-caption {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 0.85rem;
-  font-size: 0.6875rem;
-  letter-spacing: 0.16em;
+  flex-direction: column;
+  gap: 0.15em;
+  margin-top: max(5px, 1.6vw);
+  font-size: max(6.5px, 1.85vw);
+  line-height: 1.25;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #7a7a78;
+  text-wrap: balance;
+  color: var(--sv-ink);
+  opacity: 0.6;
 }
 .sv-caption span:first-child {
   opacity: 0.5;
@@ -139,8 +194,9 @@
   padding: 0 1.5rem;
   text-align: center;
   font-size: 0.875rem;
+  font-weight: 300;
   line-height: 1.7;
-  color: #3a3a3a;
+  color: var(--sv-ink);
 }
 .sv-links {
   display: flex;
@@ -166,107 +222,32 @@
     padding: 0 1.5rem;
   }
   .sv-gallery {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    perspective: 1400px;
-    align-items: start;
+    --u: 1px;
+    --k: 0.6; /* tablet: gentler tilt / offsets */
     gap: clamp(0.85rem, 1vw, 1.1rem);
     width: min(94vw, 1850px);
-    margin-top: clamp(1.5rem, 4vh, 3rem);
-    margin-inline: auto;
   }
-  .sv-gallery {
-    align-items: start;
-  }
-  .sv-item {
-    width: auto;
-    margin: 0;
-    transition: opacity 0.6s ease;
-  }
-  .sv-item:nth-child(even) {
-    margin: 0;
-  }
-  /* Inward-wrapping strip (matches the reference): panels share one shallow concave surface. Outer panels
-     turn toward the centre (rotateY about their inner edge) and are tallest; the centre is upright and sits a
-     touch deeper. Tops/bottoms stay nearly aligned. --k scales tilt on tablet. */
-  .sv-item {
-    --k: 0.6;
-    transform: translateX(calc(var(--x, 0px) * var(--k))) translateY(calc(var(--y, 0px) * var(--k)))
-      translateZ(var(--tz, 0px)) scale(var(--s, 1)) rotateY(calc(var(--ry, 0deg) * var(--k)))
-      rotateZ(calc(var(--rz, 0deg) * var(--k)));
-  }
-  .sv-item:nth-child(1) {
-    --s: 1.009;
-    --tz: -12px;
-    --a: 0%;
-    --b: 3.9%;
-    --ry: 10deg;
-    --rz: -0.3deg;
-    transform-origin: right center;
-  }
-  .sv-item:nth-child(2) {
-    --x: 1.5px;
-    --a: 3.9%;
-    --b: 6.5%;
-    --tz: -58px;
-    --s: 1.041;
-    --y: 3px;
-    --ry: 5deg;
-    --rz: -0.15deg;
-    transform-origin: right center;
-  }
-  .sv-item:nth-child(3) {
-    --a: 6.5%;
-    --b: 6.5%;
-    --bow: 0%;
-    --y: 6px;
-    --tz: -130px; /* deeper into the composition */
-    --s: 1.07;
-  }
-  .sv-item:nth-child(4) {
-    --x: -1.5px;
-    --a: 6.5%;
-    --tz: -58px;
-    --s: 1.041;
-    --b: 3.9%;
-    --y: 3px;
-    --ry: -5deg;
-    --rz: 0.15deg;
-    transform-origin: left center;
-  }
-  .sv-item:nth-child(5) {
-    --s: 1.009;
-    --tz: -12px;
-    --a: 3.9%;
-    --b: 0%;
-    --ry: -10deg;
-    --rz: 0.3deg;
-    transform-origin: left center;
-  }
-
-  .sv-gallery:has(.sv-item:hover, .sv-item:focus-within) .sv-item:not(:hover, :focus-within) {
-    opacity: 0.55;
+  .sv-photo {
+    aspect-ratio: 3 / 4;
   }
   .sv-caption {
+    flex-direction: row;
+    gap: 0.5rem;
     margin-top: 1.25rem;
     font-size: clamp(0.5rem, 0.62vw, 0.6875rem);
     letter-spacing: 0.12em;
-    gap: 0.5rem;
+    text-wrap: wrap;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  /* Hover: only the hovered image zooms (inside its own clip); siblings never react. */
   .sv-item:hover .sv-photo img {
-    transform: scale(1.02);
+    transform: scale(1.035);
   }
   .sv-in {
     animation: sv-in 0.8s var(--ease-out-expo) both;
     animation-delay: var(--sv-delay, 0s);
-  }
-  .sv-item .sv-photo,
-  .sv-item .sv-caption {
-    animation: sv-photo 0.9s var(--ease-out-expo) both;
-    animation-delay: calc(0.3s + var(--i) * 0.09s);
   }
   @keyframes sv-in {
     from {
@@ -274,16 +255,97 @@
       transform: translateY(1.25rem);
     }
   }
-  @keyframes sv-photo {
-    from {
-      opacity: 0;
-      transform: translateY(30px) scale(0.97);
-    }
+}
+
+/* Hidden only until GSAP has set up the entrance (ServicesGallery flips data-motion to "ready"). */
+@media (prefers-reduced-motion: no-preference) {
+  .sv-gallery[data-motion="pending"] .sv-enter {
+    opacity: 0;
   }
 }
 
 @media (min-width: 1280px) {
-  .sv-item {
+  .sv-gallery {
     --k: 1;
+  }
+}
+
+/* Wrappers are layout-neutral on tablet/desktop. */
+.sv-pin,
+.sv-stage {
+  display: contents;
+}
+
+/*
+ * Phones: vertical scroll drives a horizontal gallery. .sv-pin is a tall wrapper, .sv-stage is sticky inside it
+ * (same technique as the Process film), and ServicesGallery scrubs the track's translateX from the scroll position.
+ * One panel is the focus at a time; its neighbours sit at the edges. Scroll distance = --sv-unit per step.
+ */
+@media (max-width: 767px) {
+  .sv-pin {
+    --sv-unit: 80svh;
+    --sv-panel: min(74vw, 46svh);
+    display: block;
+    /* 100svh pinned + 0.4 lead-in + 4 transitions + 0.5 closing hold, in units */
+    height: calc(100svh + var(--sv-unit) * 4.9);
+  }
+  .sv-stage {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: clip;
+  }
+  .sv-gallery {
+    display: flex;
+    align-items: flex-start;
+    gap: 5vw;
+    width: max-content;
+    margin: 0;
+    padding-inline: calc((100vw - var(--sv-panel)) / 2);
+    perspective: none;
+    will-change: transform;
+  }
+  .sv-item {
+    flex: 0 0 var(--sv-panel);
+    transform: none;
+  }
+  .sv-photo {
+    aspect-ratio: 3 / 4;
+    clip-path: none;
+  }
+  .sv-caption {
+    flex-direction: row;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-wrap: wrap;
+  }
+}
+
+/* Phones, reduced motion (or no JS): no pinned track; a calm static sequence, all five services in normal flow. */
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .sv-pin {
+    height: auto;
+  }
+  .sv-stage {
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+  .sv-gallery {
+    display: grid;
+    gap: 3rem;
+    width: auto;
+    padding-inline: 1.25rem;
+  }
+  .sv-item {
+    width: min(78%, 20rem);
+  }
+  .sv-item:nth-child(even) {
+    justify-self: end;
   }
 }
