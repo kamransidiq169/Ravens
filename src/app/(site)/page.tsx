@@ -22,6 +22,7 @@ export default async function HomePage() {
     <>
       <JsonLd data={organizationJsonLd()} />
       <JsonLd data={webSiteJsonLd()} />
+      <ProcessSection />
       <Hero
         chapter={flagship ? <Showcase project={flagship} /> : null}
         next={<ShowcaseInteractive />}
@@ -31,7 +32,7 @@ export default async function HomePage() {
       <ServicesPage />
       {/* <ServicesPreview services={services} /> */}
       <SelectedWork projects={projects} />
-      <ProcessSection />
+
       <TestimonialsSection />
       <ContactCta />
     </>
