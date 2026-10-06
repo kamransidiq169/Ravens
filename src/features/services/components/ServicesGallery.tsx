@@ -152,7 +152,7 @@ export function ServicesGallery() {
                   />
                 </div>
                 <p className="sv-caption">
-                  <span>{String(i + 1).padStart(2, "0")}</span>
+                  <span className="sv-num">{String(i + 1).padStart(2, "0")}</span>
                   <span>{p.label}</span>
                 </p>
               </div>

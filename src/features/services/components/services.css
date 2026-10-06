@@ -4,9 +4,17 @@
      (--proc-ink in features/process/process.css). */
   --sv-bg: var(--color-bg);
   --sv-ink: #1b1030;
+  /* Typography palette: deep indigo, one Ravens-purple accent line, muted indigos for supporting text. */
+  --sv-indigo: #25204a;
+  --sv-purple: #5b3fa3;
+  --sv-lede: #4a4668;
+  --sv-body: #3f3a5c;
+  --sv-label: #67627f;
   background: var(--sv-bg);
   color: var(--sv-ink);
   overflow-x: clip;
+  position: relative;
+  isolation: isolate;
   padding: 1.25rem 0 7rem;
   min-height: 100svh;
 }
@@ -62,36 +70,56 @@
   margin-top: clamp(0.5rem, 2vw, 1.5rem);
   padding: 0 1rem;
 }
+/* Eyebrow: the Process eyebrow style, with a hairline beneath. */
+.sv-eyebrow {
+  margin: 0;
+  font-size: clamp(0.6875rem, 0.85vw, 0.8125rem);
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--sv-indigo);
+}
+.sv-eyebrow::after {
+  content: "";
+  display: block;
+  width: 2.25rem;
+  height: 1px;
+  margin: 0.7rem auto 0;
+  background: currentcolor;
+  opacity: 0.45;
+}
 .sv-title {
+  max-width: 68rem;
+  margin: clamp(0.75rem, 1.4vw, 1.25rem) auto 0;
   font-weight: 400;
-  font-size: clamp(2.6rem, min(4.4vw, 7vh), 4.6rem);
-  line-height: 0.88;
+  font-size: clamp(2.5rem, 12vw, 3.5rem);
+  line-height: 0.92;
   letter-spacing: -0.055em;
   text-transform: uppercase;
 }
-.sv-title span {
+.sv-title {
+  color: var(--sv-indigo);
+}
+.sv-line:last-child {
+  color: var(--sv-purple);
+}
+.sv-line,
+.sv-break {
   display: block;
 }
 .sv-sub {
-  margin: 1.5rem auto 0;
-  font-size: 0.8125rem;
-  font-weight: 300;
-  opacity: 0.8;
+  margin: clamp(1rem, 2vw, 1.5rem) auto 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--sv-lede);
 }
 
-/*
- * Gallery: ONE composition at every width. All depth/offset values below are unitless numbers in "desktop pixels"
- * (designed at a 1440px viewport) multiplied by --u, so a phone is the same camera on the same artwork, scaled.
- * --u is 1px from tablet up (unchanged desktop) and 1/1440 of the viewport width on phones.
- * --a / --b: how far the left / right edge of a panel is inset (top and bottom) from the full panel height;
- * --bow pulls each edge's mid-point inward so edges read as shallow curves. Insets grow toward the centre, so the
- * strip wraps like a concave surface (outer edges tallest); the centre is upright and deepest (translateZ).
- */
 .sv-gallery {
   --u: 0.06944vw;
   --k: 1;
   list-style: none;
-  margin: clamp(1.5rem, 4vh, 3rem) auto 0;
+  margin: clamp(1rem, 2.4vh, 2rem) auto 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -177,44 +205,73 @@
   gap: 0.15em;
   margin-top: max(5px, 1.6vw);
   font-size: max(6.5px, 1.85vw);
+  font-weight: 600;
   line-height: 1.25;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-wrap: balance;
-  color: var(--sv-ink);
-  opacity: 0.6;
+  color: var(--sv-label);
 }
-.sv-caption span:first-child {
+.sv-num {
   opacity: 0.5;
 }
 
 .sv-foot {
-  margin: clamp(1.5rem, 3.5vh, 3rem) auto 0;
-  max-width: 36rem;
+  margin: clamp(1rem, 2.2vh, 2rem) auto 0;
+  max-width: 44rem;
   padding: 0 1.5rem;
   text-align: center;
-  font-size: 0.875rem;
-  font-weight: 300;
-  line-height: 1.7;
-  color: var(--sv-ink);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--sv-body);
 }
 .sv-links {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
-  gap: 2.5rem;
-  margin-top: 1.75rem;
+  gap: 0.75rem 1.5rem;
+  margin-top: clamp(1rem, 2vh, 1.5rem);
+}
+/* Editorial pills: outlined, with a solid primary. Same size and type, no shadow. */
+.sv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 2.75rem;
+  padding: 0 1.6rem;
+  border: 1px solid var(--sv-ink);
+  border-radius: 999px;
   font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-weight: 500;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--sv-ink);
+  transition:
+    background-color 0.4s var(--ease-out-expo),
+    color 0.4s var(--ease-out-expo);
 }
-.sv-links a {
-  text-underline-offset: 6px;
+.sv-btn svg {
+  transition: transform 0.4s var(--ease-out-expo);
 }
-.sv-links a:hover,
-.sv-links a:focus-visible {
-  text-decoration: underline;
+.sv-btn:hover svg,
+.sv-btn:focus-visible svg {
+  transform: translateX(3px);
+}
+.sv-btn--solid {
+  background: var(--sv-ink);
+  color: var(--color-bg-top);
+}
+.sv-btn:not(.sv-btn--solid):hover,
+.sv-btn:not(.sv-btn--solid):focus-visible {
+  background: var(--sv-ink);
+  color: var(--color-bg-top);
+}
+.sv-btn--solid:hover,
+.sv-btn--solid:focus-visible {
+  background: transparent;
+  color: var(--sv-ink);
 }
 
 @media (min-width: 768px) {
@@ -230,13 +287,36 @@
   .sv-photo {
     aspect-ratio: 3 / 4;
   }
+  .sv-title {
+    font-size: clamp(4rem, 5.8vw, 6.5625rem);
+    line-height: 0.9;
+    white-space: nowrap;
+  }
+  .sv-break {
+    display: inline;
+  }
+  .sv-sub {
+    font-size: clamp(0.875rem, 1.1vw, 1.0625rem);
+  }
+  .sv-foot {
+    font-size: clamp(0.9375rem, 1.15vw, 1.125rem);
+  }
+  .sv-btn {
+    min-height: clamp(2.75rem, 3.3vw, 3.25rem);
+    padding: 0 clamp(1.5rem, 2.2vw, 2.1rem);
+    font-size: clamp(0.6875rem, 0.8vw, 0.8125rem);
+  }
   .sv-caption {
     flex-direction: row;
     gap: 0.5rem;
     margin-top: 1.25rem;
     font-size: clamp(0.5rem, 0.62vw, 0.6875rem);
-    letter-spacing: 0.12em;
+    font-weight: 600;
+    letter-spacing: 0.14em;
     text-wrap: wrap;
+  }
+  .sv-num::after {
+    content: " —";
   }
 }
 
@@ -338,6 +418,7 @@
   }
   .sv-gallery {
     display: grid;
+    grid-template-columns: 1fr;
     gap: 3rem;
     width: auto;
     padding-inline: 1.25rem;
@@ -347,5 +428,29 @@
   }
   .sv-item:nth-child(even) {
     justify-self: end;
+  }
+}
+
+/* Atmosphere: the Process chapter's light (shared token), so the two sit in one environment. Painted behind all
+   content; phones attach it to the sticky stage so it stays framed on the viewport while the track moves. */
+.sv-page::before {
+  content: "";
+  position: absolute;
+  inset: -4% -6%;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--gradient-process-atmosphere);
+}
+@media (max-width: 767px) {
+  .sv-page::before {
+    display: none;
+  }
+  .sv-stage::before {
+    content: "";
+    position: absolute;
+    inset: -4% -6%;
+    z-index: -1;
+    pointer-events: none;
+    background: var(--gradient-process-atmosphere);
   }
 }

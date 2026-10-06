@@ -73,39 +73,7 @@
   inset: -4% -6%;
   z-index: -1;
   pointer-events: none;
-  background:
-    /* warm bloom, almost white with a trace of peach */
-    radial-gradient(
-      ellipse 56% 44% at 50% 46%,
-      rgb(255 246 242 / 90%) 0%,
-      rgb(255 246 242 / 82%) 10%,
-      rgb(255 246 242 / 66%) 22%,
-      rgb(255 246 242 / 47%) 34%,
-      rgb(255 246 242 / 30%) 46%,
-      rgb(255 246 242 / 17%) 58%,
-      rgb(255 246 242 / 8%) 70%,
-      rgb(255 246 242 / 3%) 83%,
-      transparent 100%
-    ),
-    /* pale cool wash, offset a little right and low */
-    radial-gradient(
-        ellipse 66% 48% at 55% 52%,
-        rgb(228 233 250 / 52%) 0%,
-        rgb(228 233 250 / 42%) 16%,
-        rgb(228 233 250 / 29%) 32%,
-        rgb(228 233 250 / 17%) 48%,
-        rgb(228 233 250 / 8%) 64%,
-        rgb(228 233 250 / 2%) 82%,
-        transparent 100%
-      ),
-    /* the edges settle a touch cooler and deeper than the base */
-    radial-gradient(
-        ellipse 92% 80% at 50% 50%,
-        transparent 52%,
-        rgb(168 184 230 / 4%) 66%,
-        rgb(168 184 230 / 10%) 80%,
-        rgb(168 184 230 / 17%) 100%
-      );
+  background: var(--gradient-process-atmosphere);
   animation: proc-air 28s linear infinite;
 }
 
