@@ -10,6 +10,9 @@ export const testimonials: Testimonial[] = [
     author: "Amara Okafor",
     role: "Chief Executive",
     company: "Northlight Energy",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Portrait of Amara Okafor, Chief Executive, Northlight Energy",
+    imagePosition: "50% 22%",
   },
   {
     id: "t-2",
@@ -17,6 +20,9 @@ export const testimonials: Testimonial[] = [
     author: "Julian Moreau",
     role: "Creative Director",
     company: "Halden Atelier",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Portrait of Julian Moreau, Creative Director, Halden Atelier",
+    imagePosition: "50% 28%",
   },
   {
     id: "t-3",
@@ -24,6 +30,9 @@ export const testimonials: Testimonial[] = [
     author: "Priya Raman",
     role: "Head of Product",
     company: "Meridian Health",
+    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Portrait of Priya Raman, Head of Product, Meridian Health",
+    imagePosition: "50% 25%",
   },
   {
     id: "t-4",
@@ -31,6 +40,9 @@ export const testimonials: Testimonial[] = [
     author: "Placeholder Name",
     role: "Founder",
     company: "Common Ground",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Portrait of Placeholder Name, Founder, Common Ground",
+    imagePosition: "50% 24%",
   },
   {
     id: "t-5",
@@ -38,6 +50,9 @@ export const testimonials: Testimonial[] = [
     author: "Placeholder Name",
     role: "Managing Partner",
     company: "Aster & Vale",
+    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=1200&q=80",
+    imageAlt: "Portrait of Placeholder Name, Managing Partner, Aster & Vale",
+    imagePosition: "50% 20%",
   },
 ];
 

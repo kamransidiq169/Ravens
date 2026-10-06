@@ -1,26 +1,24 @@
 import { useEffect, type RefObject } from "react";
 
-// Same conditions the stylesheet uses, so JS only drives the layout CSS has actually switched on.
-const MODES = {
-  cinematic: "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
-  stacked: "(max-width: 767px) and (prefers-reduced-motion: no-preference)",
-};
+// Same condition the stylesheet uses, so JS only drives the layout CSS has actually switched on.
+const MOTION = "(prefers-reduced-motion: no-preference)";
 
 const clamp = (n: number, min = 0, max = 1) => Math.min(max, Math.max(min, n));
 /** Smootherstep: zero slope at both ends, so each testimonial dwells before the next arrives. */
 const dwell = (u: number) => u * u * u * (u * (6 * u - 15) + 10);
-const pad = (n: number) => String(n).padStart(2, "0");
 
 type LineState = "hidden" | "settled" | "moving";
 
 /**
- * Scroll-drives the testimonial sequence. The wrapper is tall and the stage is `position: sticky` (CSS): no pin, no
- * scroll container, native scrolling, and the browser releases the stage at the end. One scrubbed timeline carries a
- * 0 → 1 proxy; each tick writes transforms/opacity only and touches text/attributes only when the active index changes.
+ * Scroll-drives the testimonial sequence, one testimonial at a time, on every screen size. The wrapper is tall and the
+ * stage is `position: sticky` (CSS): no pin, no scroll container, native scrolling, and the browser releases the stage
+ * at the end. One scrubbed timeline carries a 0 → 1 proxy; each tick writes transforms/opacity (plus one clip-path on
+ * the arriving portrait) and touches attributes only when the active index changes.
  *
- * Each layer (a testimonial, then "trusted by") recedes (scale .94, y −3%) as the next rises into place (scale .96,
- * y +3%), and the arriving quote's lines settle one after another. Reuses the app's single GSAP/ScrollTrigger (and
- * Lenis) instance; everything reverts on unmount.
+ * Each layer (a testimonial with its portrait, then "trusted by") recedes (scale .94, y −3%) as the next rises into
+ * place; the arriving quote's lines settle one after another while its portrait frame travels a little further than the
+ * text, is revealed from the top down, and its image settles from a slight zoom. Reuses the app's single
+ * GSAP/ScrollTrigger (and Lenis) instance; everything reverts on unmount.
  */
 export function useTestimonialsScroll(root: RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -29,9 +27,9 @@ export function useTestimonialsScroll(root: RefObject<HTMLElement | null>) {
 
     const layers = Array.from(wrapper.querySelectorAll<HTMLElement>("[data-tm='layer']"));
     const intro = wrapper.querySelector<HTMLElement>("[data-tm='intro']");
-    const progress = wrapper.querySelector<HTMLElement>("[data-tm='progress']");
-    const count = wrapper.querySelector<HTMLElement>("[data-tm='count']");
-    const bar = wrapper.querySelector<HTMLElement>("[data-tm='bar']");
+    const rail = Array.from(wrapper.querySelectorAll<HTMLElement>("[data-tm='rail']"));
+    const frames = layers.map((layer) => layer.querySelector<HTMLElement>("[data-tm='frame']"));
+    const images = layers.map((layer) => layer.querySelector<HTMLElement>("[data-tm='img']"));
     // Layers are the testimonials plus one final "trusted by" layer.
     const last = layers.length - 1;
     if (last < 1) return;
@@ -44,24 +42,8 @@ export function useTestimonialsScroll(root: RefObject<HTMLElement | null>) {
 
       const mm = gsap.matchMedia();
 
-      mm.add(MODES, (context) => {
-        const cinematic = Boolean(context.conditions?.cinematic);
+      mm.add(MOTION, () => {
         const inView = (el: Element, at: number) => el.getBoundingClientRect().top < window.innerHeight * at;
-
-        if (!cinematic) {
-          // Phones: stacked editorial list with a single quiet reveal per item.
-          layers.forEach((layer) => {
-            if (inView(layer, 0.9)) return;
-            gsap.from(layer, {
-              y: 28,
-              autoAlpha: 0,
-              duration: 1,
-              ease: "expo.out",
-              scrollTrigger: { trigger: layer, start: "top 88%", once: true },
-            });
-          });
-          return;
-        }
 
         // Words grouped into the lines the browser actually wrapped them onto. Measured on refresh, never per frame.
         let lines: HTMLElement[][][] = layers.map(() => []);
@@ -107,6 +89,15 @@ export function useTestimonialsScroll(root: RefObject<HTMLElement | null>) {
               force3D: true,
             });
 
+            const frame = frames[i];
+            const image = images[i];
+            if (frame && image) {
+              // The portrait travels further than the text and its image counter-moves: the depth between the two.
+              gsap.set(frame, { yPercent: clamp(s, -1, 1) * 9, force3D: true });
+              gsap.set(image, { scale: 1 + 0.12 * a, yPercent: clamp(s, -1, 1) * -5, force3D: true });
+              frame.style.clipPath = s > 0 ? `inset(${(clamp(s) * 100).toFixed(2)}% 0 0 0)` : "";
+            }
+
             if (s > 0 && s < 1) {
               setLines(i, 1 - s);
               states[i] = "moving";
@@ -119,15 +110,14 @@ export function useTestimonialsScroll(root: RefObject<HTMLElement | null>) {
             }
           });
 
-          if (bar) gsap.set(bar, { scaleX: clamp(position / (last - 1)), force3D: false });
-          if (progress) gsap.set(progress, { opacity: clamp(1 - (position - (last - 1))), force3D: false });
-
           const nearest = Math.round(position);
           if (nearest !== active) {
             layers[active]?.removeAttribute("data-active");
             layers[nearest]?.setAttribute("data-active", "");
             active = nearest;
-            if (count) count.textContent = pad(Math.min(nearest, last - 1) + 1);
+            rail.forEach((item, i) =>
+              i === nearest ? item.setAttribute("data-active", "") : item.removeAttribute("data-active"),
+            );
           }
         };
 
@@ -175,7 +165,10 @@ export function useTestimonialsScroll(root: RefObject<HTMLElement | null>) {
           layers.forEach((layer, i) =>
             i === 0 ? layer.setAttribute("data-active", "") : layer.removeAttribute("data-active"),
           );
-          if (count) count.textContent = "01";
+          rail.forEach((item, i) =>
+            i === 0 ? item.setAttribute("data-active", "") : item.removeAttribute("data-active"),
+          );
+          frames.forEach((frame) => frame && (frame.style.clipPath = ""));
         };
       });
 

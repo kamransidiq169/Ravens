@@ -13,7 +13,7 @@ export async function TestimonialsSection() {
       <TestimonialsStage headingId={HEADING_ID} testimonials={testimonials} clients={clients} />
       {/* Without JS the pinned layout can't run, so fall back to the stacked layout. */}
       <noscript>
-        <style>{`.tm{height:auto!important}.tm__stage{position:static!important;height:auto!important}.tm__layers,.tm__layer,.tm__intro{position:static!important;opacity:1!important;transform:none!important}`}</style>
+        <style>{`.tm{height:auto!important}.tm__stage{position:static!important;height:auto!important}.tm__layers,.tm__layer,.tm__intro,.tm__visual{position:static!important;opacity:1!important;transform:none!important}.tm__rail{display:none!important}`}</style>
       </noscript>
     </section>
   );

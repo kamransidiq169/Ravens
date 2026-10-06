@@ -1,128 +1,244 @@
 /*
- * Testimonials — "selected voices", an editorial sequence on white.
+ * Testimonials — one statement and its portrait at a time, on the Process atmosphere.
+ *
+ * Atmosphere: the Process chapter's light (`--gradient-process-atmosphere` on the page's `--color-bg`), held in the
+ * viewport at z-index -1 like the home hero's. `.tm-section` and `.tm` therefore create no stacking context and have no
+ * background: the page colour is on <html>.
+ * Type: the Services system (Montserrat via `--font-display`, regular weight, -0.055em tracking, uppercase display in
+ * deep indigo with one Ravens-purple accent, the same eyebrow, the same muted label indigos — values mirrored from
+ * `.sv-page` in features/services/components/services.css).
  *
  * Layouts, all CSS-selected so nothing shifts after hydration:
- *  - base (phones, reduced motion, no-JS): a stacked editorial list; every quote is visible and in reading order.
- *  - cinematic (>= 768px, motion allowed): `.tm` is a tall wrapper, `.tm__stage` is sticky inside it, and the layers
- *    (each testimonial, then "trusted by") are driven by hooks/useTestimonialsScroll.ts. Native scrolling.
- * Desktop composition is a 12-column grid: caption in columns 1–3, quote in columns 4–12.
+ *  - base (reduced motion, no-JS): a vertical editorial list; every testimonial is visible, in reading order.
+ *  - cinematic (motion allowed, every width): `.tm` is a tall wrapper, `.tm__stage` is sticky inside it, and the
+ *    layers (each testimonial with its portrait, then "trusted by") are driven by hooks/useTestimonialsScroll.ts.
+ *    Native scrolling. Phones stack quote → portrait → attribution; from 768px the portrait stands to the right.
  */
 
 .tm-section {
-  --tm-bg: #fff;
-  --tm-fg: #111;
-  --tm-dim: #6f6f6f;
-  --tm-line: rgb(17 17 17 / 12%);
+  --tm-ink: #1b1030;
+  --tm-indigo: #25204a;
+  --tm-purple: #5b3fa3;
+  --tm-lede: #4a4668;
+  --tm-label: #67627f;
+  --tm-line: rgb(37 32 74 / 16%);
   --tm-gutter: var(--spacing-gutter);
   position: relative;
-  z-index: var(--z-content);
-  background: var(--tm-bg);
-  color: var(--tm-fg);
+  color: var(--tm-ink);
 }
 
-/* The page around this section is lavender: fade into and out of the white rather than cutting. */
-.tm-section::before,
-.tm-section::after {
-  content: "";
-  display: block;
-  height: clamp(5rem, 12vw, 10rem);
+.tm {
+  position: relative;
+}
+
+/* ---- Atmosphere: held in the viewport behind the canvas ---- */
+.tm__air {
+  position: sticky;
+  top: 0;
+  z-index: -1;
+  height: 100svh;
+  margin-bottom: -100svh;
+  overflow: clip;
   pointer-events: none;
 }
 
-.tm-section::before {
-  margin-top: calc(clamp(5rem, 12vw, 10rem) * -1);
-  background: linear-gradient(to bottom, transparent, var(--tm-bg));
+.tm__air::before {
+  content: "";
+  position: absolute;
+  inset: -4% -6%;
+  background: var(--gradient-process-atmosphere-narrow);
+  animation: ravens-air 28s linear infinite;
 }
 
-.tm-section::after {
-  margin-bottom: calc(clamp(5rem, 12vw, 10rem) * -1);
-  background: linear-gradient(to bottom, var(--tm-bg), transparent);
+@media (min-width: 768px) {
+  .tm__air::before {
+    background: var(--gradient-process-atmosphere);
+  }
 }
 
-/* ---- Stacked (base) ---- */
+@media (prefers-reduced-motion: reduce) {
+  .tm__air::before {
+    animation: none;
+  }
+}
+
+/* ---- Stage (vertical base) ---- */
 .tm__stage {
-  padding: 3rem var(--tm-gutter) 2rem;
-}
-
-.tm__giant,
-.tm__progress {
-  display: none;
+  position: relative;
+  z-index: var(--z-content);
+  overflow-x: clip;
+  padding: 6rem var(--tm-gutter) 2rem;
 }
 
 .tm__eyebrow,
 .tm__trusted-title {
+  margin: 0;
   font-family: var(--font-display);
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: clamp(0.6875rem, 0.85vw, 0.8125rem);
+  font-weight: 600;
   letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: var(--tm-dim);
+  color: var(--tm-indigo);
 }
 
-.tm__heading {
-  margin-top: 1.5rem;
-  max-width: 14em;
+.tm__eyebrow::after {
+  content: "";
+  display: block;
+  width: 2.25rem;
+  height: 1px;
+  margin-top: 0.7rem;
+  background: currentcolor;
+  opacity: 0.45;
+}
+
+.tm__lede {
+  max-width: 22em;
+  margin: 1.25rem 0 0;
   font-family: var(--font-display);
-  font-size: clamp(1.75rem, 8vw, 2.5rem);
-  font-weight: 300;
-  letter-spacing: -0.03em;
-  line-height: 1.08;
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.6;
+  text-transform: none;
+  color: var(--tm-lede);
 }
 
+/* The portrait: an arched opening (the Services arch), a hairline arch offset behind it, one consistent treatment. */
+.tm__frame {
+  position: relative;
+  width: min(15rem, 62%);
+  aspect-ratio: 4 / 5;
+  margin: 2rem 0 0 0.9rem;
+}
+
+.tm__frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--tm-line);
+  border-radius: 999px 999px 0 0;
+  transform: translate(-0.9rem, -0.9rem);
+}
+
+.tm__frame-img {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 999px 999px 0 0;
+  background: rgb(37 32 74 / 8%);
+}
+
+/* One treatment for every portrait: slightly desaturated, with a faint indigo wash so they sit in the palette. */
+.tm__photo {
+  object-fit: cover;
+  filter: saturate(0.8) contrast(1.02);
+}
+
+.tm__frame-img::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(37 32 74 / 10%);
+  pointer-events: none;
+}
+
+.tm__frame-no {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.8rem;
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-label);
+}
+
+/* ---- Statements ---- */
 .tm__layers {
-  margin-top: 4rem;
+  margin-top: 2.5rem;
 }
 
 .tm__layer {
-  padding-block: 3rem;
+  padding-block: 2.5rem;
   border-top: 1px solid var(--tm-line);
 }
 
+.tm__item {
+  margin: 0;
+}
+
+.tm__quote {
+  margin: 0;
+}
+
 .tm__quote p {
+  margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2.125rem, 9.4vw, 3.25rem);
-  font-weight: 300;
-  letter-spacing: -0.04em;
+  font-size: clamp(1.75rem, 8.4vw, 2.75rem);
+  font-weight: var(--ravens-display-weight);
+  letter-spacing: var(--ravens-display-tracking);
   line-height: 0.98;
+  text-transform: uppercase;
   text-wrap: balance;
+  color: var(--tm-indigo);
+  overflow-wrap: anywhere;
 }
 
 .tm__w {
   display: inline-block;
 }
 
+.tm__w--accent {
+  color: var(--tm-purple);
+}
+
 .tm__who {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-top: 2rem;
+  gap: 0.35rem;
+  margin-top: 1.75rem;
   font-family: var(--font-display);
+}
+
+.tm__who::before {
+  content: "";
+  width: 2.25rem;
+  height: 1px;
+  margin-bottom: 0.9rem;
+  background: var(--tm-indigo);
+  opacity: 0.45;
 }
 
 .tm__name {
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: var(--tm-indigo);
 }
 
 .tm__role {
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  color: var(--tm-dim);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--tm-label);
 }
 
-.tm__idx {
-  margin-top: 2.5rem;
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  letter-spacing: 0.22em;
-  font-variant-numeric: tabular-nums;
-  color: var(--tm-dim);
+.tm__role i {
+  margin-inline: 0.25em;
+  font-style: normal;
+  opacity: 0.6;
+}
+
+.tm__rail {
+  display: none;
 }
 
 .tm__trusted-title {
-  margin-top: 2.5rem;
+  margin-top: 2rem;
 }
 
 .tm__logos {
@@ -137,22 +253,15 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  min-height: 5rem;
+  min-height: 4.5rem;
   border-top: 1px solid var(--tm-line);
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--tm-fg);
-  opacity: 0.45;
-  transition:
-    opacity 0.5s,
-    transform 0.5s var(--ease-out-expo);
-}
-
-.tm__logo:hover {
-  opacity: 0.85;
-  transform: translateY(-2px);
+  color: var(--tm-indigo);
+  opacity: 0.55;
 }
 
 .tm__logo-mark {
@@ -167,10 +276,10 @@
   filter: brightness(0);
 }
 
-/* ---- Editorial grid (wide screens, reduced motion or cinematic) ---- */
+/* ---- Tablet and up, any motion preference: quote left, portrait right ---- */
 @media (min-width: 768px) {
   .tm__stage {
-    padding-inline: 3.9vw;
+    padding: 8rem 3.9vw 5rem;
   }
 
   .tm__intro {
@@ -183,63 +292,74 @@
     grid-column: 1 / 4;
   }
 
-  .tm__heading {
-    grid-column: 4 / 11;
+  .tm__lede {
+    grid-column: 4 / 9;
     margin-top: 0;
-    max-width: 16em;
-    font-size: clamp(1.75rem, 3vw, 3.25rem);
+    font-size: clamp(0.875rem, 1.1vw, 1.0625rem);
   }
 
   .tm__item {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-rows: 1fr auto;
     column-gap: 1.5vw;
-    margin: 0;
   }
 
   .tm__quote {
-    grid-column: 4 / 13;
+    grid-column: 1 / 8;
     grid-row: 1;
+    align-self: end;
+  }
+
+  .tm__quote p {
+    font-size: clamp(1.875rem, 4.4vw, 5.25rem);
   }
 
   .tm__who {
-    grid-column: 1 / 4;
-    grid-row: 1;
-    align-self: end;
-    margin-top: 0;
-    padding-top: 1rem;
-    border-top: 1px solid var(--tm-line);
+    grid-column: 1 / 8;
+    grid-row: 2;
+    margin-top: clamp(1.75rem, 3vw, 2.75rem);
+  }
+
+  .tm__frame {
+    grid-column: 8 / 13;
+    grid-row: 1 / 3;
+    align-self: center;
+    justify-self: end;
+    width: min(100%, 26rem);
+    margin: 0 0.9rem 0 0;
+  }
+
+  .tm__frame-no {
+    right: 0;
+  }
+
+  .tm__name {
+    font-size: clamp(0.75rem, 0.85vw, 0.8125rem);
+  }
+
+  .tm__role {
+    font-size: clamp(0.8125rem, 0.95vw, 0.9375rem);
   }
 
   .tm__logos {
-    grid-column: 4 / 13;
-    grid-row: 1;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     column-gap: 3vw;
   }
+}
 
-  .tm__trusted-title {
-    grid-column: 1 / 4;
-    grid-row: 1;
-    align-self: start;
-    margin-top: 0;
+@media (min-width: 1024px) {
+  .tm__quote {
+    grid-column: 1 / 8;
+  }
+
+  .tm__frame {
+    grid-column: 9 / 13;
   }
 }
 
-/* Reduced motion on wide screens: the same grid, in reading flow. */
-@media (min-width: 768px) and (prefers-reduced-motion: reduce) {
-  .tm__quote p {
-    font-size: clamp(2.5rem, 4.8vw, 5rem);
-  }
-
-  .tm__idx {
-    margin-top: 1.5rem;
-    text-align: right;
-  }
-}
-
-/* ---- Cinematic ---- */
-@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+/* ---- Cinematic: one testimonial on stage at a time ---- */
+@media (prefers-reduced-motion: no-preference) {
   .tm {
     height: calc(100svh + var(--tm-count) * 85svh);
   }
@@ -248,70 +368,21 @@
     position: sticky;
     top: 0;
     height: 100svh;
-    padding: 0 3.9vw;
+    padding: 0 var(--tm-gutter);
     overflow: clip;
-  }
-
-  /* One huge, near-invisible word: depth without competing with the quote. */
-  .tm__giant {
-    position: absolute;
-    left: 2vw;
-    bottom: 3svh;
-    display: block;
-    font-family: var(--font-display);
-    font-size: clamp(6rem, 12vw, 12rem);
-    font-weight: 600;
-    letter-spacing: -0.045em;
-    line-height: 1;
-    white-space: nowrap;
-    text-transform: uppercase;
-    color: #727eba;
-    pointer-events: none;
-    user-select: none;
   }
 
   .tm__intro {
     position: absolute;
-    top: clamp(6rem, 17svh, 9rem);
-    left: 3.9vw;
-    right: 3.9vw;
+    top: clamp(5.5rem, 14svh, 8.5rem);
+    left: var(--tm-gutter);
+    right: var(--tm-gutter);
     align-items: start;
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--tm-line);
   }
 
-  .tm__heading {
-    font-size: clamp(1.25rem, 1.9vw, 2.25rem);
-  }
-
-  .tm__progress {
-    position: absolute;
-    top: clamp(6rem, 17svh, 9rem);
-    right: 3.9vw;
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    font-family: var(--font-display);
-    font-size: 0.75rem;
-    letter-spacing: 0.22em;
-    font-variant-numeric: tabular-nums;
-    color: var(--tm-dim);
-  }
-
-  .tm__bar {
-    position: relative;
-    display: block;
-    width: clamp(3rem, 5vw, 5rem);
-    height: 1px;
-    background: var(--tm-line);
-  }
-
-  .tm__bar i {
-    position: absolute;
-    inset: 0;
-    background: var(--tm-fg);
-    transform: scaleX(0);
-    transform-origin: left;
+  /* Phones: the eyebrow alone; the lede would take room the quote and portrait need. */
+  .tm__lede {
+    display: none;
   }
 
   .tm__layers {
@@ -325,14 +396,12 @@
     inset: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding: clamp(9rem, 24svh, 13rem) 3.9vw 16svh;
+    padding: clamp(9rem, 22svh, 11rem) var(--tm-gutter) 2rem;
     border: 0;
     transform-origin: 50% 50%;
     will-change: transform, opacity;
   }
 
-  /* First paint before the driver runs: only the opening testimonial is on stage. */
   .tm__layer:not(:first-child) {
     opacity: 0;
   }
@@ -341,27 +410,162 @@
     pointer-events: none;
   }
 
-  .tm__quote p {
-    font-size: clamp(2.5rem, 5.1vw, 6.5rem);
-    line-height: 0.95;
-    letter-spacing: -0.04em;
+  /* Phones: quote → portrait → attribution, filling the stage. */
+  .tm__item {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
   }
 
-  .tm__idx {
+  .tm__quote p {
+    font-size: clamp(1.375rem, 6.6vw, 2.25rem);
+  }
+
+  .tm__frame {
+    flex: none;
+    align-self: flex-start;
+    width: auto;
+    height: clamp(8rem, 28svh, 22rem);
+    margin: 1.75rem 0 0 0.9rem;
+  }
+
+  .tm__frame-no {
     display: none;
   }
 
-  .tm__logo {
-    min-height: clamp(4.5rem, 12svh, 7rem);
+  .tm__who {
+    margin-top: 1.5rem;
   }
 
-  .tm__trusted-title {
-    align-self: start;
+  .tm__layer--trusted .tm__item {
+    display: grid;
+    align-content: center;
+    gap: 2rem;
+  }
+
+  .tm__layer--trusted .tm__trusted-title {
+    order: -1;
+    margin: 0;
+  }
+
+  .tm__logo {
+    min-height: clamp(4rem, 11svh, 7rem);
+  }
+
+  /* The index rail: five quiet marks along the foot of the frame; the current one is lit. */
+  .tm__rail {
+    position: absolute;
+    left: var(--tm-gutter);
+    right: var(--tm-gutter);
+    bottom: clamp(2rem, 6svh, 3.5rem);
+    display: none;
+    gap: 1.5vw;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-display);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--tm-label);
+  }
+
+  .tm__rail li {
+    display: flex;
+    flex: 1;
+    gap: 0.9rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--tm-line);
+    opacity: 0.55;
+    transition:
+      opacity 0.7s var(--ease-out-expo),
+      border-color 0.7s var(--ease-out-expo),
+      color 0.7s var(--ease-out-expo);
+  }
+
+  .tm__rail li[data-active] {
+    border-color: var(--tm-indigo);
+    color: var(--tm-indigo);
+    opacity: 1;
+  }
+
+  .tm__rail-name {
+    display: none;
+  }
+}
+
+/* Tablet and up: the grid composition, vertically centred on the stage. */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .tm__stage {
+    padding-inline: 3.9vw;
+  }
+
+  .tm__intro {
+    left: 3.9vw;
+    right: 3.9vw;
+  }
+
+  .tm__lede {
+    display: block;
+  }
+
+  .tm__layer {
+    padding: clamp(9rem, 24svh, 13rem) 3.9vw clamp(6rem, 16svh, 9rem);
+  }
+
+  .tm__item {
+    display: grid;
+  }
+
+  .tm__quote p {
+    font-size: clamp(1.875rem, 4.4vw, 5.25rem);
+  }
+
+  .tm__frame {
+    flex: initial;
+    align-self: center;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    aspect-ratio: 4 / 5;
+    margin: 0 0.9rem 0 0;
+  }
+
+  .tm__frame-no {
+    display: block;
+  }
+
+  .tm__rail {
+    display: flex;
+    left: 3.9vw;
+    right: 3.9vw;
+  }
+
+  .tm__rail-name {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tm__layer--trusted .tm__item {
+    display: grid;
+    align-content: center;
   }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
+  .tm__rail-name {
+    display: none;
+  }
+}
+
+/* Short laptop screens: keep the statement clear of the intro. */
+@media (min-width: 1024px) and (max-height: 700px) and (prefers-reduced-motion: no-preference) {
   .tm__quote p {
-    font-size: clamp(2.25rem, 5.4vw, 3.5rem);
+    font-size: clamp(1.75rem, 3.6vw, 3.5rem);
   }
 }
