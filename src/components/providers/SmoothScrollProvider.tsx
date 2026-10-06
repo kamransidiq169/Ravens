@@ -5,8 +5,6 @@ import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
-import { onIdle } from "@/lib/idle";
-
 /** Tiny external store so any client component can reach the active Lenis instance without context re-renders. */
 let current: Lenis | null = null;
 const listeners = new Set<() => void>();
@@ -16,7 +14,7 @@ function setCurrent(next: Lenis | null) {
   listeners.forEach((listener) => listener());
 }
 
-/** The active Lenis instance, or null (SSR, before idle, reduced motion). */
+/** The active Lenis instance, or null (SSR, before it has loaded, reduced motion). */
 export function useSmoothScroll(): Lenis | null {
   return useSyncExternalStore(
     (listener) => {
@@ -30,7 +28,8 @@ export function useSmoothScroll(): Lenis | null {
 
 /**
  * Lenis driven by the GSAP ticker so ScrollTrigger and smooth scrolling share one clock.
- * Lenis and GSAP are imported after the page is idle, so they stay out of the critical path.
+ * Lenis and GSAP are code-split, but imported as soon as the provider mounts (not on idle): the hero is scroll-driven, so
+ * smooth scrolling has to be live from the first scroll, not whenever the browser next has a quiet moment.
  */
 export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   const reduced = useReducedMotion();
@@ -63,11 +62,10 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
       };
     };
 
-    const cancelIdle = onIdle(() => void start(), 1500);
+    void start();
 
     return () => {
       cancelled = true;
-      cancelIdle();
       teardown?.();
     };
   }, [reduced]);

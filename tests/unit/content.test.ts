@@ -11,7 +11,7 @@ const filled = (value: string) => value.trim().length > 0;
 
 describe("content integrity", () => {
   it("has the expected number of entries", () => {
-    expect(projects).toHaveLength(4);
+    expect(projects).toHaveLength(5);
     expect(services).toHaveLength(5);
     expect(insights).toHaveLength(3);
     expect(testimonials).toHaveLength(5);

@@ -13,19 +13,19 @@ const HEIGHT = 1000;
 export const placeholderImages: Image[] = [
   {
     src: unsplash("1600585154340-be6161a56a0c"),
-    alt: "Contemporary timber-and-glass house glowing at dusk beneath a mature tree",
+    alt: "Contemporary timber-and-glass architecture glowing at dusk",
     width: WIDTH,
     height: HEIGHT,
   },
   {
     src: unsplash("1600607687939-ce8a6c25118c"),
-    alt: "Light-filled open-plan living space with timber panelling and a stone fireplace",
+    alt: "Light-filled interior with timber panelling and a stone feature wall",
     width: WIDTH,
     height: HEIGHT,
   },
   {
     src: unsplash("1613490493576-7fde63acd811"),
-    alt: "White modernist villa with cedar soffits reflected in a still pool",
+    alt: "White modernist building with cedar soffits reflected in still water",
     width: WIDTH,
     height: HEIGHT,
   },

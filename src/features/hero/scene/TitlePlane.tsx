@@ -64,7 +64,7 @@ export function TitlePlane({
       ctx.letterSpacing = `${(parseFloat(cs.letterSpacing) || 0) * dpr}px`;
       ctx.textAlign = "center";
       ctx.textBaseline = "alphabetic";
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--color-ink").trim() || "#0b0d14";
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--ravens-ink").trim() || "#1b1030";
       const text = (el.textContent ?? "").trim().toUpperCase();
       const m = ctx.measureText(text);
       // Centre on the font's own ascent/descent, like a CSS line box does.

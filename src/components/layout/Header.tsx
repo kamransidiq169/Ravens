@@ -27,13 +27,13 @@ export function Header() {
           aria-label={`${publicSite.name} — home`}
           className="relative block h-[clamp(14px,1.02vw,20px)] w-[clamp(70px,6vw,120px)]"
         >
-          <div className="relative h-[clamp(26px,2.2vw,42px)] w-[clamp(130px,10vw,200px)]">
+          <div className="relative h-[clamp(42px,3.6vw,64px)] w-[clamp(200px,16vw,320px)]">
             <Image
-              src="/ravenlogo.png"
+              src="/ravenlog.png"
               alt={`${publicSite.name} — home`}
               fill
               priority
-              sizes="(max-width: 768px) 140px, 200px"
+              sizes="(max-width: 768px) 200px, 320px"
               className="object-contain object-left"
             />
           </div>

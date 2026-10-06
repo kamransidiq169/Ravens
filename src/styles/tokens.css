@@ -38,6 +38,14 @@
   --z-cursor: 60;
   --z-progress: 70;
 
+  /* The Ravens display voice, taken from the Process chapter: near-black violet ink, regular weight, tight tracking and
+     leading. Hero and Process both consume these so the type can't drift apart. */
+  --ravens-ink: #1b1030;
+  --ravens-ink-muted: color-mix(in srgb, var(--ravens-ink) 72%, transparent);
+  --ravens-display-weight: 400;
+  --ravens-display-tracking: -0.055em;
+  --ravens-display-leading: 0.88;
+
   /* Hero / showcase atmosphere — shared so the two sections read as one surface */
   --gradient-atmosphere:
     radial-gradient(60% 55% at 50% 38%, var(--color-glow-warm) 0%, transparent 70%),
@@ -80,4 +88,58 @@
         rgb(168 184 230 / 10%) 80%,
         rgb(168 184 230 / 17%) 100%
       );
+
+  /* The same light for phones (tall and narrow): stretched across the width instead of shrinking to a bright circle. */
+  --gradient-process-atmosphere-narrow:
+    radial-gradient(
+      ellipse 120% 40% at 50% 44%,
+      rgb(255 246 242 / 90%) 0%,
+      rgb(255 246 242 / 80%) 10%,
+      rgb(255 246 242 / 63%) 22%,
+      rgb(255 246 242 / 45%) 34%,
+      rgb(255 246 242 / 28%) 46%,
+      rgb(255 246 242 / 15%) 58%,
+      rgb(255 246 242 / 7%) 70%,
+      rgb(255 246 242 / 2%) 83%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 140% 44% at 56% 52%,
+      rgb(228 233 250 / 50%) 0%,
+      rgb(228 233 250 / 40%) 16%,
+      rgb(228 233 250 / 27%) 32%,
+      rgb(228 233 250 / 16%) 48%,
+      rgb(228 233 250 / 7%) 64%,
+      rgb(228 233 250 / 2%) 82%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 120% 70% at 50% 50%,
+      transparent 54%,
+      rgb(168 184 230 / 4%) 68%,
+      rgb(168 184 230 / 10%) 82%,
+      rgb(168 184 230 / 16%) 100%
+    );
+}
+
+/* The atmosphere's slow drift, shared by Process and the home hero. A few viewport percent; linear, with the turn built
+   into the keyframes so there is never a visible reversal. Transform and opacity only. */
+@keyframes ravens-air {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: translate3d(1.6vw, -0.8svh, 0) scale(1.012);
+    opacity: 0.96;
+  }
+  50% {
+    transform: translate3d(2.2vw, 0.9svh, 0) scale(1.02);
+    opacity: 0.93;
+  }
+  75% {
+    transform: translate3d(0.6vw, 1.4svh, 0) scale(1.01);
+    opacity: 0.97;
+  }
 }

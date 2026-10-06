@@ -26,10 +26,4 @@ export const enterpriseChapter = {
 /** Fifth chapter. Same caveat: no matching case study yet, so it links to the work index. */
 export const bespokeChapter = {
   title: "The next is yours.",
-  category: "Website",
-  disciplines: "Storytelling / 3D / Product",
-  name: "Vision by Dandy",
-  summary:
-    "Interactive product website transforming dental technology into cinematic narrative. High-end 3D product visualization, scroll-based storytelling, and refined UI design showcase intraoral scanner through craft-driven digital experience for modern practices.",
-  href: "/work",
 } as const;

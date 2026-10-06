@@ -8,7 +8,7 @@
  *
  * One transition language for every phase title (`phaseExit`, extracted from Phase 1): it holds, then scales toward the
  * viewer, drops through the bottom edge of the stage and is gone, and only then does the next phase's title arrive.
- * Each phase's visual (jellyfish, forming field, sphere, tiles, geometry) keeps its own, separately timed motion.
+ * Each phase's visual (jellyfish, forming field, sphere, tiles; the last phase has none, its title is the visual) keeps its own, separately timed motion.
  *
  * Each later phase gets one "extension" of scroll (`EXT` below, as shares of that extension): the previous title exits
  * while its scene leaves, then the new title and scene arrive, then there is a hold before the next exit begins.
@@ -66,8 +66,11 @@ const EXT = {
   ],
   phase: 0.66,
 } as const;
-/** The final extension has no incoming phase: the last title exits, then the stage is released. */
-const END = { exit: [0.1, 0.85], meta: [0.1, 0.35], scene: [0.15, 0.8], phase: 0.45 } as const;
+/**
+ * The final extension has no incoming phase: the last title morphs (lib/morph.ts) over `exit`, fades only once it has
+ * filled the frame (`fadeFrom`, a share of the morph), and then the stage is released.
+ */
+const END = { exit: [0.1, 0.85], fadeFrom: 0.88, phase: 0.45 } as const;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -209,11 +212,15 @@ function fullAt(p: number): FullState {
 }
 
 interface ChaptersState extends FullState {
-  /** The fifth phase (BESPOKE): same anatomy as `next` / `last`. */
-  bespoke: JourneyState["next"];
+  /** The fifth phase (BESPOKE): only a title, which leaves by morphing (no meta, no scene). */
+  bespoke: {
+    title: TitleState;
+    /** Morph progress of the title (0 = at rest, 1 = filled the frame), see lib/morph.ts. */
+    morph: number;
+  };
 }
 
-/** … → BESPOKE: ENTERPRISE exits with the shared title exit, then BESPOKE arrives. */
+/** … → BESPOKE: ENTERPRISE exits with the shared title exit, then BESPOKE arrives (still, with morph 0). */
 function chaptersAt(p: number): ChaptersState {
   const progress = clamp01(p);
   const base = fullAt(progress / FOUR_SHARE);
@@ -227,7 +234,7 @@ function chaptersAt(p: number): ChaptersState {
       meta: scaled(base.last.meta, out.meta),
       scene: base.last.scene * out.scene,
     },
-    bespoke: arrival(q),
+    bespoke: { title: arrival(q).title, morph: 0 },
     phase: q >= EXT.phase ? "bespoke" : base.phase,
   };
 }
@@ -235,23 +242,22 @@ function chaptersAt(p: number): ChaptersState {
 export type SequenceState = ChaptersState;
 
 /**
- * The complete sequence, including the final exit: BESPOKE leaves with the same shared title exit, its visual
- * dissolves on its own schedule, and the stage then releases into the next section of the page.
+ * The complete sequence, including the final exit: BESPOKE's title morphs (growing and deforming from its centre until
+ * it fills the frame, then fading), and the stage then releases into the next section of the page.
  */
 export function sequenceAt(p: number): SequenceState {
   const progress = clamp01(p);
   const base = chaptersAt(progress / FIVE_SHARE);
   const q = range(progress, FIVE_SHARE, 1);
-  const e = range(q, END.exit[0], END.exit[1]);
-  const meta = 1 - smooth(range(q, END.meta[0], END.meta[1]));
-  const scene = 1 - easeInOutCubic(range(q, END.scene[0], END.scene[1]));
+  const morph = range(q, END.exit[0], END.exit[1]);
+  const { title } = base.bespoke;
 
   return {
     ...base,
     bespoke: {
-      title: exiting(base.bespoke.title, e),
-      meta: scaled(base.bespoke.meta, meta),
-      scene: base.bespoke.scene * scene,
+      // Scale and drop stay at the arrival values: the zoom belongs to the morph, applied with the per-character poses.
+      title: { ...title, opacity: title.opacity * (1 - smooth(range(morph, END.fadeFrom, 1))) },
+      morph,
     },
     phase: q >= END.phase ? "end" : base.phase,
   };

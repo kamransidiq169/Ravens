@@ -135,11 +135,15 @@ describe("the shared phase exit (extracted from Phase 1)", () => {
   });
 });
 
-describe("every phase title uses that same exit (sequenceAt)", () => {
-  const ranges = titles.map((title) => exitRange(title));
+/** The first four titles leave with the shared exit; the fifth (BESPOKE) leaves by morphing instead (see below). */
+const zoomTitles = titles.slice(0, 4);
+const lastTitle = titles[4]!;
+
+describe("every phase title but the last uses that same exit (sequenceAt)", () => {
+  const ranges = zoomTitles.map((title) => exitRange(title));
 
   it("each title leaves on the identical curve: same zoom-to-drop relationship, same peak, then gone", () => {
-    titles.forEach((title, i) => {
+    zoomTitles.forEach((title, i) => {
       const { start, end } = ranges[i]!;
       for (let p = start; p <= end; p += (end - start) / 200) {
         const t = title(p);
@@ -155,7 +159,7 @@ describe("every phase title uses that same exit (sequenceAt)", () => {
   });
 
   it("each phase holds in its settled state before its exit begins (the hero's hold is the page at rest)", () => {
-    for (let i = 1; i < titles.length; i += 1) {
+    for (let i = 1; i < zoomTitles.length; i += 1) {
       const { arrived, start } = ranges[i]!;
       // At least ~20 svh of scroll between "fully arrived" and "starts to leave".
       expect((start - arrived) * JOURNEY_SVH).toBeGreaterThan(20);
@@ -170,10 +174,10 @@ describe("every phase title uses that same exit (sequenceAt)", () => {
       }
     }
     // A title that has left stays gone until the user scrolls back (no reappearing ghosts).
-    titles.forEach((title, i) => {
+    zoomTitles.forEach((title, i) => {
       const { end } = ranges[i]!;
-      const next = ranges[i + 1]?.start ?? 1;
-      for (let p = end; p < Math.min(next, 1); p += 0.001) expect(title(p).opacity).toBe(0);
+      const next = ranges[i + 1]?.start ?? fine.find((p) => lastTitle(p).opacity > 0 && p > end)!;
+      for (let p = end; p < next; p += 0.001) expect(title(p).opacity).toBe(0);
     });
   });
 
@@ -205,6 +209,49 @@ describe("every phase title uses that same exit (sequenceAt)", () => {
   });
 });
 
+describe("the last title morphs instead of zooming and dropping", () => {
+  const morphStart = fine.find((p) => sequenceAt(p).bespoke.morph > 0)!;
+
+  it("rests, holds, then morphs monotonically from 0 to 1 while its own scale and drop stay put", () => {
+    expect(sequenceAt(0).bespoke.morph).toBe(0);
+    let previous = 0;
+    for (const p of fine) {
+      const { title, morph } = sequenceAt(p).bespoke;
+      expect(morph).toBeGreaterThanOrEqual(previous);
+      previous = morph;
+      if (p > morphStart) {
+        expect(title.scale).toBe(1);
+        expect(title.y).toBe(0);
+      }
+    }
+    expect(previous).toBe(1);
+    // A real hold between "settled" and "starts to morph" (the same ≥ 20 svh the other phases keep).
+    const settled = fine.find((p) => lastTitle(p).opacity === 1)!;
+    expect((morphStart - settled) * JOURNEY_SVH).toBeGreaterThan(20);
+  });
+
+  it("stays fully opaque until the morph has almost filled the frame, then fades to nothing before the release", () => {
+    for (const p of fine) {
+      const { title, morph } = sequenceAt(p).bespoke;
+      if (p > morphStart && morph < 0.88) expect(title.opacity).toBe(1);
+    }
+    expect(sequenceAt(1).bespoke.title.opacity).toBe(0);
+  });
+});
+
+describe("Phase 5 shows nothing but its own title", () => {
+  it("has no Phase 4 scene (tiles), title or meta left on stage by the time Phase 5's title is visible, nor after", () => {
+    for (const p of fine) {
+      const s = sequenceAt(p);
+      if (s.bespoke.title.opacity > 0.001 || s.phase === "bespoke" || s.phase === "end") {
+        expect(s.last.scene).toBeLessThan(0.001);
+        expect(s.last.title.opacity).toBeLessThan(0.001);
+        s.last.meta.forEach((m) => expect(m).toBeLessThan(0.001));
+      }
+    }
+  });
+});
+
 describe("phases, scenes and the final release", () => {
   it("starts as the finished hero and ends on the empty background, every title gone and the last scene dissolved", () => {
     const start = sequenceAt(0);
@@ -212,8 +259,6 @@ describe("phases, scenes and the final release", () => {
     expect(start.phase).toBe("hero");
     const end = sequenceAt(1);
     for (const title of titles) expect(title(1).opacity).toBe(0);
-    expect(end.bespoke.scene).toBe(0);
-    expect(end.bespoke.meta).toEqual([0, 0, 0]);
     expect(end.phase).toBe("end");
   });
 

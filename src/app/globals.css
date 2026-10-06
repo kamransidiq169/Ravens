@@ -12,7 +12,8 @@
 
   body {
     min-height: 100dvh;
-    background-color: var(--color-bg);
+    /* No background of its own: the page colour lives on <html> (above), so a z-index: -1 layer such as the home hero's
+       atmosphere can paint over it and still sit under the shared canvas. */
     color: var(--color-ink);
     font-family: var(--font-body);
   }

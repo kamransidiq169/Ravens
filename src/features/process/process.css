@@ -17,7 +17,7 @@
   --proc-bg: var(--color-bg);
   --proc-mist: #d9ddf0;
   /* The one type colour: near-black with a deep violet undertone (not a purple you would call purple). */
-  --proc-ink: #1b1030;
+  --proc-ink: var(--ravens-ink);
   /* difference-blend colour for the chapter words: |blend - backdrop| per channel. Chosen so the result is the same
      dark over the base canvas (#c8d1ec -> #180430) and over the bloom's pale centre (~#f8f0f2 -> #182336): R sits midway
      between the two backdrops, B gives the violet, and G is pulled down a little so that where the type crosses the
@@ -74,64 +74,13 @@
   z-index: -1;
   pointer-events: none;
   background: var(--gradient-process-atmosphere);
-  animation: proc-air 28s linear infinite;
-}
-
-/* A few viewport percent, endlessly slow; linear, with the turn built into the keyframes so there is never a visible
-   reversal. */
-@keyframes proc-air {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-    opacity: 1;
-  }
-  25% {
-    transform: translate3d(1.6vw, -0.8svh, 0) scale(1.012);
-    opacity: 0.96;
-  }
-  50% {
-    transform: translate3d(2.2vw, 0.9svh, 0) scale(1.02);
-    opacity: 0.93;
-  }
-  75% {
-    transform: translate3d(0.6vw, 1.4svh, 0) scale(1.01);
-    opacity: 0.97;
-  }
+  animation: ravens-air 28s linear infinite;
 }
 
 /* Phones are tall and narrow: stretch the light across the width instead of letting it shrink to a bright circle. */
 @media (max-width: 767px) {
   .proc__stage::after {
-    background:
-      radial-gradient(
-        ellipse 120% 40% at 50% 44%,
-        rgb(255 246 242 / 90%) 0%,
-        rgb(255 246 242 / 80%) 10%,
-        rgb(255 246 242 / 63%) 22%,
-        rgb(255 246 242 / 45%) 34%,
-        rgb(255 246 242 / 28%) 46%,
-        rgb(255 246 242 / 15%) 58%,
-        rgb(255 246 242 / 7%) 70%,
-        rgb(255 246 242 / 2%) 83%,
-        transparent 100%
-      ),
-      radial-gradient(
-        ellipse 140% 44% at 56% 52%,
-        rgb(228 233 250 / 50%) 0%,
-        rgb(228 233 250 / 40%) 16%,
-        rgb(228 233 250 / 27%) 32%,
-        rgb(228 233 250 / 16%) 48%,
-        rgb(228 233 250 / 7%) 64%,
-        rgb(228 233 250 / 2%) 82%,
-        transparent 100%
-      ),
-      radial-gradient(
-        ellipse 120% 70% at 50% 50%,
-        transparent 54%,
-        rgb(168 184 230 / 4%) 68%,
-        rgb(168 184 230 / 10%) 82%,
-        rgb(168 184 230 / 16%) 100%
-      );
+    background: var(--gradient-process-atmosphere-narrow);
   }
 }
 
@@ -199,9 +148,9 @@
   width: max-content;
   max-width: 100%;
   font-size: clamp(2.75rem, 7vw, 7.5rem);
-  font-weight: 400;
-  line-height: 0.88;
-  letter-spacing: -0.055em;
+  font-weight: var(--ravens-display-weight);
+  line-height: var(--ravens-display-leading);
+  letter-spacing: var(--ravens-display-tracking);
   text-transform: uppercase;
   text-wrap: nowrap;
   color: var(--proc-ink);

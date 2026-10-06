@@ -1,7 +1,8 @@
 import { useEffect, type RefObject } from "react";
 
 import { CHAPTERS_SHARE, FIVE_SHARE, FOUR_SHARE, INTRO_SHARE, sequenceAt, type JourneyPhase } from "../lib/journey";
-import { journeyStore } from "../lib/journey.store";
+import { closingPhase, journeyStore } from "../lib/journey.store";
+import { morphChar, morphScale } from "../lib/morph";
 
 // matchMedia only runs its callback when at least one named condition matches, so both sides are listed.
 const CONDITIONS = { compact: "(max-width: 767px)", wide: "(min-width: 768px)" };
@@ -18,7 +19,7 @@ const CONDITIONS = { compact: "(max-width: 767px)", wide: "(min-width: 768px)" }
 export function useJourney(
   root: RefObject<HTMLElement | null>,
   reduced: boolean,
-  release: RefObject<((chapter: "project" | "next" | "last" | "bespoke") => void) | null>,
+  release: RefObject<((chapter: "project" | "next" | "last") => void) | null>,
 ) {
   useEffect(() => {
     const wrapper = root.current;
@@ -36,9 +37,8 @@ export function useJourney(
     const stack = q("[data-j='stack']");
     const titleLast = q("[data-j='title-last']");
     const metaLast = all("[data-j='meta-last']");
-    const kinetic = q("[data-j='kinetic']");
     const titleBespoke = q("[data-j='title-bespoke']");
-    const metaBespoke = all("[data-j='meta-bespoke']");
+    const morphChars = all("[data-j='morph-char']");
     const meta = all("[data-j='meta']");
     const titleNext = q("[data-j='title-next']");
     const metaNext = all("[data-j='meta-next']");
@@ -58,6 +58,8 @@ export function useJourney(
 
         let stageHeight = stage.clientHeight;
         let phase: JourneyPhase | "" = "";
+        // Last morph progress written to the characters: they are only touched while the morph is (or was just) running.
+        let morphed = 0;
         const proxy = { p: 0 };
 
         const apply = (p: number) => {
@@ -118,22 +120,27 @@ export function useJourney(
           metaLast.forEach((el, i) =>
             gsap.set(el, { opacity: s.last.meta[i] ?? 0, y: (1 - (s.last.meta[i] ?? 0)) * 24 }),
           );
-          if (kinetic) gsap.set(kinetic, { opacity: s.bespoke.scene, y: (1 - s.bespoke.scene) * stageHeight * 0.4 });
           if (titleBespoke) {
+            // The title zooms about its centre; each character is deformed on top of that (lib/morph.ts).
             gsap.set(titleBespoke, {
-              scale: s.bespoke.title.scale,
+              scale: s.bespoke.title.scale * morphScale(s.bespoke.morph, compact),
               y: s.bespoke.title.y * stageHeight,
               opacity: s.bespoke.title.opacity,
               force3D: false,
             });
           }
-          metaBespoke.forEach((el, i) =>
-            gsap.set(el, { opacity: s.bespoke.meta[i] ?? 0, y: (1 - (s.bespoke.meta[i] ?? 0)) * 24 }),
-          );
+          if (s.bespoke.morph !== morphed) {
+            morphed = s.bespoke.morph;
+            morphChars.forEach((el, i) => {
+              const c = morphChar(morphed, i, morphChars.length, compact);
+              gsap.set(el, { scaleX: c.sx, scaleY: c.sy, xPercent: c.x, yPercent: c.y, force3D: false });
+            });
+          }
 
           if (s.phase !== phase) {
             phase = s.phase;
             wrapper.dataset.phase = phase;
+            closingPhase.set(phase === "bespoke" || phase === "end");
           }
         };
 
@@ -165,7 +172,6 @@ export function useJourney(
             project: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * INTRO_SHARE,
             next: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * 0.985,
             last: FIVE_SHARE * FOUR_SHARE * 0.985,
-            bespoke: FIVE_SHARE * 0.985,
           };
           const target = settled[chapter];
           if (Math.abs(proxy.p - target) < 0.04) return;
@@ -177,6 +183,7 @@ export function useJourney(
           release.current = null;
           journeyStore.progress = 0;
           delete wrapper.dataset.phase;
+          closingPhase.set(false);
         };
       });
 

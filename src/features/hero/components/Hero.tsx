@@ -72,7 +72,7 @@ function HeadlineChars({ lines }: { lines: readonly (readonly string[])[] }) {
  * `chapter` is the project composition (see features/showcase). The timeline looks for these hooks inside it:
  *   [data-j="title"]  the oversized project heading      [data-j="meta"]  the three supporting groups, left → right
  *
- * `next` is the third chapter, hooked the same way with `title-next` / `meta-next`; `last` is the fourth (`title-last` / `meta-last`); `bespoke` is the fifth (`title-bespoke` / `meta-bespoke`).
+ * `next` is the third chapter, hooked the same way with `title-next` / `meta-next`; `last` is the fourth (`title-last` / `meta-last`); `bespoke` is the fifth and last: just the morphing title (`title-bespoke`), no meta and nothing to focus.
  */
 export function Hero({
   chapter,

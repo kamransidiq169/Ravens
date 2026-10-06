@@ -1,4 +1,3 @@
-import { KineticArt } from "./KineticArt";
 import { OrbArt } from "./OrbArt";
 import { StackArt } from "./StackArt";
 
@@ -81,15 +80,6 @@ export function StackSprite() {
   return (
     <div className="journey__stack" data-j="stack">
       <StackArt />
-    </div>
-  );
-}
-
-/** Stand-in for the kinetic geometry chapter (no WebGL); same role and lifecycle as `OrbSprite`. */
-export function KineticSprite() {
-  return (
-    <div className="journey__kinetic" data-j="kinetic">
-      <KineticArt />
     </div>
   );
 }

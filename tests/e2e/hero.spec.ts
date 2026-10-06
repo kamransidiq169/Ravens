@@ -120,7 +120,7 @@ test.describe("hero scroll sequence", () => {
     expect(await state(page)).toMatchObject({ phase: "hero", headline: 1, bespoke: 0 });
   });
 
-  test("every phase title performs the same zoom-and-drop exit, is gone afterwards, and reverses on scroll back", async ({
+  test("every phase title but the last performs the same zoom-and-drop exit, is gone afterwards, and reverses on scroll back", async ({
     page,
   }) => {
     const total = 1220;
@@ -132,7 +132,6 @@ test.describe("hero scroll sequence", () => {
       { sel: "[data-j='title']", p: (e: number) => at(340, 240, 0.1, 0.52, e) },
       { sel: "[data-j='title-next']", p: (e: number) => at(580, 240, 0.1, 0.52, e) },
       { sel: "[data-j='title-last']", p: (e: number) => at(820, 240, 0.1, 0.52, e) },
-      { sel: "[data-j='title-bespoke']", p: (e: number) => at(1060, 160, 0.1, 0.85, e) },
     ];
     // Scale and opacity come from the computed style; the drop is the title's on-screen centre (a matrix read would
     // include the `translate: 0 -50%` that GSAP folds into the transform, which differs per title). Each reading is
@@ -193,6 +192,42 @@ test.describe("hero scroll sequence", () => {
     }
   });
 
+  test("THE NEXT IS YOURS. morphs character by character as the stage scrolls, and reverses", async ({ page }) => {
+    const total = 1220;
+    const at = (e: number) => (1060 + 160 * (0.1 + 0.75 * e)) / total;
+    const chars = () =>
+      page.evaluate(() => {
+        const title = document.querySelector<HTMLElement>("[data-j='title-bespoke']")!;
+        const poses = Array.from(title.querySelectorAll<HTMLElement>("[data-j='morph-char']")).map((el) => {
+          const m = new DOMMatrix(getComputedStyle(el).transform);
+          return { sx: m.a, sy: m.d };
+        });
+        return {
+          poses,
+          zoom: new DOMMatrix(getComputedStyle(title).transform).a,
+          overflowX: document.documentElement.scrollWidth - window.innerWidth,
+        };
+      });
+
+    await whole(page, at(0));
+    const rest = await chars();
+    expect(rest.poses.every((p) => Math.abs(p.sy - 1) < 0.01)).toBe(true);
+    expect(rest.zoom).toBeCloseTo(1, 1);
+
+    await whole(page, at(0.75));
+    const mid = await chars();
+    const heights = mid.poses.map((p) => p.sy);
+    expect(Math.max(...heights)).toBeGreaterThan(2);
+    // Not one rigid block: the characters differ from one another, and are stretched taller than wider.
+    expect(new Set(heights.map((h) => h.toFixed(2))).size).toBeGreaterThan(8);
+    expect(Math.max(...mid.poses.map((p) => p.sy - p.sx))).toBeGreaterThan(1);
+    expect(mid.zoom).toBeGreaterThan(2);
+    expect(mid.overflowX).toBeLessThanOrEqual(0);
+
+    await whole(page, at(0));
+    expect((await chars()).poses.every((p) => Math.abs(p.sy - 1) < 0.01)).toBe(true);
+  });
+
   test("releases the stage after the sequence so the page keeps scrolling", async ({ page }) => {
     await whole(page, 1);
     await page.evaluate(() => window.scrollBy(0, 600));
@@ -205,7 +240,7 @@ test.describe("hero scroll sequence", () => {
     const link = (layer: string) => page.locator(layer).getByRole("link", { name: /view project/i });
     const pointer = (layer: string) =>
       page.evaluate((selector) => getComputedStyle(document.querySelector(selector)!).pointerEvents, layer);
-    const layers = [".journey__project", ".journey__next", ".journey__last", ".journey__bespoke"];
+    const layers = [".journey__project", ".journey__next", ".journey__last"];
 
     for (const layer of layers) expect(await pointer(layer)).toBe("none");
 
@@ -213,7 +248,6 @@ test.describe("hero scroll sequence", () => {
       { layer: ".journey__project", phase: "project" },
       { layer: ".journey__next", phase: "next" },
       { layer: ".journey__last", phase: "last" },
-      { layer: ".journey__bespoke", phase: "bespoke" },
     ];
     for (const { layer, phase } of expected) {
       await link(layer).focus();
@@ -222,8 +256,8 @@ test.describe("hero scroll sequence", () => {
       for (const other of layers) expect(await pointer(other)).toBe(other === layer ? "auto" : "none");
     }
 
-    await link(".journey__bespoke").click();
-    await expect(page).toHaveURL(/\/work$/);
+    // The closing phase is only the morphing title: nothing to link to or focus.
+    await expect(page.locator(".journey__bespoke").getByRole("link")).toHaveCount(0);
   });
 
   test("has no horizontal overflow on a phone", async ({ page }) => {

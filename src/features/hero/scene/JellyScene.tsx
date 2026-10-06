@@ -2,15 +2,14 @@
 
 import { PerspectiveCamera, View } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import type { Group } from "three";
 
 import { getQualityTier } from "@/webgl/utils/quality";
 
 import { sequenceAt } from "../lib/journey";
-import { journeyStore } from "../lib/journey.store";
+import { closingPhase, journeyStore } from "../lib/journey.store";
 
-import { Bespoke } from "./BespokeScene";
 import { createJellyfish } from "./jellyfish";
 import { Orb, Studio } from "./OrbScene";
 import { Stack } from "./StackScene";
@@ -45,7 +44,7 @@ function Jelly({ onReady }: { onReady: () => void }) {
     const { viewport, pointer } = state;
     const s = sequenceAt(journeyStore.progress);
     // One studio environment serves both the gold metal and the glossy tiles; the tiles need it far softer.
-    state.scene.environmentIntensity = 1 - 0.72 * s.last.scene - 0.12 * s.bespoke.scene;
+    state.scene.environmentIntensity = 1 - 0.72 * s.last.scene;
     // Fully below the stage: skip the work (the View scissors it out anyway).
     g.visible = s.visual.y < 1.05;
     if (!g.visible) return;
@@ -71,16 +70,27 @@ function Jelly({ onReady }: { onReady: () => void }) {
   );
 }
 
+/**
+ * The closing phase has nothing to draw. drei's <View> renders with autoClear off, so with every scene gone there would
+ * be no draw call at all: the canvas would not be redrawn, and the browser would keep showing the last frame it
+ * presented (the earlier phase's tiles, frozen). Clearing explicitly makes the empty frame real.
+ */
+function ClearCanvas() {
+  useFrame(({ gl }) => gl.clear());
+  return null;
+}
+
 /** Mounts the jellyfish as a drei <View> over the whole stage; it renders into the site's single shared canvas. */
 export default function JellyScene({ onReady }: { onReady: () => void }) {
+  const closing = useSyncExternalStore(closingPhase.subscribe, closingPhase.get, () => false);
   return (
     <View className="journey__view">
       <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={35} />
       <Jelly onReady={onReady} />
       <Studio />
       <Orb />
-      <Stack />
-      <Bespoke />
+      {/* Phase 4's tiles and title plane exist only until the closing phase: after that nothing of them is in the scene. */}
+      {closing ? <ClearCanvas /> : <Stack />}
     </View>
   );
 }

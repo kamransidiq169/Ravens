@@ -1,16 +1,16 @@
-/** Eyebrow + headline on the left, supporting copy on the right. Placeholder copy from the art-direction reference. */
+/** Eyebrow + headline on the left, supporting copy on the right. */
 export function SelectedWorkHeader({ id }: { id: string }) {
   return (
     <header className="sw__header">
       <div>
-        <p className="sw__eyebrow">Where To Go Next</p>
+        <p className="sw__eyebrow">Selected work</p>
         <h2 id={id} className="sw__title">
-          FEATURED HOTELS
+          Recent websites
         </h2>
       </div>
       <p className="sw__lede">
-        Step into a world of inspired destinations, visionary design and legendary service, where every stay transforms
-        the journey that follows.
+        Five digital presences across commerce, architecture, hospitality, automotive and interiors, each composed with
+        the same restraint.
       </p>
     </header>
   );

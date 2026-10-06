@@ -13,12 +13,18 @@
  */
 
 .sw-section {
-  --sw-bg: #e7ebf7;
-  --sw-line: #7d6e3c;
-  --sw-serif: var(--font-editorial-serif), "Iowan Old Style", Georgia, serif;
+  /* Same palette as Services (features/services/components/services.css). Type inherits the site body face. */
+  /* The Process chapter's background and light (tokens.css: --gradient-process-atmosphere). */
+  --sw-bg: var(--color-bg);
+  --sw-ink: #1b1030;
+  --sw-indigo: #25204a;
+  --sw-purple: #5b3fa3;
+  --sw-lede: #4a4668;
+  --sw-body: #3f3a5c;
+  --sw-label: #67627f;
+  --sw-line: var(--sw-purple);
   background: var(--sw-bg);
-  color: var(--color-ink);
-  font-family: var(--sw-serif);
+  color: var(--sw-ink);
   font-weight: 400;
 }
 
@@ -28,33 +34,58 @@
   padding-top: var(--spacing-section-sm);
 }
 
+/* The atmosphere sits on the stage (sticky in the cinematic layout, so the light stays framed on the viewport). */
+.sw__stage {
+  position: relative;
+  isolation: isolate;
+}
+
+.sw__stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--gradient-process-atmosphere);
+}
+
+@media (max-width: 767px) {
+  .sw__stage::before {
+    background: var(--gradient-process-atmosphere-narrow);
+  }
+}
+
 /* ---- Header ---- */
 .sw__header {
   padding: 0 var(--spacing-gutter) 2.5rem;
 }
 
 .sw__eyebrow {
-  font-family: var(--sw-serif);
-  font-size: 1.5rem;
-  font-style: italic;
-  line-height: 1.1;
+  font-size: clamp(0.6875rem, 0.85vw, 0.8125rem);
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--sw-indigo);
 }
 
 .sw__title {
-  margin-top: 0.15em;
-  font-family: var(--sw-serif);
-  font-size: clamp(1.75rem, 8.4vw, 3.5rem);
+  margin-top: 0.6rem;
+  font-size: clamp(1.75rem, 8vw, 3.5rem);
   font-weight: 400;
-  letter-spacing: -0.005em;
-  line-height: 1;
+  letter-spacing: -0.055em;
+  line-height: 0.92;
+  text-transform: uppercase;
   white-space: nowrap;
+  color: var(--sw-indigo);
 }
 
 .sw__lede {
   margin-top: 1.25rem;
   max-width: 34rem;
-  font-size: 1.0625rem;
-  line-height: 1.55;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--sw-lede);
 }
 
 /* ---- Track & slides ---- */
@@ -109,43 +140,51 @@
 }
 
 .sw__info-eyebrow {
-  font-family: var(--font-ui);
-  font-size: 0.75rem;
-  font-weight: 400;
-  letter-spacing: 0.1em;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
+  color: var(--sw-label);
 }
 
 .sw__info-title {
-  margin-top: 0.6em;
-  font-family: var(--sw-serif);
+  margin-top: 0.7em;
   font-size: 1.5rem;
   font-weight: 400;
-  letter-spacing: 0;
-  line-height: 1.15;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--sw-indigo);
 }
 
 .sw__info-copy {
-  margin-top: 0.75em;
+  margin-top: 0.85em;
   max-width: 28rem;
-  font-size: 1.0625rem;
-  line-height: 1.55;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--sw-body);
 }
 
 .sw__cta {
   margin-top: 1.5rem;
   padding-bottom: 0.45rem;
-  border-bottom: 3px solid var(--color-ink);
+  border-bottom: 1px solid var(--sw-ink);
   border-radius: 0;
-  font-family: var(--font-ui);
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--sw-ink);
 }
 
 .sw__all {
   padding: 2.5rem var(--spacing-gutter) var(--spacing-section-sm);
-  font-size: 1.125rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
   text-align: center;
+  text-transform: uppercase;
+  color: var(--sw-ink);
 }
 
 .sw__all a {
@@ -210,20 +249,20 @@
   }
 
   .sw__eyebrow {
-    font-size: calc(var(--u) * 2.7);
+    font-size: max(calc(var(--u) * 0.8), 0.6875rem);
   }
 
   .sw__title {
-    font-size: calc(var(--u) * 4.8);
-    margin-top: calc(var(--u) * -0.1);
+    font-size: calc(var(--u) * 4);
+    margin-top: calc(var(--u) * 0.7);
   }
 
   .sw__lede {
     width: calc(var(--u) * 30.2);
     max-width: none;
     margin-top: calc(var(--u) * 0.9);
-    font-size: max(calc(var(--u) * 1.3), 0.9375rem);
-    line-height: 1.45;
+    font-size: max(calc(var(--u) * 1.05), 0.8125rem);
+    line-height: 1.6;
   }
 
   .sw__track {
@@ -273,20 +312,20 @@
   }
 
   .sw__info-eyebrow {
-    font-size: max(calc(var(--u) * 0.72), 0.6875rem);
+    font-size: max(calc(var(--u) * 0.6), 0.625rem);
   }
 
   .sw__info-title {
-    font-size: max(calc(var(--u) * 1.65), 1.2rem);
+    font-size: max(calc(var(--u) * 1.7), 1.2rem);
   }
 
   .sw__info-copy {
-    font-size: max(calc(var(--u) * 1.2), 0.9375rem);
+    font-size: max(calc(var(--u) * 1), 0.8125rem);
   }
 
   .sw__cta {
     margin-top: calc(var(--u) * 1.6);
-    font-size: max(calc(var(--u) * 1.1), 0.8125rem);
+    font-size: max(calc(var(--u) * 0.8), 0.6875rem);
   }
 
   .sw__slide:not([data-active]) .sw__info {

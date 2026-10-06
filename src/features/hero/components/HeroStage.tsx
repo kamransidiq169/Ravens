@@ -12,7 +12,7 @@ import { useJourney } from "../hooks/useJourney";
  */
 export function HeroStage({ children }: { children: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
-  const release = useRef<((chapter: "project" | "next" | "last" | "bespoke") => void) | null>(null);
+  const release = useRef<((chapter: "project" | "next" | "last") => void) | null>(null);
   const reduced = useReducedMotion();
 
   useJourney(root, reduced, release);
@@ -29,7 +29,6 @@ export function HeroStage({ children }: { children: ReactNode }) {
         if (target.closest("[data-j='chapter']")) release.current?.("project");
         else if (target.closest("[data-j='chapter-next']")) release.current?.("next");
         else if (target.closest("[data-j='chapter-last']")) release.current?.("last");
-        else if (target.closest("[data-j='chapter-bespoke']")) release.current?.("bespoke");
       }}
     >
       <div className="journey__stage" data-j="stage">
