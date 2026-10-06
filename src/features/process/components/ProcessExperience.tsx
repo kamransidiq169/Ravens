@@ -11,14 +11,14 @@ import { WHISPER, type ProcessStage as Stage } from "../lib/process.data";
 import { FloatingFeathers } from "./FloatingFeathers";
 import { ProcessStage } from "./ProcessStage";
 
-const RAVEN = "/hero/images/raven3.png";
+const RAVEN = "/hero/images/rav.png";
 const SIZES = "(min-width: 768px) 92vw, 100vw";
 
 /** The raven. Drawn twice from one photo: the whole bird between the type layers, and a feathered wing piece above all. */
 function Raven({ layer }: { layer: "back" | "front" }) {
   return (
     <div className={`proc__rig proc__rig--${layer}`} data-p={`rig-${layer}`} aria-hidden="true">
-      <Image src={RAVEN} alt="" fill sizes={SIZES} draggable={false} />
+      <Image src={RAVEN} alt="" fill sizes={SIZES} draggable={false} loading="eager" />
     </div>
   );
 }
@@ -29,7 +29,7 @@ function Raven({ layer }: { layer: "back" | "front" }) {
  * opacity and clip-path only.
  *
  * Layers, back to front: atmosphere → feathers → type → raven → intro → type (selected letters) → wing piece → guides →
- * labels. The raven is `raven3.png`, drawn twice from the one photograph; the feathers are separate vector shapes.
+ * labels. The raven is `rav.png`, drawn twice from the one photograph; the feathers are separate vector shapes.
  */
 export function ProcessExperience({ stages, intro }: { stages: Stage[]; intro: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
