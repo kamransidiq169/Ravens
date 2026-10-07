@@ -17,7 +17,7 @@ export function ProcessIntro({ headingId }: { headingId: string }) {
         <span className="proc__statement-line" data-p="intro-line">
           ideas into
         </span>
-        <span className="proc__statement-line" data-p="intro-line">
+        <span className="proc__statement-line proc__statement-line--accent" data-p="intro-line">
           experiences.
         </span>
       </h2>

@@ -24,6 +24,8 @@
      bird it reads as warm bronze (like the undersides of its feathers) rather than olive. */
   --proc-blend: #e0cdbc;
   --proc-gutter: var(--spacing-gutter);
+  /* Ravens purple: the same value as --tm-purple / --sw-purple / --sv-purple in the sibling sections. */
+  --proc-purple: #5b3fa3;
   position: relative;
   z-index: var(--z-content);
   background: var(--proc-bg);
@@ -158,6 +160,10 @@
 
 .proc__statement-line {
   display: block;
+}
+
+.proc__statement-line--accent {
+  color: var(--proc-purple);
 }
 
 .proc__lede {
