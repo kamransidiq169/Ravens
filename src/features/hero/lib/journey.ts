@@ -15,7 +15,7 @@
  */
 
 export interface JourneyLayout {
-  /** Phone-sized viewport: the jellyfish sits higher so it clears the project meta stack. */
+  /** Phone-sized viewport: the jellyfish sits higher so it clears the supporting paragraph. */
   compact: boolean;
 }
 
@@ -26,10 +26,12 @@ export interface JourneyState {
   title: { scale: number; y: number; opacity: number };
   /** Phase 2 background: shapes converging into one composed mark. `t` 0 = scattered, 1 = formed. */
   form: { t: number; opacity: number };
-  /** Opacity / rise progress of the three meta groups (left, centre, right). */
-  meta: [number, number, number];
+  /** Opacity / rise progress of the hero's supporting paragraph (0 → 1 → 0 as the headline leaves). */
+  heroLede: number;
+  /** Opacity / rise progress of the project chapter's supporting paragraph. */
+  lede: number;
   /** The third chapter (INTERACTIVE). `scene` drives the 3D composition entering: 0 = absent, 1 = settled. */
-  next: { title: { scale: number; y: number; opacity: number }; meta: [number, number, number]; scene: number };
+  next: { title: { scale: number; y: number; opacity: number }; lede: number; scene: number };
   phase: JourneyPhase;
 }
 
@@ -52,25 +54,23 @@ export const FIVE_SHARE = (INTRO_SVH + 3 * EXT_SVH) / (INTRO_SVH + 3 * EXT_SVH +
 export const JOURNEY_SVH = INTRO_SVH + 3 * EXT_SVH + END_SVH;
 
 /** Windows inside each extension (shares of it). The outgoing title leaves before the incoming one arrives. */
-const EXT = {
+export const EXT = {
   exit: [0.1, 0.52],
-  meta: [0.1, 0.3],
+  ledeOut: [0.1, 0.3],
   scene: [0.1, 0.56],
   sceneIn: [0.5, 0.94],
   titleIn: [0.56, 0.94],
   titleFade: [0.56, 0.74],
-  metaIn: [
-    [0.84, 0.91],
-    [0.88, 0.95],
-    [0.92, 0.99],
-  ],
+  ledeIn: [0.84, 0.91],
+  /** Only the closing phase has actions; they arrive after its paragraph. */
+  actionsIn: [0.92, 0.99],
   phase: 0.66,
 } as const;
 /**
  * The final extension has no incoming phase: the last title morphs (lib/morph.ts) over `exit`, fades only once it has
  * filled the frame (`fadeFrom`, a share of the morph), and then the stage is released.
  */
-const END = { exit: [0.1, 0.85], fadeFrom: 0.88, phase: 0.45 } as const;
+const END = { exit: [0.1, 0.85], fadeFrom: 0.88, phase: 0.45, copyOut: [0.04, 0.2] } as const;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -127,21 +127,19 @@ export function introAt(p: number): Omit<JourneyState, "next"> {
   // Chapter: the title arrives from the same depth the headline left to, so the two read as one continuous move.
   const t = easeInOutCubic(range(progress, 0.56, 0.8));
   const title = { scale: lerp(1.35, 1, t), y: lerp(0.07, 0, t), opacity: smooth(range(progress, 0.56, 0.74)) };
-  const meta: JourneyState["meta"] = [
-    smooth(range(progress, 0.76, 0.88)),
-    smooth(range(progress, 0.8, 0.92)),
-    smooth(range(progress, 0.84, 0.96)),
-  ];
+  const lede = smooth(range(progress, 0.76, 0.88));
+  // The hero paragraph leaves with the headline, a little ahead of it so it never trails the zoom.
+  const heroLede = 1 - smooth(range(progress, 0, 0.22));
 
   const phase: JourneyPhase = progress < 0.5 ? "hero" : progress < 0.68 ? "gap" : "project";
 
   // Forming: shapes begin to arrive as the headline has gone and settle with the title, then dissolve (see journeyAt).
   const form = { t: easeInOutCubic(range(progress, 0.5, 0.84)), opacity: smooth(range(progress, 0.5, 0.66)) };
 
-  return { headline, details: 1 - smooth(range(progress, 0, 0.1)), visual, title, form, meta, phase };
+  return { headline, details: 1 - smooth(range(progress, 0, 0.1)), visual, title, form, heroLede, lede, phase };
 }
 
-/** An extension's incoming title / meta / scene, from its progress `q`. */
+/** An extension's incoming title / paragraph / scene, from its progress `q`. */
 function arrival(q: number) {
   const t = easeInOutCubic(range(q, EXT.titleIn[0], EXT.titleIn[1]));
   return {
@@ -150,21 +148,19 @@ function arrival(q: number) {
       y: lerp(0.06, 0, t),
       opacity: smooth(range(q, EXT.titleFade[0], EXT.titleFade[1])),
     },
-    meta: EXT.metaIn.map(([a, b]) => smooth(range(q, a, b))) as [number, number, number],
+    lede: smooth(range(q, EXT.ledeIn[0], EXT.ledeIn[1])),
     scene: easeInOutCubic(range(q, EXT.sceneIn[0], EXT.sceneIn[1])),
   };
 }
 
-/** The outgoing phase's exit state in an extension: its title's exit progress, its meta fade and its scene's leave. */
+/** The outgoing phase's exit state in an extension: its title's exit progress, its paragraph fade and its scene's leave. */
 function departure(q: number) {
   return {
     e: range(q, EXT.exit[0], EXT.exit[1]),
-    meta: 1 - smooth(range(q, EXT.meta[0], EXT.meta[1])),
+    lede: 1 - smooth(range(q, EXT.ledeOut[0], EXT.ledeOut[1])),
     scene: 1 - easeInOutCubic(range(q, EXT.scene[0], EXT.scene[1])),
   };
 }
-
-const scaled = (meta: [number, number, number], k: number) => meta.map((m) => m * k) as [number, number, number];
 
 /**
  * Hero → Northlight → INTERACTIVE. The first `INTRO_SHARE` replays the intro (headline exit, Northlight arrival and
@@ -181,7 +177,7 @@ function journeyAt(p: number): JourneyState {
     ...base,
     form: { ...base.form, opacity: base.form.opacity * out.scene },
     title: exiting(base.title, out.e),
-    meta: scaled(base.meta, out.meta),
+    lede: base.lede * out.lede,
     next: incoming,
     phase: q >= EXT.phase ? "next" : base.phase,
   };
@@ -203,7 +199,7 @@ function fullAt(p: number): FullState {
     ...base,
     next: {
       title: exiting(base.next.title, out.e),
-      meta: scaled(base.next.meta, out.meta),
+      lede: base.next.lede * out.lede,
       scene: base.next.scene * out.scene,
     },
     last: arrival(q),
@@ -212,9 +208,11 @@ function fullAt(p: number): FullState {
 }
 
 interface ChaptersState extends FullState {
-  /** The fifth phase (BESPOKE): only a title, which leaves by morphing (no meta, no scene). */
+  /** The fifth phase (BESPOKE): a title that leaves by morphing, with its paragraph and then its actions beneath. */
   bespoke: {
     title: TitleState;
+    lede: number;
+    actions: number;
     /** Morph progress of the title (0 = at rest, 1 = filled the frame), see lib/morph.ts. */
     morph: number;
   };
@@ -231,10 +229,15 @@ function chaptersAt(p: number): ChaptersState {
     ...base,
     last: {
       title: exiting(base.last.title, out.e),
-      meta: scaled(base.last.meta, out.meta),
+      lede: base.last.lede * out.lede,
       scene: base.last.scene * out.scene,
     },
-    bespoke: { title: arrival(q).title, morph: 0 },
+    bespoke: {
+      title: arrival(q).title,
+      lede: arrival(q).lede,
+      actions: smooth(range(q, EXT.actionsIn[0], EXT.actionsIn[1])),
+      morph: 0,
+    },
     phase: q >= EXT.phase ? "bespoke" : base.phase,
   };
 }
@@ -251,12 +254,16 @@ export function sequenceAt(p: number): SequenceState {
   const q = range(progress, FIVE_SHARE, 1);
   const morph = range(q, END.exit[0], END.exit[1]);
   const { title } = base.bespoke;
+  // The paragraph and actions go before the morph has visibly grown, so they never sit under the zooming letters.
+  const copy = 1 - smooth(range(q, END.copyOut[0], END.copyOut[1]));
 
   return {
     ...base,
     bespoke: {
       // Scale and drop stay at the arrival values: the zoom belongs to the morph, applied with the per-character poses.
       title: { ...title, opacity: title.opacity * (1 - smooth(range(morph, END.fadeFrom, 1))) },
+      lede: base.bespoke.lede * copy,
+      actions: base.bespoke.actions * copy,
       morph,
     },
     phase: q >= END.phase ? "end" : base.phase,

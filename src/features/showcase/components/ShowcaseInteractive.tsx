@@ -1,6 +1,4 @@
-import { OrbArt } from "@/features/hero";
-
-import { Button } from "@/components/ui/Button";
+import { AccentTitle, OrbArt } from "@/features/hero";
 
 import { interactiveChapter as chapter } from "../showcase.config";
 
@@ -17,25 +15,13 @@ export function ShowcaseInteractive() {
       </div>
 
       <h2 id="interactive-heading" className="journey__title journey__title--line" data-j="title-next">
-        {chapter.title}
+        <AccentTitle text={chapter.title} />
       </h2>
 
-      <div className="journey__meta">
-        <div className="journey__meta-left" data-j="meta-next">
-          <span className="journey__pill">{chapter.category}</span>
-          <p className="journey__kicker">{chapter.disciplines}</p>
-        </div>
-
-        <div className="journey__meta-center" data-j="meta-next">
-          <Button href={chapter.href} arrow className="journey__cta">
-            View project
-          </Button>
-        </div>
-
-        <div className="journey__meta-right" data-j="meta-next">
-          <p className="journey__project-name">{chapter.name}</p>
-          <p className="journey__summary">{chapter.summary}</p>
-        </div>
+      <div className="journey__copy">
+        <p className="journey__lede" data-j="lede-next">
+          {chapter.summary}
+        </p>
       </div>
     </section>
   );

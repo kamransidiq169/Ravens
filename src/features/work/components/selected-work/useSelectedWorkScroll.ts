@@ -1,7 +1,7 @@
 import { useEffect, type RefObject } from "react";
 
 // Same condition the stylesheet uses for the pinned layout, so JS only runs where the CSS expects it.
-const CINEMATIC = { cinematic: "(min-width: 768px) and (prefers-reduced-motion: no-preference)" };
+const CINEMATIC = { cinematic: "(prefers-reduced-motion: no-preference)" };
 
 const clamp = (n: number, min = 0, max = 1) => Math.min(max, Math.max(min, n));
 /** Smootherstep: zero slope at both ends, so the track dwells on each project before moving to the next. */
@@ -12,7 +12,7 @@ const dwell = (u: number) => u * u * u * (u * (6 * u - 15) + 10);
  * pin, no scroll container and no scroll hijacking: the page scrolls natively and the stage releases itself at the end.
  *
  * One scrubbed timeline carries a 0 → 1 proxy; each tick writes transforms/opacity only (no React state). GSAP is
- * code-split, everything is reverted on unmount (Strict Mode safe), and nothing runs under reduced motion or on phones.
+ * code-split, everything is reverted on unmount (Strict Mode safe), and nothing runs under reduced motion. Phones run the same driver on a proportionally reflowed composition.
  */
 export function useSelectedWorkScroll(root: RefObject<HTMLElement | null>) {
   useEffect(() => {

@@ -7,6 +7,7 @@ import { JellyVisual } from "./JellyVisual";
 import { ModuleField } from "./ModuleField";
 
 const HEADLINE = [["We", "Build"], ["What", "Brands"], ["Become"]] as const;
+const LEDE = "We shape bold digital experiences that give ambitious brands a presence worth remembering.";
 
 /**
  * The headline as words of characters. The final layout exists in the server HTML (nothing reflows); each character
@@ -36,7 +37,14 @@ function HeadlineChars({ lines }: { lines: readonly (readonly string[])[] }) {
             return (
               <span key={wordIndex}>
                 {wordIndex > 0 ? " " : ""}
-                <span className="journey__word">
+                {/* The last word of the headline carries the brand accent (see hero.css `journey__accent`). */}
+                <span
+                  className={
+                    lineIndex === lines.length - 1 && wordIndex === line.length - 1
+                      ? "journey__word journey__accent"
+                      : "journey__word"
+                  }
+                >
                   {Array.from(word).map((char, c) => {
                     const i = start + c;
                     // Deterministic variety from the index alone (no Math.random).
@@ -70,9 +78,9 @@ function HeadlineChars({ lines }: { lines: readonly (readonly string[])[] }) {
  * Home hero and the featured-project chapter as one sticky scroll stage.
  *
  * `chapter` is the project composition (see features/showcase). The timeline looks for these hooks inside it:
- *   [data-j="title"]  the oversized project heading      [data-j="meta"]  the three supporting groups, left → right
+ *   [data-j="title"]  the oversized project heading      [data-j="lede"]  its supporting paragraph
  *
- * `next` is the third chapter, hooked the same way with `title-next` / `meta-next`; `last` is the fourth (`title-last` / `meta-last`); `bespoke` is the fifth and last: just the morphing title (`title-bespoke`), no meta and nothing to focus.
+ * `next` is the third chapter, hooked the same way with `title-next` / `lede-next`; `last` is the fourth (`title-last` / `lede-last`); `bespoke` is the fifth and last: the morphing title (`title-bespoke`), its paragraph (`lede-bespoke`) and the only two actions of the sequence (`actions-bespoke`).
  */
 export function Hero({
   chapter,
@@ -94,12 +102,17 @@ export function Hero({
           <HeadlineChars lines={HEADLINE} />
         </h1>
 
+        <div className="journey__copy">
+          <p className="journey__lede" data-j="lede-hero">
+            {LEDE}
+          </p>
+        </div>
+
         <div className="journey__details" data-j="details" aria-hidden="true">
           <span className="journey__scroll">
             <span className="journey__scroll-line" />
             Scroll
           </span>
-          <span>Brand, web &amp; digital products</span>
         </div>
       </div>
 

@@ -9,12 +9,18 @@ import type { ComponentProps } from "react";
  * Spaces are characters too (inline-block, `white-space: pre`), so the line stays a single object about its centre.
  */
 export function MorphTitle({ text, ...rest }: { text: string } & ComponentProps<"h2">) {
+  // The last word takes the brand accent.
+  const accentFrom = text.lastIndexOf(" ") + 1;
   return (
     <h2 {...rest}>
       <span className="sr-only">{text}</span>
       <span className="journey__morph" aria-hidden="true">
         {Array.from(text).map((char, i) => (
-          <span key={i} className="journey__morph-char" data-j="morph-char">
+          <span
+            key={i}
+            className={i >= accentFrom ? "journey__morph-char journey__accent" : "journey__morph-char"}
+            data-j="morph-char"
+          >
             {char}
           </span>
         ))}

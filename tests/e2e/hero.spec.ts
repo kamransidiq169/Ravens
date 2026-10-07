@@ -236,28 +236,24 @@ test.describe("hero scroll sequence", () => {
     await expect(page.getByText("One studio, every layer")).toBeInViewport();
   });
 
-  test("each View project link is inert until its chapter, and focus reveals it", async ({ page }) => {
-    const link = (layer: string) => page.locator(layer).getByRole("link", { name: /view project/i });
-    const pointer = (layer: string) =>
-      page.evaluate((selector) => getComputedStyle(document.querySelector(selector)!).pointerEvents, layer);
-    const layers = [".journey__project", ".journey__next", ".journey__last"];
-
-    for (const layer of layers) expect(await pointer(layer)).toBe("none");
-
-    const expected = [
-      { layer: ".journey__project", phase: "project" },
-      { layer: ".journey__next", phase: "next" },
-      { layer: ".journey__last", phase: "last" },
-    ];
-    for (const { layer, phase } of expected) {
-      await link(layer).focus();
-      await page.waitForTimeout(1200);
-      expect((await state(page)).phase).toBe(phase);
-      for (const other of layers) expect(await pointer(other)).toBe(other === layer ? "auto" : "none");
+  test("phases 1–4 carry no buttons; the closing phase's two actions are reachable by focus", async ({ page }) => {
+    for (const layer of [".journey__hero", ".journey__project", ".journey__next", ".journey__last"]) {
+      await expect(page.locator(layer).getByRole("link")).toHaveCount(0);
+      await expect(page.locator(layer).getByRole("button")).toHaveCount(0);
     }
+    expect(
+      await page.evaluate(() => getComputedStyle(document.querySelector(".journey__actions")!).pointerEvents),
+    ).toBe("none");
 
-    // The closing phase is only the morphing title: nothing to link to or focus.
-    await expect(page.locator(".journey__bespoke").getByRole("link")).toHaveCount(0);
+    // The closing phase has the sequence's only two actions, live only while it is on stage.
+    const closing = page.locator(".journey__bespoke").getByRole("link");
+    await expect(closing).toHaveCount(2);
+    await closing.first().focus();
+    await page.waitForTimeout(1200);
+    expect((await state(page)).phase).toBe("bespoke");
+    expect(
+      await page.evaluate(() => getComputedStyle(document.querySelector(".journey__actions")!).pointerEvents),
+    ).toBe("auto");
   });
 
   test("has no horizontal overflow on a phone", async ({ page }) => {
@@ -274,8 +270,9 @@ test.describe("reduced motion", () => {
 
   test("stacks all chapters in normal flow with no pinned stage and no canvas", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("link", { name: /view project/i })).toHaveCount(4);
-    await expect(page.getByRole("link", { name: /view project/i }).last()).toBeVisible();
+    await expect(page.getByRole("link", { name: /view project/i })).toHaveCount(0);
+    await expect(page.locator(".journey__bespoke").getByRole("link")).toHaveCount(2);
+    await expect(page.locator(".journey__bespoke").getByRole("link").last()).toBeVisible();
     const layout = await page.evaluate(() => ({
       stagePosition: getComputedStyle(document.querySelector(".journey__stage")!).position,
       canvases: document.querySelectorAll("canvas").length,

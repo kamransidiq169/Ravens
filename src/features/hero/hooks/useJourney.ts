@@ -1,6 +1,14 @@
 import { useEffect, type RefObject } from "react";
 
-import { CHAPTERS_SHARE, FIVE_SHARE, FOUR_SHARE, INTRO_SHARE, sequenceAt, type JourneyPhase } from "../lib/journey";
+import {
+  CHAPTERS_SHARE,
+  EXT,
+  FIVE_SHARE,
+  FOUR_SHARE,
+  INTRO_SHARE,
+  sequenceAt,
+  type JourneyPhase,
+} from "../lib/journey";
 import { closingPhase, journeyStore } from "../lib/journey.store";
 import { morphChar, morphScale } from "../lib/morph";
 
@@ -19,7 +27,7 @@ const CONDITIONS = { compact: "(max-width: 767px)", wide: "(min-width: 768px)" }
 export function useJourney(
   root: RefObject<HTMLElement | null>,
   reduced: boolean,
-  release: RefObject<((chapter: "project" | "next" | "last") => void) | null>,
+  release: RefObject<((chapter: "project" | "next" | "last" | "bespoke") => void) | null>,
 ) {
   useEffect(() => {
     const wrapper = root.current;
@@ -36,12 +44,15 @@ export function useJourney(
     const modules = q("[data-j='modules']");
     const stack = q("[data-j='stack']");
     const titleLast = q("[data-j='title-last']");
-    const metaLast = all("[data-j='meta-last']");
+    const ledeLast = q("[data-j='lede-last']");
     const titleBespoke = q("[data-j='title-bespoke']");
+    const ledeBespoke = q("[data-j='lede-bespoke']");
+    const actionsBespoke = q("[data-j='actions-bespoke']");
     const morphChars = all("[data-j='morph-char']");
-    const meta = all("[data-j='meta']");
+    const ledeHero = q("[data-j='lede-hero']");
+    const ledeProject = q("[data-j='lede']");
     const titleNext = q("[data-j='title-next']");
-    const metaNext = all("[data-j='meta-next']");
+    const ledeNext = q("[data-j='lede-next']");
     if (!stage || !headline || !title) return;
 
     let cancelled = false;
@@ -61,6 +72,11 @@ export function useJourney(
         // Last morph progress written to the characters: they are only touched while the morph is (or was just) running.
         let morphed = 0;
         const proxy = { p: 0 };
+
+        // A supporting paragraph (or the closing actions) fades and rises with its own progress.
+        const reveal = (el: HTMLElement | null, v: number) => {
+          if (el) gsap.set(el, { opacity: v, y: (1 - v) * 24 });
+        };
 
         const apply = (p: number) => {
           journeyStore.progress = p;
@@ -88,7 +104,8 @@ export function useJourney(
             opacity: s.title.opacity,
             force3D: false,
           });
-          meta.forEach((el, i) => gsap.set(el, { opacity: s.meta[i] ?? 0, y: (1 - (s.meta[i] ?? 0)) * 24 }));
+          reveal(ledeHero, s.heroLede);
+          reveal(ledeProject, s.lede);
           if (titleNext) {
             gsap.set(titleNext, {
               scale: s.next.title.scale,
@@ -97,9 +114,7 @@ export function useJourney(
               force3D: false,
             });
           }
-          metaNext.forEach((el, i) =>
-            gsap.set(el, { opacity: s.next.meta[i] ?? 0, y: (1 - (s.next.meta[i] ?? 0)) * 24 }),
-          );
+          reveal(ledeNext, s.next.lede);
           if (modules) {
             // Phase 2 background: the scroll model decides when it is on stage and how far its modules have slid in.
             // The looping motion itself is CSS, so nothing here runs per module.
@@ -117,9 +132,7 @@ export function useJourney(
               force3D: false,
             });
           }
-          metaLast.forEach((el, i) =>
-            gsap.set(el, { opacity: s.last.meta[i] ?? 0, y: (1 - (s.last.meta[i] ?? 0)) * 24 }),
-          );
+          reveal(ledeLast, s.last.lede);
           if (titleBespoke) {
             // The title zooms about its centre; each character is deformed on top of that (lib/morph.ts).
             gsap.set(titleBespoke, {
@@ -129,6 +142,8 @@ export function useJourney(
               force3D: false,
             });
           }
+          reveal(ledeBespoke, s.bespoke.lede);
+          reveal(actionsBespoke, s.bespoke.actions);
           if (s.bespoke.morph !== morphed) {
             morphed = s.bespoke.morph;
             morphChars.forEach((el, i) => {
@@ -172,6 +187,7 @@ export function useJourney(
             project: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * INTRO_SHARE,
             next: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * 0.985,
             last: FIVE_SHARE * FOUR_SHARE * 0.985,
+            bespoke: FIVE_SHARE * (FOUR_SHARE + (1 - FOUR_SHARE) * EXT.actionsIn[1]),
           };
           const target = settled[chapter];
           if (Math.abs(proxy.p - target) < 0.04) return;

@@ -7,9 +7,10 @@
  *
  * Layouts, all CSS-selected so nothing shifts after hydration:
  *  - base (phones, fallback): native scroll-snap strip, panel overlapping each image's lower edge.
- *  - cinematic (>= 768px, motion allowed): `.sw` is a tall wrapper, `.sw__stage` is sticky inside it, and the track is
- *    moved by hooks/useSelectedWorkScroll.ts. Native scrolling throughout; the browser releases the stage.
- *  - reduced motion (>= 768px): a plain two-column grid, no pinning.
+ *  - cinematic (motion allowed): `.sw` is a tall wrapper, `.sw__stage` is sticky inside it, and the track is moved by
+ *    useSelectedWorkScroll.ts. Native scrolling throughout; the browser releases the stage. Phones get the same
+ *    composition reflowed to the viewport width (image 84vw, panel overlapping its lower edge, neighbour peeking).
+ *  - reduced motion (>= 768px): a plain two-column grid, no pinning. Phones keep the native snap strip.
  */
 
 .sw-section {
@@ -18,9 +19,9 @@
   --sw-bg: var(--color-bg);
   --sw-ink: #1b1030;
   --sw-indigo: #25204a;
-  --sw-purple: #5b3fa3;
-  --sw-lede: #4a4668;
-  --sw-body: #3f3a5c;
+  --sw-purple: var(--ravens-purple);
+  --sw-lede: var(--ravens-lede);
+  --sw-body: var(--ravens-lede);
   --sw-label: #67627f;
   --sw-line: var(--sw-purple);
   background: var(--sw-bg);
@@ -80,11 +81,18 @@
   color: var(--sw-indigo);
 }
 
+.sw__title-accent {
+  color: var(--sw-purple);
+}
+
 .sw__lede {
   margin-top: 1.25rem;
   max-width: 34rem;
-  font-size: 0.875rem;
+  font-size: clamp(0.875rem, 0.4vw + 0.8rem, 0.9375rem);
+  font-weight: 500;
+  letter-spacing: -0.005em;
   line-height: 1.6;
+  text-wrap: pretty;
   color: var(--sw-lede);
 }
 
@@ -160,8 +168,11 @@
 .sw__info-copy {
   margin-top: 0.85em;
   max-width: 28rem;
-  font-size: 0.875rem;
+  font-size: clamp(0.875rem, 0.4vw + 0.8rem, 0.9375rem);
+  font-weight: 500;
+  letter-spacing: -0.005em;
   line-height: 1.6;
+  text-wrap: pretty;
   color: var(--sw-body);
 }
 
@@ -191,6 +202,117 @@
   border-bottom: 1px solid currentcolor;
   padding-bottom: 0.2rem;
   border-radius: 0;
+}
+
+/* ---- Phones: the desktop composition reflowed. Panel overlaps the image's lower edge and overhangs its right edge. ---- */
+@media (max-width: 767px) {
+  .sw__info {
+    width: 90%;
+    margin: calc(var(--sw-w) * -0.2) 0 0 14%;
+  }
+
+  .sw__plate {
+    padding: clamp(1.125rem, 4.5vw, 1.5rem) clamp(0.875rem, 4vw, 1.25rem);
+  }
+
+  .sw__cta {
+    margin-top: clamp(1.1rem, 4vw, 1.5rem);
+  }
+
+  .sw__lede {
+    margin-top: clamp(0.75rem, 3vw, 1.25rem);
+  }
+
+  .sw__info-title {
+    font-size: clamp(1.125rem, 6vw, 1.5rem);
+  }
+}
+
+/* ---- Phones, motion allowed: the same pinned stage and scroll-driven track as desktop ---- */
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  .sw {
+    --sw-w: 84vw;
+    --sw-gap: 3vw;
+    height: calc(100svh + (var(--sw-count) - 1) * 80svh);
+    padding-top: 0;
+  }
+
+  .sw__stage {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: safe center;
+    height: 100svh;
+    /* Clears the fixed site header (logo and menu) so the headline never runs under it. */
+    padding-top: 4.25rem;
+    overflow: clip;
+  }
+
+  .sw__scene {
+    width: 100%;
+  }
+
+  .sw__header {
+    padding: 0 8vw 4vw;
+  }
+
+  .sw__track {
+    position: relative;
+    width: max-content;
+    padding: 0 0 0 8vw;
+    overflow: visible;
+    scroll-snap-type: none;
+    will-change: transform;
+  }
+
+  .sw__slide {
+    flex: none;
+    width: var(--sw-w);
+  }
+
+  /* First paint before the driver runs: neighbours already sit where the desktop composition puts them. */
+  .sw__slide:not([data-active]) .sw__media {
+    transform: scale(0.97);
+    opacity: 0.92;
+  }
+
+  .sw__slide:not([data-active]) {
+    transform: translateY(7.8vw);
+  }
+
+  .sw__slide:not([data-active]):nth-child(n + 2) {
+    transform: translate(3.4vw, 7.8vw);
+  }
+
+  .sw__slide:not([data-active]) .sw__info {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* Very short phones (e.g. 320×568): the same composition, tightened so it still fits the stage under the site header. */
+@media (max-width: 767px) and (max-height: 600px) and (prefers-reduced-motion: no-preference) {
+  .sw__header {
+    padding-bottom: 3vw;
+  }
+
+  .sw__lede,
+  .sw__info-copy {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .sw__info {
+    margin-top: calc(var(--sw-w) * -0.26);
+  }
+
+  .sw__plate {
+    padding-block: 1rem;
+  }
+
+  .sw__cta {
+    margin-top: 1rem;
+  }
 }
 
 /* ---- Reduced motion, wide screens: simple grid ---- */
@@ -261,7 +383,7 @@
     width: calc(var(--u) * 30.2);
     max-width: none;
     margin-top: calc(var(--u) * 0.9);
-    font-size: max(calc(var(--u) * 1.05), 0.8125rem);
+    font-size: clamp(0.8125rem, calc(var(--u) * 1.05), 1rem);
     line-height: 1.6;
   }
 
@@ -320,7 +442,7 @@
   }
 
   .sw__info-copy {
-    font-size: max(calc(var(--u) * 1), 0.8125rem);
+    font-size: clamp(0.8125rem, calc(var(--u) * 1), 1rem);
   }
 
   .sw__cta {

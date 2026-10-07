@@ -42,6 +42,10 @@
      leading. Hero and Process both consume these so the type can't drift apart. */
   --ravens-ink: #1b1030;
   --ravens-ink-muted: color-mix(in srgb, var(--ravens-ink) 72%, transparent);
+  /* Supporting paragraphs: the same ink, a touch firmer than the muted labels so medium-weight copy stays readable. */
+  --ravens-lede: color-mix(in srgb, var(--ravens-ink) 80%, transparent);
+  /* Ravens purple, the accent of the sibling sections (--proc-purple, --sv-purple, ...), as one shared token. */
+  --ravens-purple: #5b3fa3;
   --ravens-display-weight: 400;
   --ravens-display-tracking: -0.055em;
   --ravens-display-leading: 0.88;

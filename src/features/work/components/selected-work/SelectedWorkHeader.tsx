@@ -5,7 +5,7 @@ export function SelectedWorkHeader({ id }: { id: string }) {
       <div>
         <p className="sw__eyebrow">Selected work</p>
         <h2 id={id} className="sw__title">
-          Recent websites
+          Recent <span className="sw__title-accent">websites</span>
         </h2>
       </div>
       <p className="sw__lede">

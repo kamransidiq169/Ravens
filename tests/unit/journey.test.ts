@@ -20,15 +20,17 @@ describe("introAt (hero → Northlight)", () => {
     const s = introAt(0);
     expect(s.headline).toMatchObject({ scale: 1, y: 0, opacity: 1 });
     expect(s.title.opacity).toBe(0);
-    expect(s.meta).toEqual([0, 0, 0]);
+    expect(s.lede).toBe(0);
+    expect(s.heroLede).toBe(1);
     expect(s.phase).toBe("hero");
   });
 
-  it("ends on the project composition: headline gone, title and meta fully in", () => {
+  it("ends on the project composition: headline gone, title and paragraph fully in", () => {
     const s = introAt(1);
     expect(s.headline.opacity).toBe(0);
     expect(s.title).toMatchObject({ scale: 1, y: 0, opacity: 1 });
-    expect(s.meta).toEqual([1, 1, 1]);
+    expect(s.lede).toBe(1);
+    expect(s.heroLede).toBe(0);
     expect(s.phase).toBe("project");
   });
 
@@ -239,16 +241,35 @@ describe("the last title morphs instead of zooming and dropping", () => {
   });
 });
 
-describe("Phase 5 shows nothing but its own title", () => {
-  it("has no Phase 4 scene (tiles), title or meta left on stage by the time Phase 5's title is visible, nor after", () => {
+describe("Phase 5 shows nothing but its own title, paragraph and actions", () => {
+  it("has no Phase 4 scene (tiles), title or paragraph left on stage by the time Phase 5's title is visible, nor after", () => {
     for (const p of fine) {
       const s = sequenceAt(p);
       if (s.bespoke.title.opacity > 0.001 || s.phase === "bespoke" || s.phase === "end") {
         expect(s.last.scene).toBeLessThan(0.001);
         expect(s.last.title.opacity).toBeLessThan(0.001);
-        s.last.meta.forEach((m) => expect(m).toBeLessThan(0.001));
+        expect(s.last.lede).toBeLessThan(0.001);
       }
     }
+  });
+});
+
+describe("Phase 5 copy", () => {
+  it("reveals the actions only after the paragraph, and clears both before the morph has grown", () => {
+    const fine = Array.from({ length: 1001 }, (_, i) => i / 1000);
+    let sawCopy = false;
+    for (const p of fine) {
+      const { bespoke } = sequenceAt(p);
+      // The actions are never further in than the paragraph above them.
+      expect(bespoke.actions).toBeLessThanOrEqual(bespoke.lede + 1e-9);
+      if (bespoke.actions > 0.999) sawCopy = true;
+      if (bespoke.morph > 0.3) {
+        expect(bespoke.lede).toBe(0);
+        expect(bespoke.actions).toBe(0);
+      }
+    }
+    expect(sawCopy).toBe(true);
+    expect(sequenceAt(0).bespoke.actions).toBe(0);
   });
 });
 
