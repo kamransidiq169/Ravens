@@ -360,17 +360,13 @@
 }
 
 /*
- * Phones: vertical scroll drives a horizontal gallery. .sv-pin is a tall wrapper, .sv-stage is sticky inside it
- * (same technique as the Process film) and holds the whole composition (heading, gallery, CTA) as one svh-sized
- * frame; ServicesGallery scrubs the track's translateX from the scroll position. The focused panel is centred, its
- * neighbours peek in at the edges. Scroll distance = --sv-unit per step.
- *
- * Compositor budget: the track itself, each panel and each caption are their own small layers, so scrubbing a
- * panel's scale or a caption's opacity never repaints the (very wide) track. Nothing else is promoted.
+ * Phones: a native horizontal scroll-snap gallery, one card per screen. No JS owns the movement, so there is no
+ * pin, no scrubbed transform and no scroll handler to fight iOS momentum scrolling. Each <li> is a full-width snap
+ * page; the card inside is centred, so neighbours never intrude on the active card.
  */
 @media (max-width: 767px) {
   .sv-page {
-    padding-bottom: 0;
+    padding-bottom: clamp(1.5rem, 5svh, 2.5rem);
     min-height: 0;
   }
   .sv-head {
@@ -396,47 +392,48 @@
   }
 
   .sv-pin {
-    /* Pin height = one stage + the scroll the timeline needs, so the stage releases when the last card has landed. */
-    --sv-unit: min(92vw, 100svw);
-    /* Panel width: 80vw, capped so heading + panel + caption + CTA always fit inside the svh-tall stage. */
-    --sv-chrome: 27rem;
-    --sv-panel: max(9rem, min(80vw, calc((100svh - var(--sv-chrome)) * 0.75)));
     display: block;
-    height: calc(100svh + var(--sv-unit) * 4.65);
+    /* Card width: up to 86vw, capped so heading + card + caption + CTA fit a short viewport. */
+    --sv-chrome: 27rem;
+    --sv-panel: max(9rem, min(86vw, 26rem, calc((100svh - var(--sv-chrome)) * 0.75)));
   }
   .sv-stage {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    overflow: clip;
+    display: block;
   }
   .sv-gallery {
     display: flex;
-    align-items: flex-start;
-    gap: clamp(4px, 2vw, 0.7rem);
-    width: max-content;
-    margin: clamp(0.85rem, 3svh, 1.5rem) 0 0;
-    /* Centre the focused panel; the track steps one panel + gap at a time. */
-    padding: 0 calc(50vw - var(--sv-panel) / 2);
+    gap: 0;
+    width: 100%;
+    margin: clamp(0.6rem, 2svh, 1rem) 0 0;
     perspective: none;
-    will-change: transform;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .sv-gallery::-webkit-scrollbar {
+    display: none;
+  }
+  .sv-gallery:focus-visible {
+    outline: 2px solid var(--sv-purple);
+    outline-offset: -2px;
   }
   .sv-item {
-    flex: 0 0 var(--sv-panel);
+    flex: 0 0 100%;
+    min-width: 0;
     transform: none;
-    will-change: transform;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
   }
-  /* The entrance owns this wrapper's transform + opacity (GSAP). Promoted up front so the first scrubbed frame never
-     has to create the layer (and repaint the photo) at the moment the section enters. */
+  /* Hidden-until-GSAP only applies to the desktop entrance; phones have none. */
+  .sv-gallery[data-motion="pending"] .sv-enter {
+    opacity: 1;
+  }
   .sv-enter {
-    will-change: transform, opacity;
-  }
-  /* Finished entrance text keeps no animation (and so no extra compositing) alive inside the sticky stage. */
-  .sv-in {
-    animation-fill-mode: backwards;
+    width: var(--sv-panel);
+    margin-inline: auto;
   }
   .sv-photo {
     aspect-ratio: 3 / 4;
@@ -452,16 +449,14 @@
     font-size: 0.625rem;
     font-weight: 700;
     letter-spacing: 0.16em;
-    text-wrap: nowrap;
-    will-change: opacity;
   }
   .sv-num::after {
     content: "\00a0—";
   }
 
-  /* Footer/CTA: part of the same frame, close under the caption. */
+  /* Footer/CTA: close under the caption. */
   .sv-foot {
-    margin-top: clamp(0.6rem, 2.2svh, 1.1rem);
+    margin-top: clamp(0.5rem, 1.6svh, 0.9rem);
     padding: 0 1rem;
     font-size: 0.8125rem;
     line-height: 1.6;
@@ -477,7 +472,7 @@
   }
 }
 
-/* Short phones (320x568 class): the CTA line is the heading's promise again, so drop it to keep the image dominant. */
+/* Short phones (320x568 class): drop the CTA line to keep the image dominant. */
 @media (max-width: 767px) and (max-height: 640px) {
   .sv-pin {
     --sv-chrome: 20.5rem;
@@ -490,43 +485,15 @@
   }
 }
 
-/* Phones, reduced motion (or no JS): no pinned track; a calm static sequence, all five services in normal flow. */
+/* Reduced motion: the scroller is user-driven, so it stays; just don't animate snaps programmatically. */
 @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
-  .sv-pin {
-    height: auto;
-  }
-  .sv-stage {
-    position: static;
-    height: auto;
-    overflow: visible;
-  }
   .sv-gallery {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    width: auto;
-    padding-inline: 1rem;
-    margin-top: clamp(0.55rem, 2.4vw, 0.9rem);
-    margin-bottom: 0;
-  }
-  .sv-gallery,
-  .sv-item,
-  .sv-caption {
-    will-change: auto;
-  }
-  .sv-foot > p {
-    display: block;
-  }
-  .sv-item {
-    width: min(84%, 26rem);
-  }
-  .sv-item:nth-child(even) {
-    justify-self: end;
+    scroll-behavior: auto;
   }
 }
 
 /* Atmosphere: the Process chapter's light (shared token), so the two sit in one environment. Painted behind all
-   content; phones attach it to the sticky stage so it stays framed on the viewport while the track moves. */
+   content. */
 .sv-page::before {
   content: "";
   position: absolute;
@@ -534,17 +501,4 @@
   z-index: -1;
   pointer-events: none;
   background: var(--gradient-process-atmosphere);
-}
-@media (max-width: 767px) {
-  .sv-page::before {
-    display: none;
-  }
-  .sv-stage::before {
-    content: "";
-    position: absolute;
-    inset: -4% -6%;
-    z-index: -1;
-    pointer-events: none;
-    background: var(--gradient-process-atmosphere);
-  }
 }
