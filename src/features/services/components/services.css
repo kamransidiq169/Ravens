@@ -321,9 +321,12 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* Hover: only the hovered image zooms (inside its own clip); siblings never react. */
-  .sv-item:hover .sv-photo img {
-    transform: scale(1.035);
+  /* Hover: only the hovered image zooms (inside its own clip); siblings never react. Pointer devices only: on touch
+     a tap leaves :hover stuck and would start a 0.7s image transition in the middle of the scrubbed gallery. */
+  @media (hover: hover) {
+    .sv-item:hover .sv-photo img {
+      transform: scale(1.035);
+    }
   }
   .sv-in {
     animation: sv-in 0.8s var(--ease-out-expo) both;
@@ -397,7 +400,7 @@
     --sv-unit: min(92vw, 100svw);
     /* Panel width: 80vw, capped so heading + panel + caption + CTA always fit inside the svh-tall stage. */
     --sv-chrome: 27rem;
-    --sv-panel: min(80vw, calc((100svh - var(--sv-chrome)) * 0.75));
+    --sv-panel: max(9rem, min(80vw, calc((100svh - var(--sv-chrome)) * 0.75)));
     display: block;
     height: calc(100svh + var(--sv-unit) * 4.65);
   }
@@ -425,6 +428,15 @@
     flex: 0 0 var(--sv-panel);
     transform: none;
     will-change: transform;
+  }
+  /* The entrance owns this wrapper's transform + opacity (GSAP). Promoted up front so the first scrubbed frame never
+     has to create the layer (and repaint the photo) at the moment the section enters. */
+  .sv-enter {
+    will-change: transform, opacity;
+  }
+  /* Finished entrance text keeps no animation (and so no extra compositing) alive inside the sticky stage. */
+  .sv-in {
+    animation-fill-mode: backwards;
   }
   .sv-photo {
     aspect-ratio: 3 / 4;
