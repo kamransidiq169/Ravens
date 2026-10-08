@@ -6,9 +6,7 @@
 export function ProcessIntro({ headingId }: { headingId: string }) {
   return (
     <div className="proc__intro">
-      <p className="proc__eyebrow" data-p="intro-copy">
-        How we work
-      </p>
+      <p className="proc__eyebrow" data-p="intro-copy"></p>
 
       <h2 id={headingId} className="proc__statement" data-p="intro-title">
         <span className="proc__statement-line" data-p="intro-line">

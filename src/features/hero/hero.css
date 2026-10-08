@@ -51,8 +51,12 @@
 
 @media (max-width: 767px) {
   .journey {
-    --journey-length: 903svh;
-    --journey-gutter: 6vw;
+    /* Mobile-length budget, responsive at the widths you listed: proportional to the desktop scroll model (lib/journey.ts),
+       not a separate animation concept. The stage still releases at the end of this wrapper by native sticky release.
+       Mobile scroll range is shorter than desktop, but it is still an intentional cinematic range, not collapsed to a
+       near-instant jump: intro = 340svh, each later chapter extension = 220svh, final release = 130svh. */
+    --journey-length: calc(340svh + 3 * 220svh + 130svh);
+    --journey-gutter: clamp(4vw, 6vw, 8vw);
   }
 }
 
@@ -175,13 +179,60 @@
 }
 
 @media (max-width: 767px) {
+  /* Same typographic system as desktop (face, weight, tracking, leading, accent word). Scale is kept dominant and
+     proportional to the viewport; only the minimum line wrapping required by the small width is allowed, so the headline
+     still reads as the Hero's centerpiece instead of being shrunk to a weak size. */
   .journey__hero {
-    --j-size: min(11.4vw, 6.5rem);
+    --j-size: min(12.4vw, 6.75rem);
+    --j-gap: clamp(0.6rem, 1.4vw, 0.9rem);
+
+    /* Tighten the relationship between the headline block, its paragraph, and the raven visual without removing the
+       intentional premium breathing room. Source of the previous mobile excess: the desktop hero kept `place-items:
+       center` plus a full 3-line headline half-height above the centre, which can leave a tall empty band above the
+       headline on short/medium phones once the raven moves down. We keep the centred composition, but anchor the copy
+       so the headline, paragraph and raven stay visually connected instead of drifting apart. */
+    align-items: center;
+    padding-block: clamp(1.25rem, 4svh, 2rem);
   }
-  /* Calmer on phones: smaller starting offsets, less blur. */
+
+  /* Headline: same system, same accent of the last word, no extra margin; the mobile size is the only change. */
+  .journey__headline {
+    margin: 0;
+  }
+
+  /* Character entrance: calmer on phones, but still present and deterministic. */
   .journey__char {
     --dk: 0.5;
     animation-duration: 0.7s;
+  }
+
+  /* Supporting paragraph: keep it connected to the headline and to the raven, premium readable size, controlled
+     measure, minimal vertical gap. Not removed, not exaggerated. */
+  .journey__lede {
+    font-size: clamp(0.875rem, 1.7vw, 1rem);
+    line-height: 1.55;
+    max-width: min(92%, 26rem);
+  }
+
+  /* Details/footer band on mobile: keep the scroll marker, drop the far-side label to reduce clutter. */
+  .journey__details {
+    inset-inline: var(--journey-gutter);
+    bottom: clamp(0.85rem, 4svh, 1.6rem);
+    gap: 0.9rem;
+    font-size: clamp(0.6rem, 1.6vw, 0.7rem);
+  }
+  .journey__scroll {
+    gap: 0.8rem;
+  }
+  .journey__scroll-line {
+    width: 2rem;
+  }
+
+  /* Raven visual: keep it an important centerpiece, adapted for the viewport. Preserve object-fit/object-position and
+     its relationship to headline → paragraph → raven; only scale, position and transform range are tuned for mobile. */
+  .journey__sprite {
+    height: min(46svh, 88vw);
+    aspect-ratio: 400 / 560;
   }
 }
 
@@ -328,13 +379,22 @@
 }
 
 @media (max-width: 767px) {
+  /* Chapters on mobile: keep the same phase anatomy and scroll model; only adapt where the small viewport would
+     otherwise create dead space. Headline placement is raised a little so the full composition stays balanced across
+     320–768px without floating far below the top of the stage. */
   .journey__title {
-    top: 30%;
+    top: 26%;
   }
+
+  /* Final phase actions: keep both buttons clearly connected to the closing paragraph and avoid excessive vertical
+     spacing on mobile. Stacked, full-width, compact vertical gaps — not a stretched desktop row. */
   .journey__actions {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
+    gap: 0.6rem;
+    padding-inline: clamp(0.5rem, 2vw, 1.25rem);
+    margin-top: clamp(0.6rem, 1.6vw, 0.85rem);
   }
 }
 
