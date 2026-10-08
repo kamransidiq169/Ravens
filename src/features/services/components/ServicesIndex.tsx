@@ -63,7 +63,7 @@ export function ServicesIndex() {
       />
       {/* Without JS the entrance can't run; make sure nothing stays hidden. */}
       <noscript>
-        <style>{`.sv-gallery .sv-enter{opacity:1!important;visibility:visible!important}.sv-pin{height:auto!important}.sv-stage{position:static!important;height:auto!important;overflow:visible!important}.sv-gallery{display:grid!important;grid-template-columns:1fr!important;gap:3rem;width:auto!important;padding-inline:1.25rem!important}.sv-item{width:min(78%,20rem);flex:none!important}`}</style>
+        <style>{`.sv-gallery .sv-enter{opacity:1!important;visibility:visible!important}.sv-pin{height:auto!important}.sv-item{visibility:visible!important}.sv-stage{position:static!important;height:auto!important;overflow:visible!important}.sv-gallery{display:grid!important;grid-template-columns:1fr!important;gap:3rem;width:auto!important;padding-inline:1.25rem!important}.sv-item{width:min(78%,20rem);flex:none!important}`}</style>
       </noscript>
     </div>
   );

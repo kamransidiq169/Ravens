@@ -24,7 +24,7 @@ const ENTER = [
 
 /**
  * `before` / `after` (heading, CTA) render inside the stage wrapper; on tablet/desktop the wrappers are
- * `display: contents`, so the layout is unchanged. Phones get a native scroll-snap gallery (CSS only).
+ * `display: contents`, so the layout is unchanged. Phones get a vertically scrubbed, one-card-at-a-time sequence.
  */
 export function ServicesGallery({ before, after }: { before?: ReactNode; after?: ReactNode }) {
   const root = useRef<HTMLUListElement>(null);
@@ -80,12 +80,51 @@ export function ServicesGallery({ before, after }: { before?: ReactNode; after?:
         };
       });
 
-      // Phones: no JS animation at all. The gallery is a native scroll-snap scroller (services.css); the only job here
-      // is making it keyboard-scrollable, since its cards contain no focusable controls.
-      mm.add("(max-width: 767px)", () => {
-        list.tabIndex = 0;
+      // Phones: vertical scroll drives one coordinated timeline. The stage is CSS-sticky inside a tall wrapper (no
+      // ScrollTrigger pin, no touch handling, no nested scroller); each card is stacked in the same grid cell and
+      // slides in from the right (xPercent of its own box, so nothing is measured) while the previous one eases out.
+      mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
+        const wrap = list.closest<HTMLElement>(".sv-pin");
+        const cards = gsap.utils.toArray<HTMLElement>(".sv-item", list);
+        if (!wrap || cards.length < 2) return;
+
+        gsap.set(cards.slice(1), { xPercent: 100, autoAlpha: 0 });
+        const tl = gsap.timeline({
+          defaults: { ease: "none" },
+          scrollTrigger: {
+            trigger: wrap,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 0.4,
+            invalidateOnRefresh: true,
+          },
+        });
+        // Per step: 1.0 of travel, then a 0.7 hold so every service rests as the sole visible card.
+        cards.slice(1).forEach((card, i) => {
+          const at = i * 1.7;
+          tl.to(cards[i]!, { xPercent: -28, duration: 1, ease: "power2.inOut" }, at)
+            .to(cards[i]!, { autoAlpha: 0, duration: 0.45, ease: "power1.in" }, at + 0.1)
+            .fromTo(
+              card,
+              { xPercent: 100, autoAlpha: 0 },
+              { xPercent: 0, duration: 1, ease: "power3.inOut", immediateRender: false },
+              at + 0.1,
+            )
+            .fromTo(
+              card,
+              { autoAlpha: 0 },
+              { autoAlpha: 1, duration: 0.4, ease: "power1.out", immediateRender: false },
+              at + 0.45,
+            )
+            .to({}, { duration: 0.7 }, at + 1);
+        });
+
         list.dataset.motion = "ready";
-        return () => list.removeAttribute("tabindex");
+        return () => {
+          tl.scrollTrigger?.kill();
+          tl.kill();
+          gsap.set(cards, { clearProps: "all" });
+        };
       });
 
       // Reduced motion: final composition, nothing hidden.

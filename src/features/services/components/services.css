@@ -360,9 +360,8 @@
 }
 
 /*
- * Phones: a native horizontal scroll-snap gallery, one card per screen. No JS owns the movement, so there is no
- * pin, no scrubbed transform and no scroll handler to fight iOS momentum scrolling. Each <li> is a full-width snap
- * page; the card inside is centred, so neighbours never intrude on the active card.
+ * Phones: vertical scroll drives the sequence (ServicesGallery). `.sv-pin` is a tall wrapper, `.sv-stage` is
+ * CSS-sticky inside it and the five cards share one grid cell; GSAP only moves the <li>s (transform/opacity).
  */
 @media (max-width: 767px) {
   .sv-page {
@@ -393,47 +392,33 @@
 
   .sv-pin {
     display: block;
-    /* Card width: up to 86vw, capped so heading + card + caption + CTA fit a short viewport. */
-    --sv-chrome: 27rem;
+    /* Space between the caption ("01 — Web Development") and the supporting paragraph. */
+    --sv-caption-gap: clamp(1rem, 3svh, 1.6rem);
+    /* Card width: up to 86vw, capped so heading + card + caption + gap + CTA fit a short viewport. */
+    --sv-chrome: 28rem;
     --sv-panel: max(9rem, min(86vw, 26rem, calc((100svh - var(--sv-chrome)) * 0.75)));
   }
-  .sv-stage {
-    display: block;
-  }
   .sv-gallery {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0;
     width: 100%;
     margin: clamp(0.6rem, 2svh, 1rem) 0 0;
     perspective: none;
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .sv-gallery::-webkit-scrollbar {
-    display: none;
-  }
-  .sv-gallery:focus-visible {
-    outline: 2px solid var(--sv-purple);
-    outline-offset: -2px;
+    overflow: clip;
   }
   .sv-item {
-    flex: 0 0 100%;
+    grid-area: 1 / 1;
     min-width: 0;
     transform: none;
-    scroll-snap-align: center;
-    scroll-snap-stop: always;
-  }
-  /* Hidden-until-GSAP only applies to the desktop entrance; phones have none. */
-  .sv-gallery[data-motion="pending"] .sv-enter {
-    opacity: 1;
   }
   .sv-enter {
     width: var(--sv-panel);
     margin-inline: auto;
+  }
+  /* Hidden-until-GSAP only applies to the desktop entrance. */
+  .sv-gallery[data-motion="pending"] .sv-enter {
+    opacity: 1;
   }
   .sv-photo {
     aspect-ratio: 3 / 4;
@@ -454,9 +439,8 @@
     content: "\00a0—";
   }
 
-  /* Footer/CTA: close under the caption. */
   .sv-foot {
-    margin-top: clamp(0.5rem, 1.6svh, 0.9rem);
+    margin-top: var(--sv-caption-gap);
     padding: 0 1rem;
     font-size: 0.8125rem;
     line-height: 1.6;
@@ -472,23 +456,49 @@
   }
 }
 
+/* Pinned sequence (motion allowed): 1 screen + 4 steps of scroll; the stage stays put while the cards change. */
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  .sv-pin {
+    height: calc(100svh + 4 * 65svh);
+  }
+  .sv-stage {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100svh;
+    padding-top: var(--header-height, 3.5rem);
+    box-sizing: border-box;
+    overflow: clip;
+  }
+  /* Stacked cards wait off-screen (GSAP takes over opacity/visibility once the matchMedia branch runs). */
+  .sv-item:not(:first-child) {
+    visibility: hidden;
+  }
+}
+
+/* Reduced motion on phones: no pin, the services simply stack vertically. */
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .sv-gallery {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 1.75rem;
+  }
+  .sv-item {
+    grid-area: auto;
+  }
+}
+
 /* Short phones (320x568 class): drop the CTA line to keep the image dominant. */
 @media (max-width: 767px) and (max-height: 640px) {
   .sv-pin {
-    --sv-chrome: 20.5rem;
+    --sv-chrome: 21rem;
   }
   .sv-title {
     font-size: clamp(1.85rem, 8.4vw, 2.15rem);
   }
   .sv-foot > p {
     display: none;
-  }
-}
-
-/* Reduced motion: the scroller is user-driven, so it stays; just don't animate snaps programmatically. */
-@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
-  .sv-gallery {
-    scroll-behavior: auto;
   }
 }
 
