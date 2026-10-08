@@ -362,12 +362,45 @@
  * One panel is the focus at a time; its neighbours sit at the edges. Scroll distance = --sv-unit per step.
  */
 @media (max-width: 767px) {
+  .sv-head {
+    margin-top: 0.45rem;
+    padding: 0 1rem;
+  }
+  .sv-eyebrow {
+    font-size: 0.6875rem;
+  }
+  .sv-eyebrow::after {
+    width: 1.75rem;
+    margin-top: 0.4rem;
+  }
+  .sv-title {
+    margin-top: 0.3rem;
+    font-size: clamp(2.15rem, 9.5vw, 2.6rem);
+    line-height: 0.94;
+  }
+  .sv-sub {
+    margin-top: clamp(0.4rem, 1.4vw, 0.6rem);
+    font-size: 0.775rem;
+    line-height: 1.5;
+  }
+
+  /* Source of the previous excess: `.sv-gallery` kept the desktop gallery’s `margin: clamp(1rem, 2.4vh, 2rem) auto 0`
+     inherited from the base rule until this override flattened it. Now the mobile gap above the first image is explicit
+     and compact, so the heading and the gallery read as one connected block. */
+  .sv-gallery {
+    margin-top: clamp(0.55rem, 2.4vw, 0.9rem);
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
   .sv-pin {
-    --sv-unit: 80svh;
-    --sv-panel: min(74vw, 46svh);
+    /* Pin height now matches the actual mobile timeline, not an oversized spacer. The wrapper is `stage + travel`,
+       so the pinned stage releases when the last card lands instead of leaving a dead band below it. */
+    --sv-unit: min(92vw, 100svw);
+    --sv-panel: min(80vw, 38svh);
     display: block;
-    /* 100svh pinned + 0.4 lead-in + 4 transitions + 0.5 closing hold, in units */
-    height: calc(100svh + var(--sv-unit) * 4.9);
+    height: calc(100svh + var(--sv-unit) * 4.65);
   }
   .sv-stage {
     display: flex;
@@ -381,10 +414,11 @@
   .sv-gallery {
     display: flex;
     align-items: flex-start;
-    gap: 5vw;
+    gap: clamp(4px, 2vw, 0.7rem);
     width: max-content;
     margin: 0;
-    padding-inline: calc((100vw - var(--sv-panel)) / 2);
+    padding-inline: clamp(6px, 4vw, 1rem);
+    padding-block: 0;
     perspective: none;
     will-change: transform;
   }
@@ -395,14 +429,37 @@
   .sv-photo {
     aspect-ratio: 3 / 4;
     clip-path: none;
+    margin: 0;
+    padding: 0;
   }
   .sv-caption {
     flex-direction: row;
-    gap: 0.75rem;
-    margin-top: 1rem;
-    font-size: 0.6875rem;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+    font-size: 0.625rem;
     letter-spacing: 0.16em;
-    text-wrap: wrap;
+    text-wrap: nowrap;
+  }
+  .sv-num::after {
+    content: "\00a0—";
+  }
+
+  /* Footer/CTA: visually connected to the gallery, not floating far below it. */
+  .sv-foot {
+    margin-top: 1rem;
+    padding: 0 1rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+  .sv-links {
+    gap: 0.6rem 0.9rem;
+    margin-top: 0.6rem;
+  }
+  .sv-btn {
+    min-height: 2.25rem;
+    padding: 0 1rem;
+    font-size: 0.625rem;
   }
 }
 
@@ -419,12 +476,14 @@
   .sv-gallery {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: 1rem;
     width: auto;
-    padding-inline: 1.25rem;
+    padding-inline: 1rem;
+    margin-top: clamp(0.55rem, 2.4vw, 0.9rem);
+    margin-bottom: 0;
   }
   .sv-item {
-    width: min(78%, 20rem);
+    width: min(84%, 26rem);
   }
   .sv-item:nth-child(even) {
     justify-self: end;
