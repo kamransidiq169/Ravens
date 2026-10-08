@@ -1,7 +1,7 @@
 "use client";
 
 import { useGSAP } from "@gsap/react";
-import { useRef, type CSSProperties } from "react";
+import { useRef, type CSSProperties, type ReactNode } from "react";
 
 import { Image } from "@/components/ui/Image";
 
@@ -22,9 +22,14 @@ const ENTER = [
   { travel: 0.38, z: -140, ry: -16, delay: 0 },
 ] as const;
 
-export function ServicesGallery() {
+/**
+ * `before` / `after` (heading, CTA) render inside the sticky stage so that on phones the whole composition pins as
+ * one frame; on tablet/desktop the wrappers are `display: contents`, so the layout is unchanged.
+ */
+export function ServicesGallery({ before, after }: { before?: ReactNode; after?: ReactNode }) {
   const root = useRef<HTMLUListElement>(null);
   const pin = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
@@ -35,11 +40,10 @@ export function ServicesGallery() {
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         const vw = window.innerWidth;
-        // Phones keep the same choreography; only the depth/tilt are eased back (depth also scales with the
-        // viewport, like the geometry in services.css).
+        // Phones keep the same choreography, flattened: the mobile track has no perspective (services.css), so
+        // depth/tilt would only cost 3D rasterisation. Desktop and tablet values are unchanged.
         const compact = vw < 768;
         const depth = Math.min(1, vw / 1440);
-        const tilt = compact ? 0.6 : 1;
         // Already on screen at load (the /services route): play it in time with a long expo settle. Otherwise scrub
         // it with the scroll (gentler curve, so the travel stays visible across the scroll distance).
         const inView = list.getBoundingClientRect().top < window.innerHeight * 0.85;
@@ -48,16 +52,20 @@ export function ServicesGallery() {
           const e = ENTER[i]!;
           tl.fromTo(
             el,
-            {
-              x: vw * e.travel,
-              y: compact ? 24 : 36,
-              z: e.z * depth,
-              rotationY: e.ry * tilt,
-              scale: 0.95,
-              autoAlpha: 0,
-              transformPerspective: 1200 * Math.max(depth, 0.5),
-            },
-            { x: 0, y: 0, z: 0, rotationY: 0, scale: 1, autoAlpha: 1, duration: 1.7 },
+            compact
+              ? { x: vw * e.travel * 0.5, y: 24, scale: 0.95, autoAlpha: 0 }
+              : {
+                  x: vw * e.travel,
+                  y: 36,
+                  z: e.z * depth,
+                  rotationY: e.ry,
+                  scale: 0.95,
+                  autoAlpha: 0,
+                  transformPerspective: 1200 * Math.max(depth, 0.5),
+                },
+            compact
+              ? { x: 0, y: 0, scale: 1, autoAlpha: 1, duration: 1.7 }
+              : { x: 0, y: 0, z: 0, rotationY: 0, scale: 1, autoAlpha: 1, duration: 1.7 },
             e.delay,
           );
         });
@@ -84,7 +92,8 @@ export function ServicesGallery() {
       // as tall as the timeline needs (see services.css), so the sticky stage releases right after the last hold.
       mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
         const wrapper = pin.current;
-        if (!wrapper || items.length < 2) return;
+        const stage = stageRef.current;
+        if (!wrapper || !stage || items.length < 2) return;
         const panels = gsap.utils.toArray<HTMLElement>(".sv-item", list);
         const captions = gsap.utils.toArray<HTMLElement>(".sv-caption", list);
         const step = () => (panels[1]?.offsetLeft ?? 0) - (panels[0]?.offsetLeft ?? 0);
@@ -108,16 +117,32 @@ export function ServicesGallery() {
         });
         tl.to({}, { duration: 0 }, LEAD + panels.length - 1 + 0.5); // closing hold on the last image
 
+        // The scroll distance comes from the CSS boxes (wrapper minus the svh-sized stage), not from innerHeight, so
+        // Safari's collapsing toolbar can never shift where the sequence ends. A touch of scrub only smooths the
+        // hand-off from native momentum scrolling.
         const st = ScrollTrigger.create({
           trigger: wrapper,
           start: "top top",
-          end: "bottom bottom",
+          end: () => `+=${wrapper.offsetHeight - stage.offsetHeight}`,
           animation: tl,
-          scrub: 0.6,
+          scrub: 0.35,
           invalidateOnRefresh: true,
         });
+
+        // Decode every photo once it has loaded, so Safari never decodes a 3x bitmap mid-scroll.
+        const imgs = gsap.utils.toArray<HTMLImageElement>("img", list);
+        const decode = (img: HTMLImageElement) => void img.decode().catch(() => undefined);
+        const pending = new Map<HTMLImageElement, () => void>();
+        imgs.forEach((img) => {
+          if (img.complete && img.naturalWidth) return decode(img);
+          const onLoad = () => decode(img);
+          pending.set(img, onLoad);
+          img.addEventListener("load", onLoad, { once: true });
+        });
+
         list.dataset.track = "ready";
         return () => {
+          pending.forEach((onLoad, img) => img.removeEventListener("load", onLoad));
           st.kill();
           tl.kill();
           gsap.set([list, ...panels, ...captions], { clearProps: "transform,opacity" });
@@ -136,7 +161,8 @@ export function ServicesGallery() {
 
   return (
     <div className="sv-pin" ref={pin}>
-      <div className="sv-stage">
+      <div className="sv-stage" ref={stageRef}>
+        {before}
         <ul ref={root} id="services-gallery" className="sv-gallery" aria-label="Our services" data-motion="pending">
           {panels.map((p, i) => (
             <li key={p.label} className="sv-item" style={{ "--i": i } as CSSProperties}>
@@ -146,9 +172,10 @@ export function ServicesGallery() {
                     src={p.src}
                     alt={p.alt}
                     fill
-                    sizes="(min-width: 768px) 20vw, 72vw"
+                    sizes="(min-width: 768px) 20vw, 80vw"
                     className="h-full"
-                    priority
+                    loading="eager"
+                    preload={i === 0}
                   />
                 </div>
                 <p className="sv-caption">
@@ -159,6 +186,7 @@ export function ServicesGallery() {
             </li>
           ))}
         </ul>
+        {after}
       </div>
     </div>
   );
