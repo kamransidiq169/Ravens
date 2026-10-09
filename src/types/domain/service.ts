@@ -8,3 +8,10 @@ export interface Service {
   deliverables: string[];
   seo: Seo;
 }
+
+/** One photographic panel in the services gallery. */
+export interface ServicePanel {
+  label: string;
+  alt: string;
+  src: string;
+}

@@ -5,7 +5,7 @@ import { Link } from "@/components/ui/Link";
 import { ServicesGallery } from "./ServicesGallery";
 import { ServicesNav } from "./ServicesNav";
 
-import "./services.css";
+import "../styles/services.css";
 
 const delay = (s: number) => ({ "--sv-delay": `${s}s` }) as CSSProperties;
 

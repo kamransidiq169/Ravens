@@ -1,7 +1,9 @@
+import type { ServicePanel } from "@/types/domain/service";
+
 /** Service gallery content: label, alt text and source photograph per panel, in display order. */
 const unsplash = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&h=1200&q=80`;
 
-export const panels = [
+export const panels: ServicePanel[] = [
   { label: "Web Development", alt: "Laptop glowing in a dark room", src: "/services/webdev.jpg" },
   {
     label: "App Development",
