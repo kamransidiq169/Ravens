@@ -4,7 +4,7 @@
 
 ## Context
 
-The site mixes marketing pages, a contact flow and a heavy WebGL hero that will be built by a separate effort. We need areas that can change independently and a structure that stays legible as it grows.
+The site mixes marketing pages, a contact flow and a heavy WebGL hero. We need areas that can change independently and a structure that stays legible as it grows.
 
 ## Decision
 
@@ -12,6 +12,6 @@ Organise by **feature** (`src/features/<name>/`) on top of a small set of shared
 
 ## Consequences
 
-- The hero can be rewritten without touching other code, as long as `Hero` keeps its export.
+- The hero can be rewritten without touching other code, as long as `features/home` keeps its public export.
 - `app/` cannot read `content/` or feature internals; data flows through feature repositories.
 - Slightly more ceremony (an `index.ts` per feature) in exchange for explicit, checkable boundaries.

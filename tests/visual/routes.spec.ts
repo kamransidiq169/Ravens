@@ -6,7 +6,7 @@ const routes: [name: string, path: string][] = [
   ["services", "/services"],
   ["service-detail", "/services/web-design"],
   ["work", "/work"],
-  ["work-detail", "/work/northlight"],
+  ["work-detail", "/work/the-heating-store"],
   ["insights", "/insights"],
   ["insight-detail", "/insights/designing-for-restraint"],
   ["contact", "/contact"],

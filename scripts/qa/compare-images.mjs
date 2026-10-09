@@ -1,4 +1,4 @@
-// Pixel-diff two images (e.g. a build screenshot vs a mockup in docs/design/reference).
+// Pixel-diff two images (e.g. a build screenshot vs a design mockup).
 // Usage: node scripts/qa/compare-images.mjs <actual.png> <expected.png> [diff-out.png] [max-ratio=0.02]
 import { writeFile } from "node:fs/promises";
 

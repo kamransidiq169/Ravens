@@ -2,7 +2,7 @@
 
 Website for **Ravens**, an independent design and development studio. Next.js (App Router) · TypeScript · Tailwind CSS 4 · GSAP + Lenis · React Three Fiber (shared canvas).
 
-> The home-page hero lives in `src/features/hero/` — see [The hero](#the-hero) and [`docs/design/reference/HERO-ANALYSIS.md`](docs/design/reference/HERO-ANALYSIS.md).
+> The home page is composed in `src/features/home/`; the hero lives in `src/features/home/sections/Hero/` — see [The hero](#the-hero). Architecture: [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md).
 
 ## Prerequisites
 
@@ -28,7 +28,7 @@ Validated with zod in [`src/config/env.ts`](src/config/env.ts); invalid values f
 | ------------------------ | -------- | ----------------------------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_SITE_URL`   | prod     | Public origin (no trailing slash). Canonical URLs, sitemap, OG. Defaults to `http://localhost:3000` in dev. |
 | `CONTACT_TO_EMAIL`       | optional | Recipient of contact-form submissions (once an email provider is wired).                                    |
-| `EMAIL_PROVIDER_API_KEY` | optional | Provider key (see the `TODO(email-provider)` in `features/contact/lib/actions.ts`).                         |
+| `EMAIL_PROVIDER_API_KEY` | optional | Provider key (see the `TODO(email-provider)` in `features/contact/actions/submit-contact.ts`).              |
 
 `NEXT_PUBLIC_*` values are inlined at **build** time — set them before `pnpm build` / `docker build`.
 
@@ -50,7 +50,7 @@ Validated with zod in [`src/config/env.ts`](src/config/env.ts); invalid values f
 | `pnpm assets:icons`            | Regenerates favicon / PNG icons in `public/`                                           |
 | `pnpm prove:boundaries`        | Writes violating imports, asserts ESLint rejects each, cleans up                       |
 | `pnpm qa:initial-js`           | After a build: asserts no route ships three.js in its initial JS                       |
-| `pnpm qa:compare a b`          | Pixel-diffs two images (build screenshot vs a mockup in `docs/design/reference`)       |
+| `pnpm qa:compare a b`          | Pixel-diffs two images (build screenshot vs a design mockup)                           |
 
 Playwright starts the production server itself (`scripts/dev/serve-prod.mjs`, building first if needed).
 
@@ -59,16 +59,16 @@ Playwright starts the production server itself (`scripts/dev/serve-prod.mjs`, bu
 ## Folder structure
 
 ```
-.github/workflows/ci.yml   CI: typecheck → lint → format → knip → cycles → unit → build → e2e + visual
+.github/workflows/ci.yml   CI: typecheck, lint, format, knip, cycles, unit, build, initial-JS check
 .husky/                    pre-commit (lint-staged) and commit-msg (commitlint)
-docs/architecture/         ARCHITECTURE.md + ADRs
-docs/design/reference/     mockups — never shipped
-public/                    static files
+docs/architecture/         ARCHITECTURE.md (layout, layers, rendering)
+docs/decisions/            ADRs
+public/                    images/{brand,services,work,insights}, icons, hero/images
 scripts/{assets,qa,dev}/   asset pipelines · QA tools · dev tooling
-src/app/                   routes only — (site) pages, metadata files
-src/features/<name>/       one folder per product feature (see below)
+src/app/                   routes only; each page composes one feature
+src/features/<name>/       one folder per product area; home/sections/ holds home-only sections
 src/components/            shared UI: ui, layout, brand, motion, seo, providers
-src/webgl/                 the single shared R3F canvas + WebGL utils
+src/webgl/                 the single shared R3F canvas + capability/quality helpers
 src/hooks/                 shared React hooks
 src/content/               typed placeholder content (CMS-ready data source)
 src/config/                site.ts (metadata source of truth), env.ts (zod), navigation.ts (client-safe)
@@ -101,20 +101,20 @@ Data reaches pages through each feature's repository (`features/<name>/lib/repos
 
 ## The hero
 
-The home page opens with one sticky scroll stage (`src/features/hero`) that carries two chapters: the headline hero and the
-featured project (`src/features/showcase`, passed in as `chapter`). The stage sits inside a tall wrapper (`340svh` desktop, `250svh`
+The home page opens with one sticky scroll stage (`src/features/home/sections/Hero`) that carries the headline hero and the
+featured-project chapters (`chapters/`, composed by `features/home/Home.tsx`). The stage sits inside a tall wrapper (`340svh` desktop, `250svh`
 phones) and is `position: sticky`, so scrolling stays native and the stage is released by the browser at the end.
 
 - **One timeline:** `hooks/useJourney.ts` scrubs a single GSAP timeline with a single ScrollTrigger. It only carries a 0 → 1 proxy;
-  `lib/journey.ts › journeyAt(p)` is a pure function that returns every moving value (headline zoom and fall, jellyfish path, project
+  `animation/journey.ts › journeyAt(p)` is a pure function that returns every moving value (headline zoom and fall, jellyfish path, project
   title and meta), applied with transforms and opacity only. Reversing the scroll reverses the sequence.
-- **Jellyfish:** a procedural Three.js animal (`scene/jellyfish.ts`, shaders inline) rendered as a drei `<View>` into the shared canvas
-  (`scene/JellyScene.tsx`). It reads `lib/journey.store.ts` inside its own frame loop, so scrolling causes no React renders. The server
+- **Jellyfish:** a procedural Three.js animal (`scenes/jellyfish.ts`, shaders inline) rendered as a drei `<View>` into the shared canvas
+  (`scenes/JellyScene.tsx`). It reads `animation/journey.store.ts` inside its own frame loop, so scrolling causes no React renders. The server
   renders an SVG version (`components/JellySprite.tsx`) as the first paint and as the fallback for no WebGL, reduced motion and
   save-data; the 3D scene loads after idle and the sprite crossfades away once its first frame is up.
 - **Reduced motion / no JS:** CSS stacks the two chapters in normal flow; no timeline, no WebGL.
 - **Background:** the stage has none. The page's pale lavender (`--color-bg`) shows through for the whole sequence.
-- The raven photos in `public/hero/images/` are no longer used by the site; they are kept on disk untouched.
+- `public/hero/images/rav.png` is used by the Process section. The other raven photos (`raven11.png`, `raven2.png`, `raven3.png`) are not referenced by the site; they are kept on disk untouched.
 
 ## Deployment
 
