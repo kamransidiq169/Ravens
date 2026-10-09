@@ -4,8 +4,8 @@ import { withPlaceholderCovers } from "@/content/placeholder-images";
 
 import type { Project } from "@/types/domain/project";
 
-import { SelectedWorkGallery } from "./selected-work/SelectedWorkGallery";
-import { SelectedWorkHeader } from "./selected-work/SelectedWorkHeader";
+import { SelectedWorkGallery } from "./components/SelectedWorkGallery";
+import { SelectedWorkHeader } from "./components/SelectedWorkHeader";
 
 const HEADING_ID = "selected-work-heading";
 

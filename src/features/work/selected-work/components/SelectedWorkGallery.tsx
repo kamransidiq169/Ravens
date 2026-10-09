@@ -4,10 +4,11 @@ import { useRef, type ReactNode } from "react";
 
 import type { Project } from "@/types/domain/project";
 
-import { SelectedWorkSlide } from "./SelectedWorkSlide";
-import { useSelectedWorkScroll } from "./useSelectedWorkScroll";
+import { useSelectedWorkScroll } from "../hooks/useSelectedWorkScroll";
 
-import "./selected-work.css";
+import { SelectedWorkSlide } from "./SelectedWorkSlide";
+
+import "../styles/selected-work.css";
 
 interface SelectedWorkGalleryProps {
   projects: Project[];
