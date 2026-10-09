@@ -5,7 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import type { Group } from "three";
 
-import { getQualityTier } from "@/webgl/utils/quality";
+import { getQualityTier } from "@/webgl/quality";
 
 import { sequenceAt } from "../animation/journey";
 import { closingPhase, journeyStore } from "../animation/journey.store";

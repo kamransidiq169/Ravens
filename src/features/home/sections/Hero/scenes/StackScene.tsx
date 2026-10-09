@@ -15,7 +15,7 @@ import {
   type Texture,
 } from "three";
 
-import { getQualityTier } from "@/webgl/utils/quality";
+import { getQualityTier } from "@/webgl/quality";
 
 import { enterpriseProgress, sequenceAt, type SequenceState } from "../animation/journey";
 import { journeyStore } from "../animation/journey.store";

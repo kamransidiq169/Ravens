@@ -6,8 +6,8 @@ import { useState, useSyncExternalStore } from "react";
 
 import { MAX_DPR } from "@/lib/constants";
 
-import { isWebGLSupported } from "../utils/isWebGLSupported";
-import { dprRangeForTier, getQualityTier } from "../utils/quality";
+import { isWebGLSupported } from "./capabilities";
+import { dprRangeForTier, getQualityTier } from "./quality";
 
 const noopSubscribe = () => () => {};
 

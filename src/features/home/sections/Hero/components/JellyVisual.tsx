@@ -4,8 +4,8 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { LazySharedCanvas, loadCanvas } from "@/webgl/canvas/LazySharedCanvas";
-import { isWebGLSupported } from "@/webgl/utils/isWebGLSupported";
+import { isWebGLSupported } from "@/webgl/capabilities";
+import { LazySharedCanvas, loadCanvas } from "@/webgl/LazyCanvas";
 
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
