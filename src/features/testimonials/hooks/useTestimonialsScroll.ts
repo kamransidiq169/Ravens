@@ -15,7 +15,7 @@ type LineState = "hidden" | "settled" | "moving";
  * at the end. One scrubbed timeline carries a 0 → 1 proxy; each tick writes transforms/opacity (plus one clip-path on
  * the arriving portrait) and touches attributes only when the active index changes.
  *
- * Each layer (a testimonial with its portrait, then "trusted by") recedes (scale .94, y −3%) as the next rises into
+ * Each layer (a testimonial with its portrait) recedes (scale .94, y −3%) as the next rises into
  * place; the arriving quote's lines settle one after another while its portrait frame travels a little further than the
  * text, is revealed from the top down, and its image settles from a slight zoom. Reuses the app's single
  * GSAP/ScrollTrigger (and Lenis) instance; everything reverts on unmount.
@@ -30,7 +30,6 @@ export function useTestimonialsScroll(root: RefObject<HTMLElement | null>) {
     const rail = Array.from(wrapper.querySelectorAll<HTMLElement>("[data-tm='rail']"));
     const frames = layers.map((layer) => layer.querySelector<HTMLElement>("[data-tm='frame']"));
     const images = layers.map((layer) => layer.querySelector<HTMLElement>("[data-tm='img']"));
-    // Layers are the testimonials plus one final "trusted by" layer.
     const last = layers.length - 1;
     if (last < 1) return;
 

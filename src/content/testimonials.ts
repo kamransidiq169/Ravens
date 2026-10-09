@@ -1,6 +1,6 @@
 // PLACEHOLDER CONTENT — every quote, person and company below is fictional. Replace with real client quotes (with
 // permission) and real logos before launch; none of these are actual Ravens clients.
-import type { ClientLogo, Testimonial } from "@/types/domain/testimonial";
+import type { Testimonial } from "@/types/domain/testimonial";
 
 export const testimonials: Testimonial[] = [
   {
@@ -55,9 +55,3 @@ export const testimonials: Testimonial[] = [
     imagePosition: "50% 20%",
   },
 ];
-
-/** PLACEHOLDER marks — swap for real, single-colour client logos (`logo: "/clients/name.svg"`). */
-export const clientLogos: ClientLogo[] = Array.from({ length: 6 }, (_, i) => ({
-  id: `c-${i + 1}`,
-  name: `Client ${String(i + 1).padStart(2, "0")}`,
-}));

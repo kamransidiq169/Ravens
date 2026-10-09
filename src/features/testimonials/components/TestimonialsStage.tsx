@@ -3,11 +3,9 @@
 import Image from "next/image";
 import { Fragment, useRef } from "react";
 
-import type { ClientLogo, Testimonial } from "@/types/domain/testimonial";
+import type { Testimonial } from "@/types/domain/testimonial";
 
 import { useTestimonialsScroll } from "../hooks/useTestimonialsScroll";
-
-import { ClientMark } from "./ClientMark";
 
 import "../testimonials.css";
 
@@ -30,10 +28,9 @@ function Words({ text }: { text: string }) {
 interface TestimonialsStageProps {
   headingId: string;
   testimonials: Testimonial[];
-  clients: ClientLogo[];
 }
 
-export function TestimonialsStage({ headingId, testimonials, clients }: TestimonialsStageProps) {
+export function TestimonialsStage({ headingId, testimonials }: TestimonialsStageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   useTestimonialsScroll(rootRef);
   const total = testimonials.length;
@@ -85,19 +82,6 @@ export function TestimonialsStage({ headingId, testimonials, clients }: Testimon
               </figure>
             </div>
           ))}
-
-          <div data-tm="layer" className="tm__layer tm__layer--trusted">
-            <div className="tm__item">
-              <ul className="tm__logos">
-                {clients.map((client) => (
-                  <li key={client.id} className="tm__logo">
-                    <ClientMark client={client} />
-                  </li>
-                ))}
-              </ul>
-              <h3 className="tm__trusted-title">Trusted by</h3>
-            </div>
-          </div>
         </div>
 
         <ol aria-hidden="true" className="tm__rail">

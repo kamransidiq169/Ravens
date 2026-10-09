@@ -11,7 +11,7 @@
  * Layouts, all CSS-selected so nothing shifts after hydration:
  *  - base (reduced motion, no-JS): a vertical editorial list; every testimonial is visible, in reading order.
  *  - cinematic (motion allowed, every width): `.tm` is a tall wrapper, `.tm__stage` is sticky inside it, and the
- *    layers (each testimonial with its portrait, then "trusted by") are driven by hooks/useTestimonialsScroll.ts.
+ *    layers (each testimonial with its portrait) are driven by hooks/useTestimonialsScroll.ts.
  *    Native scrolling. Phones stack quote → portrait → attribution; from 768px the portrait stands to the right.
  */
 
@@ -70,8 +70,7 @@
   padding: 6rem var(--tm-gutter) 2rem;
 }
 
-.tm__eyebrow,
-.tm__trusted-title {
+.tm__eyebrow {
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(0.6875rem, 0.85vw, 0.8125rem);
@@ -237,45 +236,6 @@
   display: none;
 }
 
-.tm__trusted-title {
-  margin-top: 2rem;
-}
-
-.tm__logos {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.tm__logo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-height: 4.5rem;
-  border-top: 1px solid var(--tm-line);
-  font-family: var(--font-display);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--tm-indigo);
-  opacity: 0.55;
-}
-
-.tm__logo-mark {
-  flex: none;
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-.tm__logo-img {
-  width: auto;
-  height: 1.75rem;
-  filter: brightness(0);
-}
-
 /* ---- Tablet and up, any motion preference: quote left, portrait right ---- */
 @media (min-width: 768px) {
   .tm__stage {
@@ -341,11 +301,6 @@
   .tm__role {
     font-size: clamp(0.8125rem, 0.95vw, 0.9375rem);
   }
-
-  .tm__logos {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: 3vw;
-  }
 }
 
 @media (min-width: 1024px) {
@@ -361,7 +316,7 @@
 /* ---- Cinematic: one testimonial on stage at a time ---- */
 @media (prefers-reduced-motion: no-preference) {
   .tm {
-    height: calc(100svh + var(--tm-count) * 85svh);
+    height: calc(100svh + (var(--tm-count) - 1) * 85svh);
   }
 
   .tm__stage {
@@ -436,21 +391,6 @@
 
   .tm__who {
     margin-top: 1.5rem;
-  }
-
-  .tm__layer--trusted .tm__item {
-    display: grid;
-    align-content: center;
-    gap: 2rem;
-  }
-
-  .tm__layer--trusted .tm__trusted-title {
-    order: -1;
-    margin: 0;
-  }
-
-  .tm__logo {
-    min-height: clamp(4rem, 11svh, 7rem);
   }
 
   /* The index rail: five quiet marks along the foot of the frame; the current one is lit. */
@@ -549,11 +489,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .tm__layer--trusted .tm__item {
-    display: grid;
-    align-content: center;
   }
 }
 
