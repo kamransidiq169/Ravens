@@ -1,9 +1,9 @@
 import { ContactCta } from "@/features/contact";
 import { Hero } from "@/features/hero";
+import { TestimonialsSection } from "@/features/home";
 import { ProcessSection } from "@/features/process";
 import { ServicesPreview, getServices } from "@/features/services";
 import { Showcase, ShowcaseBespoke, ShowcaseEnterprise, ShowcaseInteractive } from "@/features/showcase";
-import { TestimonialsSection } from "@/features/testimonials";
 import { SelectedWork, getProjects } from "@/features/work";
 
 import { JsonLd, organizationJsonLd, webSiteJsonLd } from "@/components/seo/JsonLd";

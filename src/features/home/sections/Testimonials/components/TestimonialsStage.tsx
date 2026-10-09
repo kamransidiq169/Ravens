@@ -7,7 +7,7 @@ import type { Testimonial } from "@/types/domain/testimonial";
 
 import { useTestimonialsScroll } from "../hooks/useTestimonialsScroll";
 
-import "../testimonials.css";
+import "../styles/testimonials.css";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 

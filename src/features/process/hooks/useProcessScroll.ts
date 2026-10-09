@@ -1,6 +1,6 @@
 import { useEffect, type RefObject } from "react";
 
-import { STAGES, processAt } from "../lib/process.motion";
+import { STAGES, processAt } from "../animation/process.animation";
 
 // matchMedia only runs its callback when at least one named condition matches, so both sides are listed.
 const CONDITIONS = { compact: "(max-width: 767px)", wide: "(min-width: 768px)" };

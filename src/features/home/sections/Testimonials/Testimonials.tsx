@@ -1,6 +1,5 @@
-import { getTestimonials } from "../lib/repository";
-
-import { TestimonialsStage } from "./TestimonialsStage";
+import { TestimonialsStage } from "./components/TestimonialsStage";
+import { getTestimonials } from "./lib/repository";
 
 const HEADING_ID = "testimonials-heading";
 

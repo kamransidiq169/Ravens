@@ -1,4 +1,4 @@
-import "../process.css";
+import "../styles/process.css";
 
 import { toStages } from "../lib/process.data";
 import { getProcessSteps } from "../lib/repository";

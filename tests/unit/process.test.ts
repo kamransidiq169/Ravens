@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { STAGES, processAt } from "@/features/process/animation/process.animation";
 import { STAGE_IDS, toStages } from "@/features/process/lib/process.data";
-import { STAGES, processAt } from "@/features/process/lib/process.motion";
 
 const wide = { compact: false };
 const compact = { compact: true };
