@@ -4,8 +4,8 @@ import { useActionState, useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 
-import { submitContact } from "../lib/actions";
-import { HONEYPOT_FIELD, readContactForm, validateContact, type ContactField } from "../lib/schema";
+import { submitContact } from "../actions/submit-contact";
+import { HONEYPOT_FIELD, readContactForm, validateContact, type ContactField } from "../schema";
 
 import { FormField } from "./FormField";
 

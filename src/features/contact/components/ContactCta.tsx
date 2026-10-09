@@ -1,11 +1,11 @@
-import "../contact-cta.css";
+import "../styles/contact-cta.css";
 
 import { RavenAccent } from "@/components/brand/RavenAccent";
 import { Link } from "@/components/ui/Link";
 
 import { publicSite } from "@/config/navigation";
 
-import { contactCtaCopy as copy } from "../contactCta.config";
+import { contactCtaCopy as copy } from "../contact-cta.config";
 
 import { ContactCtaStage } from "./ContactCtaStage";
 import { CtaFeather } from "./CtaFeather";

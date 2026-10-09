@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { submitContact } from "@/features/contact/lib/actions";
-import { contactSchema, HONEYPOT_FIELD, validateContact } from "@/features/contact/lib/schema";
+import { submitContact } from "@/features/contact/actions/submit-contact";
+import { contactSchema, HONEYPOT_FIELD, validateContact } from "@/features/contact/schema";
 
 const valid = {
   name: "Ada Lovelace",

@@ -1,6 +1,6 @@
 "use server";
 
-import { HONEYPOT_FIELD, readContactForm, validateContact, type ContactResult } from "./schema";
+import { HONEYPOT_FIELD, readContactForm, validateContact, type ContactResult } from "../schema";
 
 const SUCCESS: ContactResult = {
   status: "success",
