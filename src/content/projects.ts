@@ -3,31 +3,31 @@ import type { Project } from "@/types/domain/project";
 
 const covers: [Image, Image, Image, Image, Image] = [
   {
-    src: "/selectedwork/thm.png",
+    src: "/images/work/the-heating-store.png",
     alt: "Premium underfloor heating website for The Heating Store",
     width: 1600,
     height: 1000,
   },
   {
-    src: "/selectedwork/tripoday.png",
+    src: "/images/work/tripoday.png",
     alt: "Travel CRM interface and digital experience for Tripoday",
     width: 1600,
     height: 1000,
   },
   {
-    src: "/selectedwork/prowarm.png",
+    src: "/images/work/prowarm.png",
     alt: "Premium brand website experience for ProWarm",
     width: 1600,
     height: 1000,
   },
   {
-    src: "/selectedwork/wowtherm.png",
+    src: "/images/work/wowtherm.png",
     alt: "Modern heating brand website experience for Wowtherm",
     width: 1600,
     height: 1000,
   },
   {
-    src: "/selectedwork/landaim.png",
+    src: "/images/work/landa-im-reality.png",
     alt: "Premium real estate website experience for Landa Im Reality",
     width: 1600,
     height: 1000,

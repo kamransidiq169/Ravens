@@ -1,7 +1,12 @@
 // PLACEHOLDER CONTENT — replace with real articles.
 import type { Insight } from "@/types/domain/insight";
 
-const cover = (n: number, alt: string) => ({ src: `/placeholder/insight-${n}.svg`, alt, width: 1600, height: 1000 });
+const cover = (n: number, alt: string) => ({
+  src: `/images/insights/insight-${n}.svg`,
+  alt,
+  width: 1600,
+  height: 1000,
+});
 
 export const insights: Insight[] = [
   {

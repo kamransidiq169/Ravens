@@ -4,11 +4,11 @@ import type { ServicePanel } from "@/types/domain/service";
 const unsplash = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&h=1200&q=80`;
 
 export const panels: ServicePanel[] = [
-  { label: "Web Development", alt: "Laptop glowing in a dark room", src: "/services/webdev.jpg" },
+  { label: "Web Development", alt: "Laptop glowing in a dark room", src: "/images/services/web-development.jpg" },
   {
     label: "App Development",
     alt: "Sweeping curved architecture against the sky",
-    src: "/services/appdev.jpg",
+    src: "/images/services/app-development.jpg",
   },
   {
     label: "Digital Experiences",
@@ -18,11 +18,11 @@ export const panels: ServicePanel[] = [
   {
     label: "Business Systems",
     alt: "Modern meeting room with a long timber table",
-    src: "/services/bm.png",
+    src: "/images/services/business-management.png",
   },
   {
     label: "CRM Development",
     alt: "Designer lounge chairs and a black floor lamp",
-    src: "/services/crm.jpg",
+    src: "/images/services/crm.jpg",
   },
 ];

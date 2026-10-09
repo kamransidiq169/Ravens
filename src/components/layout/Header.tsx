@@ -29,7 +29,7 @@ export function Header() {
         >
           <div className="relative h-[clamp(42px,3.6vw,64px)] w-[clamp(200px,16vw,320px)]">
             <Image
-              src="/ravenlog.png"
+              src="/images/brand/ravens-logo.png"
               alt={`${publicSite.name} — home`}
               fill
               priority
