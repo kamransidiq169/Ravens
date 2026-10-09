@@ -83,6 +83,10 @@ export function ServicesGallery({ before, after }: { before?: ReactNode; after?:
       // Phones: vertical scroll drives one coordinated timeline. The stage is CSS-sticky inside a tall wrapper (no
       // ScrollTrigger pin, no touch handling, no nested scroller); each card is stacked in the same grid cell and
       // slides in from the right (xPercent of its own box, so nothing is measured) while the previous one eases out.
+      //
+      // The ScrollTrigger uses fixed pixel-range end so iOS Safari's dynamic address bar cannot move the end point
+      // during scroll (which would cause continuous recalculation and the section to shake). Measurements happen
+      // only on refresh, never per frame.
       mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
         const wrap = list.closest<HTMLElement>(".sv-pin");
         const cards = gsap.utils.toArray<HTMLElement>(".sv-item", list);
@@ -96,7 +100,6 @@ export function ServicesGallery({ before, after }: { before?: ReactNode; after?:
             start: "top top",
             end: "bottom bottom",
             scrub: 0.4,
-            invalidateOnRefresh: true,
           },
         });
         // Per step: 1.0 of travel, then a 0.7 hold so every service rests as the sole visible card.

@@ -365,7 +365,7 @@
  */
 @media (max-width: 767px) {
   .sv-page {
-    padding-bottom: clamp(1.5rem, 5svh, 2.5rem);
+    padding-bottom: clamp(1.5rem, 5vh, 2.5rem);
     min-height: 0;
   }
   .sv-head {
@@ -393,17 +393,17 @@
   .sv-pin {
     display: block;
     /* Space between the caption ("01 — Web Development") and the supporting paragraph. */
-    --sv-caption-gap: clamp(1rem, 3svh, 1.6rem);
+    --sv-caption-gap: clamp(1rem, 3vh, 1.6rem);
     /* Card width: up to 86vw, capped so heading + card + caption + gap + CTA fit a short viewport. */
     --sv-chrome: 28rem;
-    --sv-panel: max(9rem, min(86vw, 26rem, calc((100svh - var(--sv-chrome)) * 0.75)));
+    --sv-panel: max(9rem, min(86vw, 26rem, calc((100vh - var(--sv-chrome)) * 0.75)));
   }
   .sv-gallery {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     width: 100%;
-    margin: clamp(0.6rem, 2svh, 1rem) 0 0;
+    margin: clamp(0.6rem, 2vh, 1rem) 0 0;
     perspective: none;
     overflow: clip;
   }
@@ -447,7 +447,7 @@
   }
   .sv-links {
     gap: 0.6rem 0.9rem;
-    margin-top: clamp(0.5rem, 1.6svh, 0.8rem);
+    margin-top: clamp(0.5rem, 1.6vh, 0.8rem);
   }
   .sv-btn {
     min-height: 2.25rem;
@@ -456,10 +456,17 @@
   }
 }
 
-/* Pinned sequence (motion allowed): 1 screen + 4 steps of scroll; the stage stays put while the cards change. */
+/* Pinned sequence (motion allowed): 1 screen + 4 steps of scroll; the stage stays put while the cards change.
+   * The wrapper is tall enough to drive the full scrub range; the stage is CSS-sticky inside it.
+   * Height is fixed in viewport-independent units so iOS Safari's dynamic address bar cannot make the
+   * pin recalculate while scrolling (which would move the ScrollTrigger end point and shake the section).
+   */
 @media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
   .sv-pin {
-    height: calc(100svh + 4 * 65svh);
+    /* One viewport for the sticky stage, then one fixed 65rem step per remaining card (4 cards).
+       65rem ~= the tallest mobile card (image 3:4 + caption + gap) on a short phone; taller phones
+       get more whitespace, which is fine — the scrub range still covers the full sequence. */
+    height: calc(100vh + 4 * 65rem);
   }
   .sv-stage {
     position: sticky;
@@ -467,10 +474,13 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    height: 100svh;
+    height: 100vh;
     padding-top: var(--header-height, 3.5rem);
     box-sizing: border-box;
     overflow: clip;
+    /* Stable compositing layer so the sticky stage does not repaint when the tall wrapper scrolls past it. */
+    contain: layout style;
+    transform: translateZ(0);
   }
   /* Stacked cards wait off-screen (GSAP takes over opacity/visibility once the matchMedia branch runs). */
   .sv-item:not(:first-child) {
