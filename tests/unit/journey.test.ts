@@ -301,7 +301,11 @@ describe("phases, scenes and the final release", () => {
 
   it("the scroll length in the CSS equals the model's (and the phone length is the same sequence, shorter)", () => {
     const css = readFileSync("src/features/hero/hero.css", "utf8");
-    const lengths = [...css.matchAll(/--journey-length:\s*(\d+)svh/g)].map((m) => Number(m[1]));
+    // Desktop is a plain `NNNsvh`; the phone override is `calc(A svh + N * B svh + C svh)`.
+    const lengths = [...css.matchAll(/--journey-length:\s*([^;]+);/g)].map(([, value = ""]) => {
+      const calc = /calc\(\s*(\d+)svh\s*\+\s*(\d+)\s*\*\s*(\d+)svh\s*\+\s*(\d+)svh\s*\)/.exec(value);
+      return calc ? Number(calc[1]) + Number(calc[2]) * Number(calc[3]) + Number(calc[4]) : parseInt(value, 10);
+    });
     expect(lengths[0]).toBe(JOURNEY_SVH);
     expect(lengths[1]).toBeLessThan(JOURNEY_SVH);
     expect(lengths[1]).toBeGreaterThan(JOURNEY_SVH * 0.6);

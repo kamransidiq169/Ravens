@@ -1,6 +1,7 @@
+import type { Image } from "@/types/domain/common";
 import type { Project } from "@/types/domain/project";
 
-const covers = [
+const covers: [Image, Image, Image, Image, Image] = [
   {
     src: "/selectedwork/thm.png",
     alt: "Premium underfloor heating website for The Heating Store",
