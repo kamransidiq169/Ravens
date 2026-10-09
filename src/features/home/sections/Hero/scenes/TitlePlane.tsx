@@ -4,8 +4,8 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import { CanvasTexture, SRGBColorSpace, type Mesh, type PerspectiveCamera } from "three";
 
-import { sequenceAt, type SequenceState, type TitleState } from "../lib/journey";
-import { journeyStore } from "../lib/journey.store";
+import { sequenceAt, type SequenceState, type TitleState } from "../animation/journey";
+import { journeyStore } from "../animation/journey.store";
 
 interface TitleBox {
   /** Layout box of the DOM title inside the stage, in CSS px (untransformed), and the stage size. */

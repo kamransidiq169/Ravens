@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { closingPhase } from "@/features/hero/lib/journey.store";
+import { closingPhase } from "@/features/home/sections/Hero/animation/journey.store";
 
 describe("closingPhase", () => {
   it("notifies subscribers only when the value actually changes, and stops after unsubscribe", () => {

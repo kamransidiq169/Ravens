@@ -7,8 +7,8 @@ import type { Group, Mesh } from "three";
 
 import { getQualityTier } from "@/webgl/utils/quality";
 
-import { sequenceAt, type SequenceState } from "../lib/journey";
-import { journeyStore } from "../lib/journey.store";
+import { sequenceAt, type SequenceState } from "../animation/journey";
+import { journeyStore } from "../animation/journey.store";
 
 import { createBasketball, createSlabGeometry, createSoftShadowTexture } from "./orbGeometry";
 import { TitlePlane } from "./TitlePlane";

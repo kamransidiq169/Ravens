@@ -1,6 +1,7 @@
-import { AccentTitle, OrbArt } from "@/features/hero";
+import { AccentTitle } from "../components/AccentTitle";
+import { OrbArt } from "../components/OrbArt";
 
-import { interactiveChapter as chapter } from "../showcase.config";
+import { interactiveChapter as chapter } from "./chapters.config";
 
 /**
  * The third chapter of the hero's sticky stage: a thin, oversized title with the gold sphere, platform and fragments

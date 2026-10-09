@@ -1,8 +1,8 @@
-import { MorphTitle } from "@/features/hero";
-
 import { Button } from "@/components/ui/Button";
 
-import { bespokeChapter as chapter } from "../showcase.config";
+import { MorphTitle } from "../components/MorphTitle";
+
+import { bespokeChapter as chapter } from "./chapters.config";
 
 /**
  * Fifth and last chapter of the hero's sticky stage: the closing title, its paragraph and, only once those have

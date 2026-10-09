@@ -1,10 +1,10 @@
-import { AccentTitle } from "@/features/hero";
-
 import type { Project } from "@/types/domain/project";
+
+import { AccentTitle } from "../components/AccentTitle";
 
 /**
  * The featured-project chapter: an oversized title with its supporting paragraph beneath. It is the second half of the
- * hero's sticky stage (features/hero), which reveals it on scroll through the `data-j` hooks below. The jellyfish stays
+ * hero's sticky stage (Hero.tsx), which reveals it on scroll through the `data-j` hooks below. The jellyfish stays
  * the visual; there are deliberately no cards, borders or buttons here.
  */
 export function Showcase({ project }: { project: Project }) {

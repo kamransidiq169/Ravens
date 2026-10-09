@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { irregularity, morphChar, morphScale } from "@/features/hero/lib/morph";
+import { irregularity, morphChar, morphScale } from "@/features/home/sections/Hero/animation/morph";
 
 const COUNT = 18; // "THE NEXT IS YOURS."
 

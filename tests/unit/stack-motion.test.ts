@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CH, StackMotion, ownMotion } from "@/features/hero/scene/stackMotion";
+import { CH, StackMotion, ownMotion } from "@/features/home/sections/Hero/scenes/stackMotion";
 
 const DEG = Math.PI / 180;
 

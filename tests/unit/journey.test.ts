@@ -11,7 +11,7 @@ import {
   phaseExit,
   sequenceAt,
   type TitleState,
-} from "@/features/hero/lib/journey";
+} from "@/features/home/sections/Hero/animation/journey";
 
 const steps = Array.from({ length: 201 }, (_, i) => i / 200);
 
@@ -300,7 +300,7 @@ describe("phases, scenes and the final release", () => {
   });
 
   it("the scroll length in the CSS equals the model's (and the phone length is the same sequence, shorter)", () => {
-    const css = readFileSync("src/features/hero/hero.css", "utf8");
+    const css = readFileSync("src/features/home/sections/Hero/styles/hero.css", "utf8");
     // Desktop is a plain `NNNsvh`; the phone override is `calc(A svh + N * B svh + C svh)`.
     const lengths = [...css.matchAll(/--journey-length:\s*([^;]+);/g)].map(([, value = ""]) => {
       const calc = /calc\(\s*(\d+)svh\s*\+\s*(\d+)\s*\*\s*(\d+)svh\s*\+\s*(\d+)svh\s*\)/.exec(value);

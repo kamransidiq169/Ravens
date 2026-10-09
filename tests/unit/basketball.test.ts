@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 import { describe, expect, it } from "vitest";
 
-import { createBasketball } from "@/features/hero/scene/orbGeometry";
+import { createBasketball } from "@/features/home/sections/Hero/scenes/orbGeometry";
 
 const geometry = createBasketball(160, 112);
 const position = geometry.getAttribute("position");

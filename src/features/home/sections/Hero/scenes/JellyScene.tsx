@@ -7,8 +7,8 @@ import type { Group } from "three";
 
 import { getQualityTier } from "@/webgl/utils/quality";
 
-import { sequenceAt } from "../lib/journey";
-import { closingPhase, journeyStore } from "../lib/journey.store";
+import { sequenceAt } from "../animation/journey";
+import { closingPhase, journeyStore } from "../animation/journey.store";
 
 import { createJellyfish } from "./jellyfish";
 import { Orb, Studio } from "./OrbScene";

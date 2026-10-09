@@ -1,6 +1,7 @@
-import { AccentTitle, StackArt } from "@/features/hero";
+import { AccentTitle } from "../components/AccentTitle";
+import { StackArt } from "../components/StackArt";
 
-import { enterpriseChapter as chapter } from "../showcase.config";
+import { enterpriseChapter as chapter } from "./chapters.config";
 
 /**
  * Fourth chapter of the hero's sticky stage: thin oversized title over the glossy tile stack (rendered by the hero's

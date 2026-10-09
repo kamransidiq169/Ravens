@@ -17,8 +17,8 @@ import {
 
 import { getQualityTier } from "@/webgl/utils/quality";
 
-import { enterpriseProgress, sequenceAt, type SequenceState } from "../lib/journey";
-import { journeyStore } from "../lib/journey.store";
+import { enterpriseProgress, sequenceAt, type SequenceState } from "../animation/journey";
+import { journeyStore } from "../animation/journey.store";
 
 import { createRoughnessTexture, createSoftShadowTexture } from "./orbGeometry";
 import { FragmentGeometry } from "./OrbScene";

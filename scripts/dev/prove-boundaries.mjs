@@ -8,13 +8,13 @@ const cases = [
   {
     name: "app deep-imports a feature's internals",
     file: "src/app/tmp-violation-app.ts",
-    code: 'import { Hero } from "@/features/hero/components/Hero";\nexport const x = Hero;\n',
+    code: 'import { Hero } from "@/features/home/sections/Hero/Hero";\nexport const x = Hero;\n',
     expect: ["no-restricted-imports", "boundaries/dependencies"],
   },
   {
     name: "shared layer (components) imports from features",
     file: "src/components/ui/tmp-violation-shared.ts",
-    code: 'import { Hero } from "@/features/hero";\nexport const x = Hero;\n',
+    code: 'import { Home } from "@/features/home";\nexport const x = Home;\n',
     expect: ["boundaries/dependencies"],
   },
   {

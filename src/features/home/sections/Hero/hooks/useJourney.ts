@@ -8,9 +8,9 @@ import {
   INTRO_SHARE,
   sequenceAt,
   type JourneyPhase,
-} from "../lib/journey";
-import { closingPhase, journeyStore } from "../lib/journey.store";
-import { morphChar, morphScale } from "../lib/morph";
+} from "../animation/journey";
+import { closingPhase, journeyStore } from "../animation/journey.store";
+import { morphChar, morphScale } from "../animation/morph";
 
 // matchMedia only runs its callback when at least one named condition matches, so both sides are listed.
 const CONDITIONS = { compact: "(max-width: 767px)", wide: "(min-width: 768px)" };

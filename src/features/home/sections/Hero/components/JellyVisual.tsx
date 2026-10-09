@@ -12,7 +12,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { JellySprite, OrbSprite, StackSprite } from "./JellySprite";
 
 // three / drei stay out of the initial bundle: the scene loads on demand, client-only, after the hero has painted.
-const loadScene = () => import("../scene/JellyScene");
+const loadScene = () => import("../scenes/JellyScene");
 const JellyScene = dynamic(loadScene, { ssr: false });
 
 interface NavigatorWithSaveData extends Navigator {

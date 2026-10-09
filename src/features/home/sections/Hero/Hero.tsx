@@ -1,10 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
 
-import "../hero.css";
+import "./styles/hero.css";
 
-import { HeroStage } from "./HeroStage";
-import { JellyVisual } from "./JellyVisual";
-import { ModuleField } from "./ModuleField";
+import { HeroStage } from "./components/HeroStage";
+import { JellyVisual } from "./components/JellyVisual";
+import { ModuleField } from "./components/ModuleField";
 
 const HEADLINE = [["We", "Build"], ["What", "Brands"], ["Become"]] as const;
 const LEDE = "We shape bold digital experiences that give ambitious brands a presence worth remembering.";
