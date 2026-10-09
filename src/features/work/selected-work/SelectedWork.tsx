@@ -1,7 +1,5 @@
 import { Link } from "@/components/ui/Link";
 
-import { withPlaceholderCovers } from "@/content/placeholder-images";
-
 import type { Project } from "@/types/domain/project";
 
 import { SelectedWorkGallery } from "./components/SelectedWorkGallery";
@@ -12,7 +10,7 @@ const HEADING_ID = "selected-work-heading";
 export function SelectedWork({ projects }: { projects: Project[] }) {
   return (
     <section aria-labelledby={HEADING_ID} className={`sw-section relative z-(--z-content)`}>
-      <SelectedWorkGallery projects={withPlaceholderCovers(projects)} labelledBy={HEADING_ID}>
+      <SelectedWorkGallery projects={projects} labelledBy={HEADING_ID}>
         <SelectedWorkHeader id={HEADING_ID} />
       </SelectedWorkGallery>
 

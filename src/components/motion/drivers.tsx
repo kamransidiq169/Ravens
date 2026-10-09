@@ -54,53 +54,6 @@ export function WordRevealDriver({ target, trigger }: { target: Target; trigger:
   return null;
 }
 
-export function ParallaxDriver({ wrapper, inner, speed }: { wrapper: Target; inner: Target; speed: number }) {
-  useGSAP(
-    () => {
-      if (!wrapper.current || !inner.current) return;
-      gsap.fromTo(
-        inner.current,
-        { yPercent: -speed },
-        {
-          yPercent: speed,
-          ease: "none",
-          scrollTrigger: { trigger: wrapper.current, start: "top bottom", end: "bottom top", scrub: true },
-        },
-      );
-    },
-    { scope: wrapper, revertOnUpdate: true, dependencies: [speed] },
-  );
-  return null;
-}
-
-export function MagneticDriver({ target, strength }: { target: Target; strength: number }) {
-  useGSAP(
-    () => {
-      const el = target.current;
-      if (!el) return;
-      const x = gsap.quickTo(el, "x", { duration: 0.6, ease: "elastic.out(1, 0.5)" });
-      const y = gsap.quickTo(el, "y", { duration: 0.6, ease: "elastic.out(1, 0.5)" });
-      const onMove = (event: PointerEvent) => {
-        const rect = el.getBoundingClientRect();
-        x((event.clientX - (rect.left + rect.width / 2)) * strength);
-        y((event.clientY - (rect.top + rect.height / 2)) * strength);
-      };
-      const onLeave = () => {
-        x(0);
-        y(0);
-      };
-      el.addEventListener("pointermove", onMove);
-      el.addEventListener("pointerleave", onLeave);
-      return () => {
-        el.removeEventListener("pointermove", onMove);
-        el.removeEventListener("pointerleave", onLeave);
-      };
-    },
-    { scope: target, revertOnUpdate: true, dependencies: [strength] },
-  );
-  return null;
-}
-
 export function PageTransitionDriver({ target, pathname }: { target: Target; pathname: string }) {
   const isFirstRun = useRef(true);
   useGSAP(
