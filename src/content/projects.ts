@@ -1,6 +1,37 @@
 import type { Project } from "@/types/domain/project";
 
-const cover = (n: number, alt: string) => ({ src: `/placeholder/work-${n}.svg`, alt, width: 1600, height: 1000 });
+const covers = [
+  {
+    src: "/selectedwork/thm.png",
+    alt: "Premium underfloor heating website for The Heating Store",
+    width: 1600,
+    height: 1000,
+  },
+  {
+    src: "/selectedwork/tripoday.png",
+    alt: "Travel CRM interface and digital experience for Tripoday",
+    width: 1600,
+    height: 1000,
+  },
+  {
+    src: "/selectedwork/prowarm.png",
+    alt: "Premium brand website experience for ProWarm",
+    width: 1600,
+    height: 1000,
+  },
+  {
+    src: "/selectedwork/wowtherm.png",
+    alt: "Modern heating brand website experience for Wowtherm",
+    width: 1600,
+    height: 1000,
+  },
+  {
+    src: "/selectedwork/landaim.png",
+    alt: "Premium real estate website experience for Landa Im Reality",
+    width: 1600,
+    height: 1000,
+  },
+];
 
 export const projects: Project[] = [
   {
@@ -13,7 +44,7 @@ export const projects: Project[] = [
       "A refined digital presence built to communicate premium heating technology, products and installation expertise with clarity.",
     ],
     disciplines: ["Underfloor Heating / Website"],
-    cover: cover(1, "Premium underfloor heating website for The Heating Store"),
+    cover: covers[0],
     websiteUrl: "https://theheatingstore.in",
     seo: {
       title: "The Heating Store — Ravens",
@@ -31,7 +62,7 @@ export const projects: Project[] = [
       "A powerful travel-focused CRM experience bringing enquiries, customers, trips and operational workflows into one connected system.",
     ],
     disciplines: ["Travel / CRM"],
-    cover: cover(2, "Travel CRM interface and digital experience for Tripoday"),
+    cover: covers[1],
     websiteUrl: "https://crm.tripoday.com",
     seo: {
       title: "Tripoday — Ravens",
@@ -49,7 +80,7 @@ export const projects: Project[] = [
       "A focused brand experience designed to present ProWarm's heating technology, products and positioning through a refined digital interface.",
     ],
     disciplines: ["Heating / Brand Website"],
-    cover: cover(3, "Premium brand website experience for ProWarm"),
+    cover: covers[2],
     websiteUrl: "https://prowarm.in",
     seo: {
       title: "ProWarm — Ravens",
@@ -67,7 +98,7 @@ export const projects: Project[] = [
       "A premium brand-led website experience designed to present Wowtherm's products and heating solutions with clarity and confidence.",
     ],
     disciplines: ["Heating / Brand Website"],
-    cover: cover(4, "Modern heating brand website experience for Wowtherm"),
+    cover: covers[3],
     websiteUrl: "https://wowtherm.com",
     seo: {
       title: "Wowtherm — Ravens",
@@ -85,7 +116,7 @@ export const projects: Project[] = [
       "A polished digital experience for a real estate brand, combining property presentation with a clear and confident browsing experience.",
     ],
     disciplines: ["Real Estate / Website"],
-    cover: cover(5, "Premium real estate website experience for Landa Im Reality"),
+    cover: covers[4],
     websiteUrl: "https://landaimreality.in",
     seo: {
       title: "Landa Im Reality — Ravens",

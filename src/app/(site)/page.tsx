@@ -36,7 +36,6 @@ export default async function HomePage() {
 
       <TestimonialsSection />
       <ContactCta />
-      <ContactCta />
     </>
   );
 }

@@ -2,11 +2,11 @@
 const unsplash = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&h=1200&q=80`;
 
 export const panels = [
-  { label: "Web Development", alt: "Laptop glowing in a dark room", src: unsplash("1531297484001-80022131f5a1") },
+  { label: "Web Development", alt: "Laptop glowing in a dark room", src: "/services/webdev.jpg" },
   {
     label: "App Development",
     alt: "Sweeping curved architecture against the sky",
-    src: unsplash("1518005020951-eccb494ad742"),
+    src: "/services/appdev.jpg",
   },
   {
     label: "Digital Experiences",
@@ -16,11 +16,11 @@ export const panels = [
   {
     label: "Business Systems",
     alt: "Modern meeting room with a long timber table",
-    src: unsplash("1497366811353-6870744d04b2"),
+    src: "/services/bm.png",
   },
   {
     label: "CRM Development",
     alt: "Designer lounge chairs and a black floor lamp",
-    src: unsplash("1524758631624-e2822e304c36"),
+    src: "/services/crm.jpg",
   },
 ];
