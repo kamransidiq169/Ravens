@@ -11,7 +11,7 @@ import { WHISPER, type ProcessStage as Stage } from "../lib/process.data";
 import { FloatingFeathers } from "./FloatingFeathers";
 import { ProcessStage } from "./ProcessStage";
 
-const RAVEN = "/hero/images/rav.png";
+const RAVEN = "/hero/images/ravenprocess.png";
 const SIZES = "(min-width: 768px) 92vw, 100vw";
 
 /** The raven. Drawn twice from one photo: the whole bird between the type layers, and a feathered wing piece above all. */

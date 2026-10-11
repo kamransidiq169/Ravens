@@ -1,5 +1,4 @@
 import { gsap } from "@/lib/gsap";
-import { onIdle } from "@/lib/idle";
 
 /**
  * Entrance choreography per panel (index order 0..4). Panels enter from the right, the outermost-right first, so
@@ -15,22 +14,7 @@ const ENTER = [
 ] as const;
 
 /**
- * Decodes a card's photograph off the main thread. Cards that wait in `visibility: hidden` are never painted, so
- * WebKit would otherwise download-then-decode (AVIF has no hardware decoder on most iPhones) and upload the bitmap
- * the frame the card first appears, in the middle of the scrub. Resolves either way; a failed decode just means the
- * browser does it lazily as before.
- */
-function decodeCard(card: HTMLElement | undefined) {
-  return (
-    card
-      ?.querySelector("img")
-      ?.decode()
-      .catch(() => undefined) ?? Promise.resolve()
-  );
-}
-
-/**
- * Wires every motion mode of the services gallery (tablet/desktop entrance, phone scroll sequence, reduced motion)
+ * Wires every motion mode of the services gallery (tablet/desktop entrance, reduced motion; the phone sequence is services.mobile.ts)
  * onto the list. Returns the cleanup that reverts all of it; call it inside `useGSAP` so it runs with the component.
  */
 export function animateServicesGallery(list: HTMLUListElement) {
@@ -78,67 +62,6 @@ export function animateServicesGallery(list: HTMLUListElement) {
       st.scrollTrigger?.kill();
       st.kill();
       tl.kill();
-    };
-  });
-
-  // Phones: vertical scroll drives one coordinated timeline. The stage is CSS-sticky inside a tall wrapper (no
-  // ScrollTrigger pin, no touch handling, no nested scroller); each card is stacked in the same grid cell and
-  // slides in from the right (xPercent of its own box, so nothing is measured) while the previous one eases out.
-  //
-  // The ScrollTrigger uses fixed pixel-range end so iOS Safari's dynamic address bar cannot move the end point
-  // during scroll (which would cause continuous recalculation and the section to shake). Measurements happen
-  // only on refresh, never per frame.
-  mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
-    const wrap = list.closest<HTMLElement>(".sv-pin");
-    const cards = gsap.utils.toArray<HTMLElement>(".sv-item", list);
-    if (!wrap || cards.length < 2) return;
-
-    gsap.set(cards.slice(1), { xPercent: 100, autoAlpha: 0 });
-
-    // Warm the hidden cards one at a time once the page is idle, so decoding never competes with hydration or
-    // with another decode.
-    let alive = true;
-    const cancelIdle = onIdle(() => {
-      void cards
-        .slice(1)
-        .reduce((chain, card) => chain.then(() => (alive ? decodeCard(card) : undefined)), Promise.resolve());
-    });
-    const tl = gsap.timeline({
-      defaults: { ease: "none" },
-      scrollTrigger: {
-        trigger: wrap,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: 0.4,
-      },
-    });
-    // Per step: 1.0 of travel, then a 0.7 hold so every service rests as the sole visible card.
-    cards.slice(1).forEach((card, i) => {
-      const at = i * 1.7;
-      tl.to(cards[i]!, { xPercent: -28, duration: 1, ease: "power2.inOut" }, at)
-        .to(cards[i]!, { autoAlpha: 0, duration: 0.45, ease: "power1.in" }, at + 0.1)
-        .fromTo(
-          card,
-          { xPercent: 100, autoAlpha: 0 },
-          { xPercent: 0, duration: 1, ease: "power3.inOut", immediateRender: false },
-          at + 0.1,
-        )
-        .fromTo(
-          card,
-          { autoAlpha: 0 },
-          { autoAlpha: 1, duration: 0.4, ease: "power1.out", immediateRender: false },
-          at + 0.45,
-        )
-        .to({}, { duration: 0.7 }, at + 1);
-    });
-
-    list.dataset.motion = "ready";
-    return () => {
-      alive = false;
-      cancelIdle();
-      tl.scrollTrigger?.kill();
-      tl.kill();
-      gsap.set(cards, { clearProps: "all" });
     };
   });
 
