@@ -1,4 +1,5 @@
 import { gsap } from "@/lib/gsap";
+import { onIdle } from "@/lib/idle";
 
 /**
  * Entrance choreography per panel (index order 0..4). Panels enter from the right, the outermost-right first, so
@@ -12,6 +13,21 @@ const ENTER = [
   { travel: 0.44, z: -90, ry: -12, delay: 0.08 },
   { travel: 0.38, z: -140, ry: -16, delay: 0 },
 ] as const;
+
+/**
+ * Decodes a card's photograph off the main thread. Cards that wait in `visibility: hidden` are never painted, so
+ * WebKit would otherwise download-then-decode (AVIF has no hardware decoder on most iPhones) and upload the bitmap
+ * the frame the card first appears, in the middle of the scrub. Resolves either way; a failed decode just means the
+ * browser does it lazily as before.
+ */
+function decodeCard(card: HTMLElement | undefined) {
+  return (
+    card
+      ?.querySelector("img")
+      ?.decode()
+      .catch(() => undefined) ?? Promise.resolve()
+  );
+}
 
 /**
  * Wires every motion mode of the services gallery (tablet/desktop entrance, phone scroll sequence, reduced motion)
@@ -78,6 +94,15 @@ export function animateServicesGallery(list: HTMLUListElement) {
     if (!wrap || cards.length < 2) return;
 
     gsap.set(cards.slice(1), { xPercent: 100, autoAlpha: 0 });
+
+    // Warm the hidden cards one at a time once the page is idle, so decoding never competes with hydration or
+    // with another decode.
+    let alive = true;
+    const cancelIdle = onIdle(() => {
+      void cards
+        .slice(1)
+        .reduce((chain, card) => chain.then(() => (alive ? decodeCard(card) : undefined)), Promise.resolve());
+    });
     const tl = gsap.timeline({
       defaults: { ease: "none" },
       scrollTrigger: {
@@ -109,6 +134,8 @@ export function animateServicesGallery(list: HTMLUListElement) {
 
     list.dataset.motion = "ready";
     return () => {
+      alive = false;
+      cancelIdle();
       tl.scrollTrigger?.kill();
       tl.kill();
       gsap.set(cards, { clearProps: "all" });
