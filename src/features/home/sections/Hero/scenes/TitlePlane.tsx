@@ -103,6 +103,11 @@ export function TitlePlane({
     const m = mesh.current;
     const b = box.current;
     if (!m) return;
+    // Phones show the DOM title instead (see hero.css): a texture drawn into the low-DPR canvas cannot be crisp there.
+    if (journeyStore.layout.compact) {
+      m.visible = false;
+      return;
+    }
     const title = pick(sequenceAt(journeyStore.progress));
     m.visible = Boolean(b) && title.opacity > 0.001;
     if (!m.visible || !b) return;

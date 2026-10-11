@@ -45,6 +45,7 @@ export function createStepper(options: StepperOptions) {
   let waypoints: number[] = [];
   let stepTween: gsap.core.Tween | null = null;
   let settlingAt: number | null = null;
+  let settlingY = 0;
   let lockedAt = 0;
   const gate = createWheelGate();
 
@@ -57,6 +58,9 @@ export function createStepper(options: StepperOptions) {
   /** A transition is in flight: the tween is running, or the film has not yet caught up with where it landed. */
   const busy = () => {
     if (stepTween) return true;
+    // The tween has ended but the page is no longer where it landed (native momentum carried it on): the transition is
+    // over, and holding the lock would swallow the next gesture and block settling.
+    if (settlingAt !== null && Math.abs(window.scrollY - settlingY) > REST_TOLERANCE) settlingAt = null;
     if (
       settlingAt !== null &&
       (Math.abs(filmProgress() - settlingAt) < SETTLED_PROGRESS || performance.now() - lockedAt > MAX_LOCK_MS)
@@ -68,6 +72,7 @@ export function createStepper(options: StepperOptions) {
   const goTo = (self: ScrollTrigger, y: number, seconds: number) => {
     stepTween?.kill();
     settlingAt = (y - self.start) / (self.end - self.start);
+    settlingY = y;
     lockedAt = performance.now();
     const cursor = { y: window.scrollY };
     stepTween = gsap.to(cursor, {

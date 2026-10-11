@@ -1,4 +1,6 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
+
+import { useSmoothScroll } from "@/components/providers/SmoothScrollProvider";
 
 import {
   CHAPTERS_SHARE,
@@ -11,6 +13,22 @@ import {
 } from "../animation/journey";
 import { closingPhase, journeyStore } from "../animation/journey.store";
 import { morphChar, morphScale } from "../animation/morph";
+
+/** Seconds one step takes to travel between chapters; settling a drifted page is quicker. */
+const STEP_SECONDS = 1.1;
+const SETTLE_SECONDS = 0.6;
+
+/**
+ * Where each chapter is fully settled, as a fraction of the whole sequence: the hero before any scroll, then the
+ * project, INTERACTIVE, ENTERPRISE and BESPOKE. These are the only places the page may come to rest.
+ */
+const SETTLED = {
+  project: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * INTRO_SHARE,
+  next: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * 0.985,
+  last: FIVE_SHARE * FOUR_SHARE * 0.985,
+  bespoke: FIVE_SHARE * (FOUR_SHARE + (1 - FOUR_SHARE) * EXT.actionsIn[1]),
+} as const;
+const WAYPOINTS = [0, SETTLED.project, SETTLED.next, SETTLED.last, SETTLED.bespoke] as const;
 
 // matchMedia only runs its callback when at least one named condition matches, so both sides are listed.
 const CONDITIONS = { compact: "(max-width: 767px)", wide: "(min-width: 768px)" };
@@ -29,6 +47,13 @@ export function useJourney(
   reduced: boolean,
   release: RefObject<((chapter: "project" | "next" | "last" | "bespoke") => void) | null>,
 ) {
+  // Read through a ref so Lenis finishing its load does not rebuild the timeline.
+  const lenis = useSmoothScroll();
+  const lenisRef = useRef(lenis);
+  useEffect(() => {
+    lenisRef.current = lenis;
+  }, [lenis]);
+
   useEffect(() => {
     const wrapper = root.current;
     if (!wrapper || reduced) return;
@@ -58,154 +83,164 @@ export function useJourney(
     let cancelled = false;
     let teardown: (() => void) | undefined;
 
-    void import("@/lib/gsap").then(({ gsap, ScrollTrigger }) => {
-      if (cancelled) return;
+    void Promise.all([import("@/lib/gsap"), import("@/lib/stepper-controller")]).then(
+      ([{ gsap, ScrollTrigger }, { createStepper }]) => {
+        if (cancelled) return;
 
-      const mm = gsap.matchMedia();
-      mm.add(CONDITIONS, (context) => {
-        const compact = Boolean(context.conditions?.compact);
-        const layout = { compact };
-        journeyStore.layout = layout;
+        const mm = gsap.matchMedia();
+        mm.add(CONDITIONS, (context) => {
+          const compact = Boolean(context.conditions?.compact);
+          const layout = { compact };
+          journeyStore.layout = layout;
 
-        let stageHeight = stage.clientHeight;
-        let phase: JourneyPhase | "" = "";
-        // Last morph progress written to the characters: they are only touched while the morph is (or was just) running.
-        let morphed = 0;
-        const proxy = { p: 0 };
+          let stageHeight = stage.clientHeight;
+          let phase: JourneyPhase | "" = "";
+          // Last morph progress written to the characters: they are only touched while the morph is (or was just) running.
+          let morphed = 0;
+          const proxy = { p: 0 };
 
-        // A supporting paragraph (or the closing actions) fades and rises with its own progress.
-        const reveal = (el: HTMLElement | null, v: number) => {
-          if (el) gsap.set(el, { opacity: v, y: (1 - v) * 24 });
-        };
-
-        const apply = (p: number) => {
-          journeyStore.progress = p;
-          const s = sequenceAt(p);
-
-          gsap.set(headline, {
-            scale: s.headline.scale,
-            y: s.headline.y * stageHeight,
-            opacity: s.headline.opacity,
-            force3D: false,
-          });
-          if (details) gsap.set(details, { opacity: s.details });
-          // The CSS-only jellyfish (first paint and no-WebGL fallback) follows the same curve as the 3D one.
-          if (sprite) {
-            gsap.set(sprite, {
-              y: s.visual.y * stageHeight,
-              scale: s.visual.scale,
-              rotate: (s.visual.tilt * 180) / Math.PI,
-              force3D: false,
-            });
-          }
-          gsap.set(title, {
-            scale: s.title.scale,
-            y: s.title.y * stageHeight,
-            opacity: s.title.opacity,
-            force3D: false,
-          });
-          reveal(ledeHero, s.heroLede);
-          reveal(ledeProject, s.lede);
-          if (titleNext) {
-            gsap.set(titleNext, {
-              scale: s.next.title.scale,
-              y: s.next.title.y * stageHeight,
-              opacity: s.next.title.opacity,
-              force3D: false,
-            });
-          }
-          reveal(ledeNext, s.next.lede);
-          if (modules) {
-            // Phase 2 background: the scroll model decides when it is on stage and how far its modules have slid in.
-            // The looping motion itself is CSS, so nothing here runs per module.
-            const active = s.form.opacity > 0.002;
-            if (modules.dataset.active !== String(active)) modules.dataset.active = String(active);
-            gsap.set(modules, { opacity: s.form.opacity, "--form": s.form.t });
-          }
-          if (orb) gsap.set(orb, { opacity: s.next.scene, y: (1 - s.next.scene) * stageHeight * 0.4 });
-          if (stack) gsap.set(stack, { opacity: s.last.scene, y: (1 - s.last.scene) * stageHeight * 0.4 });
-          if (titleLast) {
-            gsap.set(titleLast, {
-              scale: s.last.title.scale,
-              y: s.last.title.y * stageHeight,
-              opacity: s.last.title.opacity,
-              force3D: false,
-            });
-          }
-          reveal(ledeLast, s.last.lede);
-          if (titleBespoke) {
-            // The title zooms about its centre; each character is deformed on top of that (lib/morph.ts).
-            gsap.set(titleBespoke, {
-              scale: s.bespoke.title.scale * morphScale(s.bespoke.morph, compact),
-              y: s.bespoke.title.y * stageHeight,
-              opacity: s.bespoke.title.opacity,
-              force3D: false,
-            });
-          }
-          reveal(ledeBespoke, s.bespoke.lede);
-          reveal(actionsBespoke, s.bespoke.actions);
-          if (s.bespoke.morph !== morphed) {
-            morphed = s.bespoke.morph;
-            morphChars.forEach((el, i) => {
-              const c = morphChar(morphed, i, morphChars.length, compact);
-              gsap.set(el, { scaleX: c.sx, scaleY: c.sy, xPercent: c.x, yPercent: c.y, force3D: false });
-            });
-          }
-
-          if (s.phase !== phase) {
-            phase = s.phase;
-            wrapper.dataset.phase = phase;
-            closingPhase.set(phase === "bespoke" || phase === "end");
-          }
-        };
-
-        apply(0);
-
-        const timeline = gsap.timeline({
-          defaults: { ease: "none" },
-          scrollTrigger: {
-            trigger: wrapper,
-            start: "top top",
-            end: "bottom bottom",
-            scrub: 0.35,
-            invalidateOnRefresh: true,
-            onRefresh: () => {
-              stageHeight = stage.clientHeight;
-              apply(proxy.p);
-            },
-          },
-        });
-        timeline.to(proxy, { p: 1, duration: 1, onUpdate: () => apply(proxy.p) }, 0);
-
-        // Keyboard focus can land on the (visually hidden) project links before the user has scrolled to them: jump to
-        // the end of the sequence so what is focused is also what is shown.
-        release.current = (chapter) => {
-          const trigger = timeline.scrollTrigger;
-          if (!trigger) return;
-          // Where each chapter is fully settled, as a fraction of the whole sequence.
-          const settled = {
-            project: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * INTRO_SHARE,
-            next: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * 0.985,
-            last: FIVE_SHARE * FOUR_SHARE * 0.985,
-            bespoke: FIVE_SHARE * (FOUR_SHARE + (1 - FOUR_SHARE) * EXT.actionsIn[1]),
+          // A supporting paragraph (or the closing actions) fades and rises with its own progress.
+          const reveal = (el: HTMLElement | null, v: number) => {
+            if (el) gsap.set(el, { opacity: v, y: (1 - v) * 24 });
           };
-          const target = settled[chapter];
-          if (Math.abs(proxy.p - target) < 0.04) return;
-          const top = trigger.start + (trigger.end - trigger.start) * target;
-          window.scrollTo({ top, behavior: "instant" });
-        };
 
-        return () => {
-          release.current = null;
-          journeyStore.progress = 0;
-          delete wrapper.dataset.phase;
-          closingPhase.set(false);
-        };
-      });
+          const apply = (p: number) => {
+            journeyStore.progress = p;
+            const s = sequenceAt(p);
 
-      teardown = () => mm.revert();
-      ScrollTrigger.refresh();
-    });
+            gsap.set(headline, {
+              scale: s.headline.scale,
+              y: s.headline.y * stageHeight,
+              opacity: s.headline.opacity,
+              force3D: false,
+            });
+            if (details) gsap.set(details, { opacity: s.details });
+            // The CSS-only jellyfish (first paint and no-WebGL fallback) follows the same curve as the 3D one.
+            if (sprite) {
+              gsap.set(sprite, {
+                y: s.visual.y * stageHeight,
+                scale: s.visual.scale,
+                rotate: (s.visual.tilt * 180) / Math.PI,
+                force3D: false,
+              });
+            }
+            gsap.set(title, {
+              scale: s.title.scale,
+              y: s.title.y * stageHeight,
+              opacity: s.title.opacity,
+              force3D: false,
+            });
+            reveal(ledeHero, s.heroLede);
+            reveal(ledeProject, s.lede);
+            if (titleNext) {
+              gsap.set(titleNext, {
+                scale: s.next.title.scale,
+                y: s.next.title.y * stageHeight,
+                opacity: s.next.title.opacity,
+                force3D: false,
+              });
+            }
+            reveal(ledeNext, s.next.lede);
+            if (modules) {
+              // Phase 2 background: the scroll model decides when it is on stage and how far its modules have slid in.
+              // The looping motion itself is CSS, so nothing here runs per module.
+              const active = s.form.opacity > 0.002;
+              if (modules.dataset.active !== String(active)) modules.dataset.active = String(active);
+              gsap.set(modules, { opacity: s.form.opacity, "--form": s.form.t });
+            }
+            if (orb) gsap.set(orb, { opacity: s.next.scene, y: (1 - s.next.scene) * stageHeight * 0.4 });
+            if (stack) gsap.set(stack, { opacity: s.last.scene, y: (1 - s.last.scene) * stageHeight * 0.4 });
+            if (titleLast) {
+              gsap.set(titleLast, {
+                scale: s.last.title.scale,
+                y: s.last.title.y * stageHeight,
+                opacity: s.last.title.opacity,
+                force3D: false,
+              });
+            }
+            reveal(ledeLast, s.last.lede);
+            if (titleBespoke) {
+              // The title zooms about its centre; each character is deformed on top of that (lib/morph.ts).
+              gsap.set(titleBespoke, {
+                scale: s.bespoke.title.scale * morphScale(s.bespoke.morph, compact),
+                y: s.bespoke.title.y * stageHeight,
+                opacity: s.bespoke.title.opacity,
+                force3D: false,
+              });
+            }
+            reveal(ledeBespoke, s.bespoke.lede);
+            reveal(actionsBespoke, s.bespoke.actions);
+            if (s.bespoke.morph !== morphed) {
+              morphed = s.bespoke.morph;
+              morphChars.forEach((el, i) => {
+                const c = morphChar(morphed, i, morphChars.length, compact);
+                gsap.set(el, { scaleX: c.sx, scaleY: c.sy, xPercent: c.x, yPercent: c.y, force3D: false });
+              });
+            }
+
+            if (s.phase !== phase) {
+              phase = s.phase;
+              wrapper.dataset.phase = phase;
+              closingPhase.set(phase === "bespoke" || phase === "end");
+            }
+          };
+
+          apply(0);
+
+          // The page may only rest on a settled chapter, and one gesture (swipe, wheel notch, trackpad flick with its
+          // momentum) moves it by exactly one chapter, on every screen size. Scroll distance and momentum never decide
+          // how many go by (see lib/stepper-controller); both ends of the span release to normal scrolling.
+          const stepper = createStepper({
+            trigger: () => timeline.scrollTrigger,
+            filmProgress: () => proxy.p,
+            waypoints: WAYPOINTS,
+            lenis: () => lenisRef.current,
+            stepSeconds: STEP_SECONDS,
+            settleSeconds: SETTLE_SECONDS,
+          });
+
+          const timeline = gsap.timeline({
+            defaults: { ease: "none" },
+            scrollTrigger: {
+              trigger: wrapper,
+              start: "top top",
+              end: "bottom bottom",
+              scrub: 0.35,
+              invalidateOnRefresh: true,
+              onRefresh: (self) => {
+                stageHeight = stage.clientHeight;
+                apply(proxy.p);
+                stepper.onRefresh(self);
+              },
+              onUpdate: (self) => stepper.onUpdate(self),
+            },
+          });
+          timeline.to(proxy, { p: 1, duration: 1, onUpdate: () => apply(proxy.p) }, 0);
+
+          // Keyboard focus can land on the (visually hidden) project links before the user has scrolled to them: jump to
+          // the end of the sequence so what is focused is also what is shown.
+          release.current = (chapter) => {
+            const trigger = timeline.scrollTrigger;
+            if (!trigger) return;
+            const target = SETTLED[chapter];
+            if (Math.abs(proxy.p - target) < 0.04) return;
+            const top = trigger.start + (trigger.end - trigger.start) * target;
+            window.scrollTo({ top, behavior: "instant" });
+          };
+
+          return () => {
+            stepper.destroy();
+            release.current = null;
+            journeyStore.progress = 0;
+            delete wrapper.dataset.phase;
+            closingPhase.set(false);
+          };
+        });
+
+        teardown = () => mm.revert();
+        ScrollTrigger.refresh();
+      },
+    );
 
     return () => {
       cancelled = true;

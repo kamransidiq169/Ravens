@@ -386,6 +386,16 @@
     top: 26%;
   }
 
+  /* "Everything, connected." carries the longest paragraph of the sequence (~250 characters). At the base 15px over the
+     full width it ran to six or seven lines and outweighed its title. Smaller, a slightly tighter leading and a
+     measure of ~55 characters keep it clearly subordinate: about four to five lines. This sits after the base
+     `.journey__lede` rule on purpose; the earlier phone rule for `.journey__lede` is overridden by it. */
+  [data-j="lede-last"] {
+    font-size: clamp(0.78rem, 0.35vw + 0.68rem, 0.875rem);
+    line-height: 1.5;
+    max-width: min(100%, 21.5rem);
+  }
+
   /* Final phase actions: keep both buttons clearly connected to the closing paragraph and avoid excessive vertical
      spacing on mobile. Stacked, full-width, compact vertical gaps — not a stretched desktop row. */
   .journey__actions {
@@ -796,9 +806,14 @@
 }
 
 /* The scene draws the title behind the sphere; the DOM heading stays for screen readers and as the fallback. */
-.journey:has(.journey__visual[data-gl="ready"]) [data-j="title-next"],
-.journey:has(.journey__visual[data-gl="ready"]) [data-j="title-last"] {
-  color: transparent;
+/* Wide screens only. On phones the title stays real DOM text: the scene's copy of it is a canvas texture drawn at ≤2x
+   and sampled into a canvas that renders at ≤1.5x on touch devices, so on a 3x screen it was visibly soft (and softer
+   still while it scaled). DOM glyphs are rasterised by the browser at the screen's own resolution at every scale. */
+@media (min-width: 768px) {
+  .journey:has(.journey__visual[data-gl="ready"]) [data-j="title-next"],
+  .journey:has(.journey__visual[data-gl="ready"]) [data-j="title-last"] {
+    color: transparent;
+  }
 }
 
 @media (max-width: 767px) {
