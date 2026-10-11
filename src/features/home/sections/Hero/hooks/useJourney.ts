@@ -73,7 +73,7 @@ export function useJourney(
 
         const apply = (p: number) => {
           journeyStore.progress = p;
-          const s = sequenceAt(p);
+          const s = sequenceAt(p, compact);
 
           gsap.set(headline, {
             scale: s.headline.scale,

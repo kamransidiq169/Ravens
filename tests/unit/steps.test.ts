@@ -64,3 +64,11 @@ describe("stepDuration", () => {
     expect(stepDuration(100000, 900)).toBe(2.4);
   });
 });
+
+describe("compact pacing", () => {
+  it("is slower on phones, with the same shape", () => {
+    expect(stepDuration(10, 900, true)).toBeCloseTo(1.4);
+    expect(stepDuration(4000, 900, true)).toBeGreaterThan(stepDuration(4000, 900));
+    expect(stepDuration(100000, 900, true)).toBeCloseTo(3.36);
+  });
+});

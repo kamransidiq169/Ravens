@@ -4,10 +4,8 @@ import { PerformanceMonitor, View } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { useState, useSyncExternalStore } from "react";
 
-import { MAX_DPR } from "@/lib/constants";
-
 import { isWebGLSupported } from "./capabilities";
-import { dprRangeForTier, getQualityTier } from "./quality";
+import { dprRange, getQualityTier } from "./quality";
 
 const noopSubscribe = () => () => {};
 
@@ -18,7 +16,7 @@ const noopSubscribe = () => () => {};
  */
 export default function SharedCanvas() {
   const supported = useSyncExternalStore(noopSubscribe, isWebGLSupported, () => false);
-  const [[minDpr, maxDpr]] = useState(() => dprRangeForTier(getQualityTier()));
+  const [[minDpr, maxDpr]] = useState(() => dprRange(getQualityTier()));
   const [dpr, setDpr] = useState(maxDpr);
 
   if (!supported) return null;
@@ -27,7 +25,7 @@ export default function SharedCanvas() {
     // `isolate` creates a stacking context so the fixed canvas never disappears behind page backgrounds.
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 isolate z-(--z-canvas)">
       <Canvas
-        dpr={Math.min(dpr, MAX_DPR)}
+        dpr={dpr}
         eventSource={document.documentElement}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         style={{ position: "fixed", inset: 0, pointerEvents: "none" }}

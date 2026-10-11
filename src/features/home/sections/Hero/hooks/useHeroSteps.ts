@@ -2,6 +2,7 @@ import type Lenis from "lenis";
 import { useEffect, type RefObject } from "react";
 
 import {
+  COMPACT_QUERY,
   HERO_STOPS,
   JOURNEY_TRIGGER,
   SELECTED_WORK_TRIGGER,
@@ -77,7 +78,7 @@ export function useHeroSteps(root: RefObject<HTMLElement | null>, reduced: boole
         if (target === null) return;
         locked = true;
         lenis.scrollTo(target, {
-          duration: stepDuration(target - lenis.scroll, window.innerHeight),
+          duration: stepDuration(target - lenis.scroll, window.innerHeight, window.matchMedia(COMPACT_QUERY).matches),
           easing: easeInOut,
           force: true,
           lock: true,

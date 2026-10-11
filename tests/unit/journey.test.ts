@@ -6,6 +6,7 @@ import {
   FIVE_SHARE,
   JOURNEY_SVH,
   PHASE_EXIT,
+  PHASE_EXIT_COMPACT,
   enterpriseProgress,
   introAt,
   phaseExit,
@@ -370,5 +371,16 @@ describe("enterpriseProgress (scroll-linked evolution of the ENTERPRISE phase)",
     expect(enterpriseProgress(gone)).toBeGreaterThan(0.97);
     const settled = grid.filter((p) => sequenceAt(p).last.scene > 0.999);
     expect(enterpriseProgress(settled[settled.length - 1]!) - enterpriseProgress(settled[0]!)).toBeGreaterThan(0.1);
+  });
+});
+
+describe("phone exit of the ENTERPRISE title", () => {
+  it("ends in the same place and drops more evenly than the desktop curve", () => {
+    const d = (e: number) => phaseExit(e);
+    const c = (e: number) => phaseExit(e, PHASE_EXIT_COMPACT);
+    expect(c(1).y).toBeGreaterThan(0.8);
+    expect(c(1).opacity).toBe(d(1).opacity);
+    expect(c(0.5).y).toBeGreaterThan(d(0.5).y);
+    expect(c(0.9).y - c(0.8).y).toBeLessThan(d(0.9).y - d(0.8).y);
   });
 });

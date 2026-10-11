@@ -94,9 +94,15 @@ const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2
  * positive = down) and `opacity`.
  */
 export const PHASE_EXIT = { scale: 2.9, scalePower: 1.75, y: 0.8, yPower: 1.9, fadeFrom: 0.55 } as const;
+/**
+ * The ENTERPRISE title's exit on a phone: the same move (grow, drop through the bottom, fade late), but its drop is
+ * spread more evenly so it is pushed down steadily instead of accelerating into the bottom edge. Same end state.
+ */
+export const PHASE_EXIT_COMPACT = { ...PHASE_EXIT, y: 0.85, yPower: 1.4 } as const;
+type ExitConfig = { [K in keyof typeof PHASE_EXIT]: number };
 export type TitleState = { scale: number; y: number; opacity: number };
 
-export function phaseExit(e: number, config: typeof PHASE_EXIT = PHASE_EXIT): TitleState {
+export function phaseExit(e: number, config: ExitConfig = PHASE_EXIT): TitleState {
   const h = clamp01(e);
   return {
     scale: 1 + config.scale * h ** config.scalePower,
@@ -106,8 +112,8 @@ export function phaseExit(e: number, config: typeof PHASE_EXIT = PHASE_EXIT): Ti
 }
 
 /** Applies the shared exit to a title that is currently at `title` (its arrival state composes with the exit). */
-const exiting = (title: TitleState, e: number): TitleState => {
-  const x = phaseExit(e);
+const exiting = (title: TitleState, e: number, config: ExitConfig = PHASE_EXIT): TitleState => {
+  const x = phaseExit(e, config);
   return { scale: title.scale * x.scale, y: title.y + x.y, opacity: title.opacity * x.opacity };
 };
 
@@ -227,7 +233,7 @@ interface ChaptersState extends FullState {
 }
 
 /** … → BESPOKE: ENTERPRISE exits with the shared title exit, then BESPOKE arrives (still, with morph 0). */
-function chaptersAt(p: number): ChaptersState {
+function chaptersAt(p: number, compact: boolean): ChaptersState {
   const progress = clamp01(p);
   const base = fullAt(progress / FOUR_SHARE);
   const q = range(progress, FOUR_SHARE, 1);
@@ -236,7 +242,7 @@ function chaptersAt(p: number): ChaptersState {
   return {
     ...base,
     last: {
-      title: exiting(base.last.title, out.e),
+      title: exiting(base.last.title, out.e, compact ? PHASE_EXIT_COMPACT : PHASE_EXIT),
       lede: base.last.lede * out.lede,
       scene: base.last.scene * out.scene,
     },
@@ -256,9 +262,9 @@ export type SequenceState = ChaptersState;
  * The complete sequence, including the final exit: BESPOKE's title morphs (growing and deforming from its centre until
  * it fills the frame, then fading), and the stage then releases into the next section of the page.
  */
-export function sequenceAt(p: number): SequenceState {
+export function sequenceAt(p: number, compact = false): SequenceState {
   const progress = clamp01(p);
-  const base = chaptersAt(progress / FIVE_SHARE);
+  const base = chaptersAt(progress / FIVE_SHARE, compact);
   const q = range(progress, FIVE_SHARE, 1);
   const morph = range(q, END.exit[0], END.exit[1]);
   const { title } = base.bespoke;

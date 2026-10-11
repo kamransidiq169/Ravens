@@ -108,7 +108,7 @@ export function TitlePlane({
       m.visible = false;
       return;
     }
-    const title = pick(sequenceAt(journeyStore.progress));
+    const title = pick(sequenceAt(journeyStore.progress, journeyStore.layout.compact));
     m.visible = Boolean(b) && title.opacity > 0.001;
     if (!m.visible || !b) return;
 

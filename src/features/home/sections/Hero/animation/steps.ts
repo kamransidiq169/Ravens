@@ -19,9 +19,17 @@ export function stepFrom(stops: readonly number[], position: number, direction: 
   return [...stops].reverse().find((stop) => stop < position - tolerance) ?? null;
 }
 
-/** Seconds for a transition covering `distance` px at viewport height `viewport`: brisk, but long enough to read the choreography. */
-export const stepDuration = (distance: number, viewport: number) =>
-  Math.min(2.4, Math.max(1, (Math.abs(distance) / Math.max(viewport, 1)) * 0.42));
+/** The phone layout (same query the journey's matchMedia uses). */
+export const COMPACT_QUERY = "(max-width: 767px)";
+
+/**
+ * Seconds for a transition covering `distance` px at viewport height `viewport`: brisk, but long enough to read the
+ * choreography. Phones get a gentler pace (the titles travel the full, narrow stage and are read at arm's length).
+ */
+export const stepDuration = (distance: number, viewport: number, compact = false) => {
+  const pace = compact ? 1.4 : 1;
+  return Math.min(2.4 * pace, Math.max(pace, (Math.abs(distance) / Math.max(viewport, 1)) * 0.42 * pace));
+};
 
 /**
  * Wheel/trackpad gestures arrive as a stream: a burst, then inertial events that decay for up to a second or more. After
