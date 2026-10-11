@@ -1,14 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  createWheelGate,
-  isEngaged,
-  nextWaypoint,
-  settleTarget,
-  waypointPositions,
-} from "@/features/process/animation/process.stepper";
+import { createWheelGate, isEngaged, nextWaypoint, settleTarget, waypointPositions } from "@/lib/stepper";
 
-const wp = waypointPositions(1000, 9000);
+const wp = waypointPositions(1000, 9000, [0, 0.29, 0.471, 0.644, 0.851]);
 const [intro, discover, define, design, deliver] = wp as [number, number, number, number, number];
 
 /** Feeds a wheel burst and counts how many steps the gate would start. */

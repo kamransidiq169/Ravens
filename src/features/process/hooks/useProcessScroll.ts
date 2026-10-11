@@ -3,18 +3,6 @@ import { useEffect, useRef, type RefObject } from "react";
 import { useSmoothScroll } from "@/components/providers/SmoothScrollProvider";
 
 import { STAGES, processAt } from "../animation/process.animation";
-import {
-  MAX_LOCK_MS,
-  MIN_SWIPE_PX,
-  createWheelGate,
-  inSpan,
-  isEngaged,
-  nextWaypoint,
-  normalizeWheelDelta,
-  settleTarget,
-  waypointPositions,
-  type Direction,
-} from "../animation/process.stepper";
 
 // matchMedia only runs its callback when at least one named condition matches, so both sides are listed.
 const CONDITIONS = { compact: "(max-width: 767px)", wide: "(min-width: 768px)" };
@@ -30,10 +18,8 @@ const RELEASE_OVERLAP = 0.7;
 /** Seconds one chapter step takes to travel between waypoints; settling a drifted page is quicker. */
 const STEP_SECONDS = 0.9;
 const SETTLE_SECONDS = 0.6;
-/** The film has caught up with the scroll position once it is this close (0–1) to the waypoint's progress. */
-const SETTLED_PROGRESS = 0.004;
-
-type VirtualScrollEvent = Event & { lenisStopPropagation?: boolean };
+/** Film progress at which each step rests: 0 = intro, then each chapter's word fully arrived with its caption showing. */
+const WAYPOINTS = [0, 0.29, 0.471, 0.644, 0.851] as const;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (t: number) => t * t * (3 - 2 * t);
@@ -109,287 +95,186 @@ export function useProcessScroll(root: RefObject<HTMLElement | null>, reduced: b
     let cancelled = false;
     let teardown: (() => void) | undefined;
 
-    void import("@/lib/gsap").then(({ gsap, ScrollTrigger }) => {
-      if (cancelled) return;
+    void Promise.all([import("@/lib/gsap"), import("@/lib/stepper-controller")]).then(
+      ([{ gsap, ScrollTrigger }, { createStepper }]) => {
+        if (cancelled) return;
 
-      const mm = gsap.matchMedia();
-      mm.add(CONDITIONS, (context) => {
-        const layout = { compact: Boolean(context.conditions?.compact) };
+        const mm = gsap.matchMedia();
+        mm.add(CONDITIONS, (context) => {
+          const layout = { compact: Boolean(context.conditions?.compact) };
 
-        let stageW = stage.clientWidth;
-        let stageH = stage.clientHeight;
-        let rigW = back.offsetWidth;
-        let rigH = back.offsetHeight;
-        let fontPx = parseFloat(getComputedStyle(words[0] ?? stage).fontSize);
-        let active = -2;
-        const letterKey = words.map(() => "");
-        const proxy = { p: 0 };
+          let stageW = stage.clientWidth;
+          let stageH = stage.clientHeight;
+          let rigW = back.offsetWidth;
+          let rigH = back.offsetHeight;
+          let fontPx = parseFloat(getComputedStyle(words[0] ?? stage).fontSize);
+          let active = -2;
+          const letterKey = words.map(() => "");
+          const proxy = { p: 0 };
 
-        gsap.set([back, front], { xPercent: -50, yPercent: -50, transformPerspective: 1600 });
-        gsap.set([guideH, guideV], { force3D: false });
+          gsap.set([back, front], { xPercent: -50, yPercent: -50, transformPerspective: 1600 });
+          gsap.set([guideH, guideV], { force3D: false });
 
-        const applyLetters = (
-          i: number,
-          spread: number,
-          exit: number,
-          f: { amount: number; line: number; dir: 1 | -1 },
-        ) => {
-          const key = `${Math.round(spread * 2000)}|${Math.round(exit * 400)}|${Math.round(f.amount * 200)}|${Math.round(f.line * 200)}|${f.dir}`;
-          if (letterKey[i] === key) return;
-          letterKey[i] = key;
+          const applyLetters = (
+            i: number,
+            spread: number,
+            exit: number,
+            f: { amount: number; line: number; dir: 1 | -1 },
+          ) => {
+            const key = `${Math.round(spread * 2000)}|${Math.round(exit * 400)}|${Math.round(f.amount * 200)}|${Math.round(f.line * 200)}|${f.dir}`;
+            if (letterKey[i] === key) return;
+            letterKey[i] = key;
 
-          const base = letters[i] ?? [];
-          const twin = twinLetters[i] ?? [];
-          const n = base.length;
-          const mid = (n - 1) / 2;
-          base.forEach((letter, j) => {
-            // Each letter breaks away on its own beat and its own side, so the word comes apart rather than fading.
-            const weight = 0.5 + ((j * 5 + 3) % n) / Math.max(1, n - 1);
-            const side = j % 2 ? -1 : 1;
-            const fade = clamp01(1 - exit * 1.4 * weight);
-            const pose = {
-              x: (j - mid) * spread * fontPx,
-              y: exit * stageH * 0.3 * weight * side,
-              rotation: exit * 9 * weight * side,
-            };
-            // One copy per letter at a time: both are difference-blended, so overlapping twins would invert each other.
-            let inFront = 0;
-            const twinLetter = twin[j];
-            if (twinLetter) {
-              const pos = (j + 0.5) / n;
-              const across = f.dir === 1 ? (f.line - pos) / 0.12 + 0.5 : (pos - f.line) / 0.12 + 0.5;
-              inFront = f.amount * smooth(clamp01(across));
-              gsap.set(twinLetter, { ...pose, opacity: inFront * fade });
-            }
-            gsap.set(letter, { ...pose, opacity: (1 - inFront) * fade });
-          });
-        };
-
-        const apply = (p: number) => {
-          const s = processAt(p, layout);
-
-          // Intro: the statement drifts up and swells; the camera pushes into it, the lines split apart.
-          gsap.set(intro, { y: s.intro.y * stageH, scale: s.intro.scale, opacity: s.intro.opacity, force3D: false });
-          gsap.set(introCopy, { opacity: s.intro.copy, y: (1 - s.intro.copy) * -24 });
-          // The loose feathers leave with the headline. Their fall is ambient CSS, independent of this timeline.
-          gsap.set(feathers, { opacity: s.feathers.opacity });
-          const [top, mid, bottom] = introLines;
-          if (top && mid && bottom) {
-            // Lines live inside the scaled title, so convert stage-height fractions back into its coordinate space.
-            const unit = stageH / s.intro.scale;
-            gsap.set(top, { y: s.intro.split.top * unit });
-            gsap.set(bottom, { y: s.intro.split.bottom * unit });
-            gsap.set(mid, { opacity: s.intro.split.middle });
-          }
-
-          // Raven: both copies take the same numbers, so the wing piece in front always lines up with the bird behind.
-          const body = {
-            x: s.rig.x * rigW,
-            y: s.rig.y * rigH,
-            scale: s.rig.scale,
-            scaleX: s.rig.scaleX,
-            rotation: s.rig.rotate,
-            rotationX: s.rig.tiltX,
-            rotationY: s.rig.yaw,
+            const base = letters[i] ?? [];
+            const twin = twinLetters[i] ?? [];
+            const n = base.length;
+            const mid = (n - 1) / 2;
+            base.forEach((letter, j) => {
+              // Each letter breaks away on its own beat and its own side, so the word comes apart rather than fading.
+              const weight = 0.5 + ((j * 5 + 3) % n) / Math.max(1, n - 1);
+              const side = j % 2 ? -1 : 1;
+              const fade = clamp01(1 - exit * 1.4 * weight);
+              const pose = {
+                x: (j - mid) * spread * fontPx,
+                y: exit * stageH * 0.3 * weight * side,
+                rotation: exit * 9 * weight * side,
+              };
+              // One copy per letter at a time: both are difference-blended, so overlapping twins would invert each other.
+              let inFront = 0;
+              const twinLetter = twin[j];
+              if (twinLetter) {
+                const pos = (j + 0.5) / n;
+                const across = f.dir === 1 ? (f.line - pos) / 0.12 + 0.5 : (pos - f.line) / 0.12 + 0.5;
+                inFront = f.amount * smooth(clamp01(across));
+                gsap.set(twinLetter, { ...pose, opacity: inFront * fade });
+              }
+              gsap.set(letter, { ...pose, opacity: (1 - inFront) * fade });
+            });
           };
-          gsap.set(back, { ...body, opacity: s.rig.opacity });
-          gsap.set(front, { ...body, opacity: s.rig.opacity * s.front });
 
-          // Type: the real word and its twin share every transform.
-          words.forEach((word, i) => {
-            const w = s.words[i];
-            const twin = twins[i];
-            if (!w || !twin) return;
-            const pose = {
-              x: w.x * stageW,
-              y: w.y * stageH,
-              scale: w.scale,
-              scaleX: w.scaleX,
-              opacity: w.opacity,
-              force3D: false,
-              clipPath: `inset(${(1 - w.open) * 50}% 0% ${(1 - w.open) * 50}% 0%)`,
+          const apply = (p: number) => {
+            const s = processAt(p, layout);
+
+            // Intro: the statement drifts up and swells; the camera pushes into it, the lines split apart.
+            gsap.set(intro, { y: s.intro.y * stageH, scale: s.intro.scale, opacity: s.intro.opacity, force3D: false });
+            gsap.set(introCopy, { opacity: s.intro.copy, y: (1 - s.intro.copy) * -24 });
+            // The loose feathers leave with the headline. Their fall is ambient CSS, independent of this timeline.
+            gsap.set(feathers, { opacity: s.feathers.opacity });
+            const [top, mid, bottom] = introLines;
+            if (top && mid && bottom) {
+              // Lines live inside the scaled title, so convert stage-height fractions back into its coordinate space.
+              const unit = stageH / s.intro.scale;
+              gsap.set(top, { y: s.intro.split.top * unit });
+              gsap.set(bottom, { y: s.intro.split.bottom * unit });
+              gsap.set(mid, { opacity: s.intro.split.middle });
+            }
+
+            // Raven: both copies take the same numbers, so the wing piece in front always lines up with the bird behind.
+            const body = {
+              x: s.rig.x * rigW,
+              y: s.rig.y * rigH,
+              scale: s.rig.scale,
+              scaleX: s.rig.scaleX,
+              rotation: s.rig.rotate,
+              rotationX: s.rig.tiltX,
+              rotationY: s.rig.yaw,
             };
-            gsap.set([word, twin], pose);
-            if (w.opacity > 0.001 || letterKey[i] !== "") applyLetters(i, w.spread, w.exit, w.front);
+            gsap.set(back, { ...body, opacity: s.rig.opacity });
+            gsap.set(front, { ...body, opacity: s.rig.opacity * s.front });
 
-            const desc = descs[i];
-            if (desc) gsap.set(desc, { opacity: w.caption, y: (1 - w.caption) * 14 });
+            // Type: the real word and its twin share every transform.
+            words.forEach((word, i) => {
+              const w = s.words[i];
+              const twin = twins[i];
+              if (!w || !twin) return;
+              const pose = {
+                x: w.x * stageW,
+                y: w.y * stageH,
+                scale: w.scale,
+                scaleX: w.scaleX,
+                opacity: w.opacity,
+                force3D: false,
+                clipPath: `inset(${(1 - w.open) * 50}% 0% ${(1 - w.open) * 50}% 0%)`,
+              };
+              gsap.set([word, twin], pose);
+              if (w.opacity > 0.001 || letterKey[i] !== "") applyLetters(i, w.spread, w.exit, w.front);
+
+              const desc = descs[i];
+              if (desc) gsap.set(desc, { opacity: w.caption, y: (1 - w.caption) * 14 });
+            });
+
+            gsap.set(guides, { opacity: s.guides });
+            gsap.set(guideH, { scaleX: s.guides });
+            gsap.set(guideV, { scaleY: s.guides });
+            gsap.set(whisper, { opacity: s.whisper, y: (1 - s.whisper) * 10 });
+            gsap.set(glow, { x: (s.glow.x - 0.5) * stageW * 0.5, opacity: s.glow.opacity });
+            gsap.set(tint, { opacity: s.tint });
+            gsap.set(meta, { opacity: s.meta });
+            gsap.set(bar, { scaleX: s.progress });
+
+            if (s.active !== active) {
+              active = s.active;
+              wrapper.dataset.active = String(active);
+              nums.forEach((num, i) => gsap.set(num, { yPercent: (i - active) * 100, opacity: i === active ? 1 : 0 }));
+              names.forEach((name, i) =>
+                gsap.set(name, { yPercent: (i - active) * 100, opacity: i === active ? 1 : 0 }),
+              );
+            }
+          };
+
+          const measure = () => {
+            stageW = stage.clientWidth;
+            stageH = stage.clientHeight;
+            rigW = back.offsetWidth;
+            rigH = back.offsetHeight;
+            fontPx = parseFloat(getComputedStyle(words[0] ?? stage).fontSize);
+            letterKey.fill("");
+          };
+
+          apply(0);
+
+          const stepper = createStepper({
+            trigger: () => tween.scrollTrigger,
+            filmProgress: () => proxy.p,
+            waypoints: WAYPOINTS,
+            lenis: () => lenisRef.current,
+            stepSeconds: STEP_SECONDS,
+            settleSeconds: SETTLE_SECONDS,
           });
 
-          gsap.set(guides, { opacity: s.guides });
-          gsap.set(guideH, { scaleX: s.guides });
-          gsap.set(guideV, { scaleY: s.guides });
-          gsap.set(whisper, { opacity: s.whisper, y: (1 - s.whisper) * 10 });
-          gsap.set(glow, { x: (s.glow.x - 0.5) * stageW * 0.5, opacity: s.glow.opacity });
-          gsap.set(tint, { opacity: s.tint });
-          gsap.set(meta, { opacity: s.meta });
-          gsap.set(bar, { scaleX: s.progress });
-
-          if (s.active !== active) {
-            active = s.active;
-            wrapper.dataset.active = String(active);
-            nums.forEach((num, i) => gsap.set(num, { yPercent: (i - active) * 100, opacity: i === active ? 1 : 0 }));
-            names.forEach((name, i) => gsap.set(name, { yPercent: (i - active) * 100, opacity: i === active ? 1 : 0 }));
-          }
-        };
-
-        const measure = () => {
-          stageW = stage.clientWidth;
-          stageH = stage.clientHeight;
-          rigW = back.offsetWidth;
-          rigH = back.offsetHeight;
-          fontPx = parseFloat(getComputedStyle(words[0] ?? stage).fontSize);
-          letterKey.fill("");
-        };
-
-        apply(0);
-
-        // ---- Discrete stepping -------------------------------------------------------------------------------------
-        let waypoints: number[] = [];
-        let stepTween: gsap.core.Tween | null = null;
-        let settlingAt: number | null = null;
-        let lockedAt = 0;
-        const gate = createWheelGate();
-
-        const setScroll = (y: number) => {
-          const instance = lenisRef.current;
-          if (instance) instance.scrollTo(y, { immediate: true, force: true });
-          else window.scrollTo(0, y);
-        };
-
-        /** A transition is in flight: the tween is running, or the film has not yet caught up with where it landed. */
-        const busy = () => {
-          if (stepTween) return true;
-          if (
-            settlingAt !== null &&
-            (Math.abs(proxy.p - settlingAt) < SETTLED_PROGRESS || performance.now() - lockedAt > MAX_LOCK_MS)
-          )
-            settlingAt = null;
-          return settlingAt !== null;
-        };
-
-        const goTo = (trigger: ScrollTrigger, y: number, seconds: number) => {
-          stepTween?.kill();
-          settlingAt = (y - trigger.start) / (trigger.end - trigger.start);
-          lockedAt = performance.now();
-          const cursor = { y: window.scrollY };
-          stepTween = gsap.to(cursor, {
-            y,
-            duration: seconds,
-            ease: "power2.inOut",
-            onUpdate: () => setScroll(cursor.y),
-            onComplete: () => {
-              stepTween = null;
+          const tween = gsap.to(proxy, {
+            p: 1,
+            ease: "none",
+            onUpdate: () => apply(proxy.p),
+            scrollTrigger: {
+              trigger: wrapper,
+              start: "top top",
+              end: () => `bottom bottom-=${Math.round(window.innerHeight * RELEASE_OVERLAP)}`,
+              scrub: 0.8,
+              invalidateOnRefresh: true,
+              onToggle: (self) => wrapper.classList.toggle("is-live", self.isActive),
+              onRefresh: (self) => {
+                measure();
+                apply(proxy.p);
+                stepper.onRefresh(self);
+              },
+              onUpdate: stepper.onUpdate,
             },
           });
-        };
 
-        /** Stops the browser and Lenis from also scrolling for an event the stepper owns. */
-        const own = (event: VirtualScrollEvent) => {
-          if (event.cancelable) event.preventDefault();
-          event.lenisStopPropagation = true;
-        };
-
-        const step = (dir: Direction) => {
-          const trigger = tween.scrollTrigger;
-          const target = nextWaypoint(window.scrollY, dir, waypoints);
-          if (trigger && target !== null) goTo(trigger, target, STEP_SECONDS);
-        };
-
-        const onWheel = (event: WheelEvent) => {
-          if (event.ctrlKey || event.deltaY === 0) return;
-          const dir: Direction = event.deltaY > 0 ? 1 : -1;
-          // Every wheel event feeds the gate, in or out of the section, so momentum that carries the page in is not
-          // mistaken for a fresh gesture once it arrives.
-          const delta = normalizeWheelDelta(event.deltaY, event.deltaMode, window.innerHeight);
-          const { start, continuing } = gate.push(delta, event.timeStamp, busy());
-          const y = window.scrollY;
-          const engaged = isEngaged(y, dir, waypoints);
-          // The rest of a swipe that already took its step is swallowed even where a fresh swipe would pass (on DELIVER or
-          // the intro), so one gesture never both steps and then scrolls out of the section.
-          if (!engaged && !(continuing && inSpan(y, waypoints))) return;
-          own(event);
-          if (engaged && start) step(dir);
-        };
-
-        let touchFrom = 0;
-        let touchDir: Direction | 0 = 0;
-        let touchOwned = false;
-        let touchSpent = false;
-
-        const onTouchStart = (event: TouchEvent) => {
-          touchFrom = event.touches[0]?.clientY ?? 0;
-          touchDir = 0;
-          touchOwned = false;
-          touchSpent = false;
-        };
-
-        const onTouchMove = (event: TouchEvent) => {
-          const dy = touchFrom - (event.touches[0]?.clientY ?? touchFrom);
-          if (touchDir === 0) {
-            if (Math.abs(dy) < 2) return;
-            // Ownership is decided once, on the first move: calling preventDefault later cannot stop a scroll that began.
-            touchDir = dy > 0 ? 1 : -1;
-            touchOwned = isEngaged(window.scrollY, touchDir, waypoints);
-          }
-          if (!touchOwned) return;
-          own(event);
-          if (touchSpent || Math.abs(dy) < MIN_SWIPE_PX) return;
-          touchSpent = true;
-          if (!busy()) step(touchDir);
-        };
-
-        window.addEventListener("wheel", onWheel, { passive: false, capture: true });
-        window.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
-        window.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
-
-        const tween = gsap.to(proxy, {
-          p: 1,
-          ease: "none",
-          onUpdate: () => apply(proxy.p),
-          scrollTrigger: {
-            trigger: wrapper,
-            start: "top top",
-            end: () => `bottom bottom-=${Math.round(window.innerHeight * RELEASE_OVERLAP)}`,
-            scrub: 0.8,
-            invalidateOnRefresh: true,
-            onToggle: (self) => wrapper.classList.toggle("is-live", self.isActive),
-            onRefresh: (self) => {
-              measure();
-              apply(proxy.p);
-              // A resize moves the waypoints; a page resting on one follows it.
-              const y = window.scrollY;
-              const resting = waypoints.findIndex((w) => Math.abs(w - y) <= 2);
-              waypoints = waypointPositions(self.start, self.end);
-              const moved = waypoints[resting];
-              if (resting >= 0 && moved !== undefined && !busy()) setScroll(moved);
-            },
-            onUpdate: (self) => {
-              // Momentum, a scrollbar drag or an anchor can leave the page between waypoints: settle it on the one it
-              // came from rather than letting the film play through.
-              if (busy()) return;
-              const target = settleTarget(self.scroll(), self.direction === 1 ? 1 : -1, waypoints);
-              if (target !== null) goTo(self, target, SETTLE_SECONDS);
-            },
-          },
+          return () => {
+            stepper.destroy();
+            tween.scrollTrigger?.kill();
+            tween.kill();
+            wrapper.classList.remove("is-live");
+            delete wrapper.dataset.active;
+          };
         });
 
-        return () => {
-          window.removeEventListener("wheel", onWheel, { capture: true });
-          window.removeEventListener("touchstart", onTouchStart, { capture: true });
-          window.removeEventListener("touchmove", onTouchMove, { capture: true });
-          stepTween?.kill();
-          gate.reset();
-          tween.scrollTrigger?.kill();
-          tween.kill();
-          wrapper.classList.remove("is-live");
-          delete wrapper.dataset.active;
-        };
-      });
-
-      teardown = () => mm.revert();
-      ScrollTrigger.refresh();
-    });
+        teardown = () => mm.revert();
+        ScrollTrigger.refresh();
+      },
+    );
 
     return () => {
       cancelled = true;

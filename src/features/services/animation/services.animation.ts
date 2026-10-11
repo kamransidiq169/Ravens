@@ -1,5 +1,8 @@
+import type Lenis from "lenis";
+
 import { gsap } from "@/lib/gsap";
 import { onIdle } from "@/lib/idle";
+import { createStepper } from "@/lib/stepper-controller";
 
 /**
  * Entrance choreography per panel (index order 0..4). Panels enter from the right, the outermost-right first, so
@@ -13,6 +16,12 @@ const ENTER = [
   { travel: 0.44, z: -90, ry: -12, delay: 0.08 },
   { travel: 0.38, z: -140, ry: -16, delay: 0 },
 ] as const;
+
+/** Timeline units one phone step spans (1.0 of travel + a 0.7 hold), and where inside it the arrived card rests. */
+const STEP_UNITS = 1.7;
+const REST_UNITS = 1.4;
+const PHONE_STEP_SECONDS = 1;
+const PHONE_SETTLE_SECONDS = 0.6;
 
 /**
  * Decodes a card's photograph off the main thread. Cards that wait in `visibility: hidden` are never painted, so
@@ -33,7 +42,7 @@ function decodeCard(card: HTMLElement | undefined) {
  * Wires every motion mode of the services gallery (tablet/desktop entrance, phone scroll sequence, reduced motion)
  * onto the list. Returns the cleanup that reverts all of it; call it inside `useGSAP` so it runs with the component.
  */
-export function animateServicesGallery(list: HTMLUListElement) {
+export function animateServicesGallery(list: HTMLUListElement, lenis: () => Lenis | null = () => null) {
   const items = gsap.utils.toArray<HTMLElement>(".sv-enter", list);
   const mm = gsap.matchMedia();
 
@@ -85,6 +94,10 @@ export function animateServicesGallery(list: HTMLUListElement) {
   // ScrollTrigger pin, no touch handling, no nested scroller); each card is stacked in the same grid cell and
   // slides in from the right (xPercent of its own box, so nothing is measured) while the previous one eases out.
   //
+  // The page may only rest with one card showing, and one swipe moves it by exactly one card (`createStepper`): swipe
+  // distance, speed and momentum never decide how many cards go by. Above the first card and below the last the page
+  // scrolls normally.
+  //
   // The ScrollTrigger uses fixed pixel-range end so iOS Safari's dynamic address bar cannot move the end point
   // during scroll (which would cause continuous recalculation and the section to shake). Measurements happen
   // only on refresh, never per frame.
@@ -103,6 +116,17 @@ export function animateServicesGallery(list: HTMLUListElement) {
         .slice(1)
         .reduce((chain, card) => chain.then(() => (alive ? decodeCard(card) : undefined)), Promise.resolve());
     });
+    const stepper = createStepper({
+      trigger: () => tl.scrollTrigger,
+      filmProgress: () => tl.progress(),
+      // Card 0 rests at the start; card k (k ≥ 1) rests once its step has arrived, inside that step's hold.
+      waypoints: cards.map((_, k) =>
+        k === 0 ? 0 : ((k - 1) * STEP_UNITS + REST_UNITS) / ((cards.length - 1) * STEP_UNITS),
+      ),
+      lenis,
+      stepSeconds: PHONE_STEP_SECONDS,
+      settleSeconds: PHONE_SETTLE_SECONDS,
+    });
     const tl = gsap.timeline({
       defaults: { ease: "none" },
       scrollTrigger: {
@@ -110,11 +134,13 @@ export function animateServicesGallery(list: HTMLUListElement) {
         start: "top top",
         end: "bottom bottom",
         scrub: 0.4,
+        onRefresh: stepper.onRefresh,
+        onUpdate: stepper.onUpdate,
       },
     });
     // Per step: 1.0 of travel, then a 0.7 hold so every service rests as the sole visible card.
     cards.slice(1).forEach((card, i) => {
-      const at = i * 1.7;
+      const at = i * STEP_UNITS;
       tl.to(cards[i]!, { xPercent: -28, duration: 1, ease: "power2.inOut" }, at)
         .to(cards[i]!, { autoAlpha: 0, duration: 0.45, ease: "power1.in" }, at + 0.1)
         .fromTo(
@@ -136,6 +162,7 @@ export function animateServicesGallery(list: HTMLUListElement) {
     return () => {
       alive = false;
       cancelIdle();
+      stepper.destroy();
       tl.scrollTrigger?.kill();
       tl.kill();
       gsap.set(cards, { clearProps: "all" });

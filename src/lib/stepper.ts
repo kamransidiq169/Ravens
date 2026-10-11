@@ -1,13 +1,11 @@
 /**
- * Turns raw scroll input into discrete chapter steps. Pure (no DOM, no GSAP), so the rules are unit-tested.
+ * Turns raw scroll input into discrete steps. Pure (no DOM, no GSAP), so the rules are unit-tested.
  *
- * The film stays a pure function of scroll position (`processAt`). The stepper only decides *where the page may rest*:
- * five waypoints — the intro, then DISCOVER, DEFINE, DESIGN, DELIVER — and a wheel/touch gesture may move the page from
- * one waypoint to the neighbouring one, never further. Outside the waypoint span the page scrolls normally.
+ * A scrubbed film (Process, the phone Services sequence) stays a pure function of scroll position. The stepper only
+ * decides *where the page may rest*: a list of waypoints, and a wheel/touch gesture may move the page from one waypoint
+ * to the neighbouring one, never further. Outside the waypoint span the page scrolls normally.
+ * `createStepper` (stepper-controller) wires these rules to the DOM.
  */
-
-/** Film progress at which each step rests: 0 = intro, then each chapter's word fully arrived with its caption showing. */
-export const WAYPOINT_PROGRESS = [0, 0.29, 0.471, 0.644, 0.851] as const;
 
 /** Pixels within which the page counts as being exactly on a waypoint. */
 export const REST_TOLERANCE = 2;
@@ -28,22 +26,22 @@ export const MAX_LOCK_MS = 3500;
 export type Direction = 1 | -1;
 
 /** Scroll positions (px) of every waypoint for the current layout. */
-export function waypointPositions(start: number, end: number): number[] {
-  return WAYPOINT_PROGRESS.map((p) => Math.round(start + p * (end - start)));
+export function waypointPositions(start: number, end: number, progress: readonly number[]): number[] {
+  return progress.map((p) => Math.round(start + p * (end - start)));
 }
 
 /** Whether a gesture in `dir` is owned by the stepper at scroll position `y`, i.e. must not scroll the page itself. */
 export function isEngaged(y: number, dir: Direction, waypoints: readonly number[]): boolean {
   const first = waypoints[0] ?? 0;
   const last = waypoints[waypoints.length - 1] ?? 0;
-  // Going down: from the intro up to (not including) DELIVER. Going up: from DELIVER down to (not including) the intro.
-  // Below DELIVER and above the intro the page scrolls freely, which is how the user enters and leaves the section.
+  // Going down: from the first waypoint up to (not including) the last. Going up: from the last down to (not
+  // including) the first. Below the last and above the first the page scrolls freely, which is how the user enters and leaves the section.
   return dir === 1
     ? y >= first - REST_TOLERANCE && y < last - REST_TOLERANCE
     : y > first + REST_TOLERANCE && y <= last + REST_TOLERANCE;
 }
 
-/** Whether the page rests anywhere from the intro to DELIVER inclusive (the span the stepper owns, ends included). */
+/** Whether the page rests anywhere from the first to the last waypoint inclusive (the span the stepper owns, ends included). */
 export function inSpan(y: number, waypoints: readonly number[]): boolean {
   const first = waypoints[0] ?? 0;
   const last = waypoints[waypoints.length - 1] ?? 0;

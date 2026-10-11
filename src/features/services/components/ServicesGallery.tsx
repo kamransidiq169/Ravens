@@ -1,8 +1,9 @@
 "use client";
 
 import { useGSAP } from "@gsap/react";
-import { useRef, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 
+import { useSmoothScroll } from "@/components/providers/SmoothScrollProvider";
 import { Image } from "@/components/ui/Image";
 
 import { panels } from "@/content/service-panels";
@@ -15,12 +16,18 @@ import { animateServicesGallery } from "../animation/services.animation";
  */
 export function ServicesGallery({ before, after }: { before?: ReactNode; after?: ReactNode }) {
   const root = useRef<HTMLUListElement>(null);
+  // Read through a ref so Lenis finishing its load does not rebuild the animation.
+  const lenis = useSmoothScroll();
+  const lenisRef = useRef(lenis);
+  useEffect(() => {
+    lenisRef.current = lenis;
+  }, [lenis]);
 
   useGSAP(
     () => {
       const list = root.current;
       if (!list) return;
-      return animateServicesGallery(list);
+      return animateServicesGallery(list, () => lenisRef.current);
     },
     { scope: root },
   );
