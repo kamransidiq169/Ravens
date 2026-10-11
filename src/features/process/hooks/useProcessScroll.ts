@@ -1,6 +1,20 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
+
+import { useSmoothScroll } from "@/components/providers/SmoothScrollProvider";
 
 import { STAGES, processAt } from "../animation/process.animation";
+import {
+  MAX_LOCK_MS,
+  MIN_SWIPE_PX,
+  createWheelGate,
+  inSpan,
+  isEngaged,
+  nextWaypoint,
+  normalizeWheelDelta,
+  settleTarget,
+  waypointPositions,
+  type Direction,
+} from "../animation/process.stepper";
 
 // matchMedia only runs its callback when at least one named condition matches, so both sides are listed.
 const CONDITIONS = { compact: "(max-width: 767px)", wide: "(min-width: 768px)" };
@@ -13,6 +27,14 @@ const CONDITIONS = { compact: "(max-width: 767px)", wide: "(min-width: 768px)" }
  */
 const RELEASE_OVERLAP = 0.7;
 
+/** Seconds one chapter step takes to travel between waypoints; settling a drifted page is quicker. */
+const STEP_SECONDS = 0.9;
+const SETTLE_SECONDS = 0.6;
+/** The film has caught up with the scroll position once it is this close (0–1) to the waypoint's progress. */
+const SETTLED_PROGRESS = 0.004;
+
+type VirtualScrollEvent = Event & { lenisStopPropagation?: boolean };
+
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
@@ -20,11 +42,23 @@ const smooth = (t: number) => t * t * (3 - 2 * t);
  * Scroll-drives the process film. One timeline, one ScrollTrigger on the shared GSAP instance, no pin (the stage is
  * `position: sticky` inside a tall wrapper) and no second Lenis: the site's provider already feeds ScrollTrigger.
  *
+ * Scroll position still drives the film, but the page is only allowed to rest on five waypoints (intro, DISCOVER,
+ * DEFINE, DESIGN, DELIVER; see `process.stepper`). Inside that span a wheel or touch gesture is consumed and becomes at
+ * most one tween to the adjacent waypoint, so scroll speed and momentum cannot skip a chapter. Above the intro and below
+ * DELIVER nothing is intercepted: the page scrolls normally and the user is never trapped.
+ *
  * The timeline only carries a 0 → 1 proxy; each tick `processAt` is evaluated and applied with transforms, opacity and
  * clip-path. Measurements are read on refresh, never per frame. GSAP is code-split, everything is reverted on unmount
  * (Strict Mode safe), and nothing runs under reduced motion — the CSS shows the stacked layout instead.
  */
 export function useProcessScroll(root: RefObject<HTMLElement | null>, reduced: boolean) {
+  // Read through a ref so Lenis finishing its load does not rebuild the timeline.
+  const lenis = useSmoothScroll();
+  const lenisRef = useRef(lenis);
+  useEffect(() => {
+    lenisRef.current = lenis;
+  }, [lenis]);
+
   useEffect(() => {
     const wrapper = root.current;
     if (!wrapper || reduced) return;
@@ -210,6 +244,105 @@ export function useProcessScroll(root: RefObject<HTMLElement | null>, reduced: b
 
         apply(0);
 
+        // ---- Discrete stepping -------------------------------------------------------------------------------------
+        let waypoints: number[] = [];
+        let stepTween: gsap.core.Tween | null = null;
+        let settlingAt: number | null = null;
+        let lockedAt = 0;
+        const gate = createWheelGate();
+
+        const setScroll = (y: number) => {
+          const instance = lenisRef.current;
+          if (instance) instance.scrollTo(y, { immediate: true, force: true });
+          else window.scrollTo(0, y);
+        };
+
+        /** A transition is in flight: the tween is running, or the film has not yet caught up with where it landed. */
+        const busy = () => {
+          if (stepTween) return true;
+          if (
+            settlingAt !== null &&
+            (Math.abs(proxy.p - settlingAt) < SETTLED_PROGRESS || performance.now() - lockedAt > MAX_LOCK_MS)
+          )
+            settlingAt = null;
+          return settlingAt !== null;
+        };
+
+        const goTo = (trigger: ScrollTrigger, y: number, seconds: number) => {
+          stepTween?.kill();
+          settlingAt = (y - trigger.start) / (trigger.end - trigger.start);
+          lockedAt = performance.now();
+          const cursor = { y: window.scrollY };
+          stepTween = gsap.to(cursor, {
+            y,
+            duration: seconds,
+            ease: "power2.inOut",
+            onUpdate: () => setScroll(cursor.y),
+            onComplete: () => {
+              stepTween = null;
+            },
+          });
+        };
+
+        /** Stops the browser and Lenis from also scrolling for an event the stepper owns. */
+        const own = (event: VirtualScrollEvent) => {
+          if (event.cancelable) event.preventDefault();
+          event.lenisStopPropagation = true;
+        };
+
+        const step = (dir: Direction) => {
+          const trigger = tween.scrollTrigger;
+          const target = nextWaypoint(window.scrollY, dir, waypoints);
+          if (trigger && target !== null) goTo(trigger, target, STEP_SECONDS);
+        };
+
+        const onWheel = (event: WheelEvent) => {
+          if (event.ctrlKey || event.deltaY === 0) return;
+          const dir: Direction = event.deltaY > 0 ? 1 : -1;
+          // Every wheel event feeds the gate, in or out of the section, so momentum that carries the page in is not
+          // mistaken for a fresh gesture once it arrives.
+          const delta = normalizeWheelDelta(event.deltaY, event.deltaMode, window.innerHeight);
+          const { start, continuing } = gate.push(delta, event.timeStamp, busy());
+          const y = window.scrollY;
+          const engaged = isEngaged(y, dir, waypoints);
+          // The rest of a swipe that already took its step is swallowed even where a fresh swipe would pass (on DELIVER or
+          // the intro), so one gesture never both steps and then scrolls out of the section.
+          if (!engaged && !(continuing && inSpan(y, waypoints))) return;
+          own(event);
+          if (engaged && start) step(dir);
+        };
+
+        let touchFrom = 0;
+        let touchDir: Direction | 0 = 0;
+        let touchOwned = false;
+        let touchSpent = false;
+
+        const onTouchStart = (event: TouchEvent) => {
+          touchFrom = event.touches[0]?.clientY ?? 0;
+          touchDir = 0;
+          touchOwned = false;
+          touchSpent = false;
+        };
+
+        const onTouchMove = (event: TouchEvent) => {
+          const dy = touchFrom - (event.touches[0]?.clientY ?? touchFrom);
+          if (touchDir === 0) {
+            if (Math.abs(dy) < 2) return;
+            // Ownership is decided once, on the first move: calling preventDefault later cannot stop a scroll that began.
+            touchDir = dy > 0 ? 1 : -1;
+            touchOwned = isEngaged(window.scrollY, touchDir, waypoints);
+          }
+          if (!touchOwned) return;
+          own(event);
+          if (touchSpent || Math.abs(dy) < MIN_SWIPE_PX) return;
+          touchSpent = true;
+          if (!busy()) step(touchDir);
+        };
+
+        window.addEventListener("wheel", onWheel, { passive: false, capture: true });
+        window.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
+        window.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
+
         const tween = gsap.to(proxy, {
           p: 1,
           ease: "none",
@@ -221,14 +354,32 @@ export function useProcessScroll(root: RefObject<HTMLElement | null>, reduced: b
             scrub: 0.8,
             invalidateOnRefresh: true,
             onToggle: (self) => wrapper.classList.toggle("is-live", self.isActive),
-            onRefresh: () => {
+            onRefresh: (self) => {
               measure();
               apply(proxy.p);
+              // A resize moves the waypoints; a page resting on one follows it.
+              const y = window.scrollY;
+              const resting = waypoints.findIndex((w) => Math.abs(w - y) <= 2);
+              waypoints = waypointPositions(self.start, self.end);
+              const moved = waypoints[resting];
+              if (resting >= 0 && moved !== undefined && !busy()) setScroll(moved);
+            },
+            onUpdate: (self) => {
+              // Momentum, a scrollbar drag or an anchor can leave the page between waypoints: settle it on the one it
+              // came from rather than letting the film play through.
+              if (busy()) return;
+              const target = settleTarget(self.scroll(), self.direction === 1 ? 1 : -1, waypoints);
+              if (target !== null) goTo(self, target, SETTLE_SECONDS);
             },
           },
         });
 
         return () => {
+          window.removeEventListener("wheel", onWheel, { capture: true });
+          window.removeEventListener("touchstart", onTouchStart, { capture: true });
+          window.removeEventListener("touchmove", onTouchMove, { capture: true });
+          stepTween?.kill();
+          gate.reset();
           tween.scrollTrigger?.kill();
           tween.kill();
           wrapper.classList.remove("is-live");
