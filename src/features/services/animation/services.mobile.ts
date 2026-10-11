@@ -8,9 +8,13 @@ const QUERY = "(max-width: 767px) and (prefers-reduced-motion: no-preference)";
 const SWIPE_PX = 28;
 /** A wheel burst (narrow desktop window) ends after this much silence; compared by event timestamp, not a timer. */
 const WHEEL_GAP_MS = 140;
-/** Card travel / scale at rest while waiting off-stage. */
-const SHIFT = 14;
-const SCALE = 0.97;
+/** Card travel / scale while waiting off-stage. */
+const SHIFT = 12;
+const SCALE = 0.96;
+/** The next gesture is accepted this long after the previous card started moving. */
+const SETTLE_S = 0.42;
+/** Attribute on <html> while the section owns the page (CSS: no native scroll, no overscroll). */
+const LOCK_ATTR = "data-sv-locked";
 
 export interface ServicesMobile {
   goNext: () => void;
@@ -32,16 +36,17 @@ function decodeCard(card: HTMLElement | undefined) {
 }
 
 /**
- * Phone Services: a gesture-driven stack, independent of the desktop entrance and of scroll position.
+ * Phone Services: a gesture-driven, one-card-at-a-time stack that the page cannot scroll past by momentum.
  *
- *  - `index` is the only authority for the active card and only `goTo` writes it; `goNext` / `goPrevious` are its
- *    public face. One accepted gesture calls it at most once.
- *  - The stage is CSS-sticky inside a short wrapper (`.sv-pin`). While it is stuck ("owned") its touches are ours:
- *    touch-action stops the browser panning, so native scroll distance can never decide how many cards move.
- *    Outside that range nothing here intercepts anything.
- *  - Past the last card (swipe up) or before the first (swipe down) the stage hands over: it carries the page out
- *    with one short scroll tween, so the next section follows in the same gesture.
- *  - `busy` is set synchronously when a transition starts and cleared in GSAP's onComplete.
+ *  - The wrapper (`.sv-pin`) is exactly one viewport tall. A *gate* watches the scroll position every frame; the
+ *    moment it crosses the wrapper's top edge (from Process above or from the Hero below, however fast) the page is
+ *    snapped to that edge and locked: `<html>` stops scrolling, any leftover momentum is clamped back. Skipping the
+ *    section is therefore impossible, not merely unlikely.
+ *  - While locked, every gesture is ours and is interpreted once: a touch that began before the lock is ignored
+ *    (the arrival itself never advances a card), a later swipe accepts at most one decision (the rest of that
+ *    touch, momentum included, is dropped).
+ *  - One swipe = one card (`goTo`, the only writer of `index`). A swipe past the last (or before the first) card
+ *    releases the lock with one short scroll tween into the neighbouring section.
  *
  * Returns controls for the pager buttons plus the cleanup.
  */
@@ -56,9 +61,13 @@ export function mountServicesMobile(list: HTMLUListElement, onChange: (index: nu
     const cards = gsap.utils.toArray<HTMLElement>(".sv-item", list);
     if (!wrap || !stage || !page || cards.length < 2) return;
 
+    const html = document.documentElement;
     const last = cards.length - 1;
     let index = 0;
     let busy = false;
+    let locked = false;
+    let releasing = false;
+    let lockY = 0;
     let tl: gsap.core.Timeline | undefined;
     let scrollTween: gsap.core.Tween | undefined;
 
@@ -82,49 +91,70 @@ export function mountServicesMobile(list: HTMLUListElement, onChange: (index: nu
       if (busy || next < 0 || next > last) return;
       const from = cards[index]!;
       const to = cards[next]!;
+      const caption = to.querySelector(".sv-caption");
       index = next;
       busy = true;
       onChange(next);
       tl = gsap
-        .timeline({
-          onComplete: () => {
-            busy = false;
-          },
-        })
+        .timeline()
         .to(from, { yPercent: -dir * SHIFT, scale: SCALE, duration: 0.45, ease: "power3.out" }, 0)
-        .to(from, { autoAlpha: 0, duration: 0.22, ease: "power1.in" }, 0)
+        .to(from, { autoAlpha: 0, duration: 0.2, ease: "power1.in" }, 0)
         .fromTo(
           to,
           { yPercent: dir * SHIFT, scale: SCALE, autoAlpha: 0 },
           { yPercent: 0, scale: 1, autoAlpha: 1, duration: 0.5, ease: "power3.out" },
           0.04,
+        )
+        .call(
+          () => {
+            busy = false;
+          },
+          undefined,
+          SETTLE_S,
         );
+      if (caption) {
+        tl.fromTo(caption, { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.45, ease: "power3.out" }, 0.14);
+      }
     };
 
-    // Ownership: the stuck range of the wrapper. `onToggle` keeps the browser from panning (touch-action in CSS)
-    // and Lenis from smoothing wheel input over the stage, only while we own it.
-    let touching = false;
-    const own = (on: boolean) => {
-      stage.toggleAttribute("data-owned", on);
-      stage.toggleAttribute("data-lenis-prevent", on);
+    const wrapTop = () => wrap.getBoundingClientRect().top + window.scrollY;
+
+    // ── The gate ────────────────────────────────────────────────────────────────────────────────────────────
+    const engage = (top: number) => {
+      locked = true;
+      lockY = Math.round(top);
+      html.setAttribute(LOCK_ATTR, "");
+      window.scrollTo({ top, behavior: "instant" });
     };
-    // Entering the range (momentum from a neighbouring section) parks the page in the middle of it. Invisible,
-    // because the stage is sticky, and it leaves room on both sides for the first gesture.
-    const park = () => {
-      if (touching || busy) return;
-      window.scrollTo({ top: Math.round((zone.start + zone.end) / 2), behavior: "instant" });
+    const disengage = () => {
+      locked = false;
+      html.removeAttribute(LOCK_ATTR);
     };
-    const zone = ScrollTrigger.create({
-      trigger: wrap,
-      start: "top top",
-      end: "bottom bottom",
-      onToggle: (self) => own(self.isActive),
-      onEnter: park,
-      onEnterBack: park,
-    });
+
+    let prevY = window.scrollY;
+    /** Runs every frame (and on every scroll event): hold the lock, or lock when the top edge was crossed. */
+    const gate = () => {
+      const y = window.scrollY;
+      if (releasing) {
+        prevY = y;
+        return;
+      }
+      if (locked) {
+        if (y !== lockY) window.scrollTo({ top: lockY, behavior: "instant" });
+        prevY = lockY;
+        return;
+      }
+      const top = wrapTop();
+      // Crossing, not proximity: a flick that jumps over the edge between two samples still counts.
+      if ((prevY < top && y >= top) || (prevY > top && y <= top)) engage(top);
+      prevY = locked ? lockY : y;
+    };
+    gsap.ticker.add(gate);
+    window.addEventListener("scroll", gate, { passive: true });
+
     // Coming from above shows card 1, from below the last card; decided while the stage is still off-screen.
     const reset = (active: number) => {
-      if (busy || active === index) return;
+      if (busy || locked || active === index) return;
       index = active;
       settle(active);
       onChange(active);
@@ -137,49 +167,57 @@ export function mountServicesMobile(list: HTMLUListElement, onChange: (index: nu
       onEnterBack: () => reset(last),
     });
 
-    // Hand-over past either end: jump (invisibly) to the edge of the stuck range, then tween out of it.
+    // Loaded (or restored, or anchored) with the stage already on screen: take it, so it can't be scrolled through.
+    {
+      const top = wrapTop();
+      const y = window.scrollY;
+      if (y > top - 1 && y < top + wrap.offsetHeight - 1) engage(top);
+    }
+
+    /** Past either end: one short scroll tween into the neighbouring section, then hand the page back. */
     const release = (dir: 1 | -1) => {
-      busy = true;
-      const edge = dir > 0 ? zone.end : zone.start;
-      window.scrollTo({ top: edge, behavior: "instant" });
-      const target = dir > 0 ? page.getBoundingClientRect().bottom + window.scrollY : zone.start - window.innerHeight;
-      const proxy = { y: edge };
+      releasing = true;
+      const target = dir > 0 ? page.getBoundingClientRect().bottom + window.scrollY : lockY - window.innerHeight;
+      const proxy = { y: window.scrollY };
       scrollTween = gsap.to(proxy, {
         y: Math.max(0, target),
-        duration: 0.6,
+        duration: 0.65,
         ease: "power2.inOut",
         onUpdate: () => window.scrollTo(0, proxy.y),
         onComplete: () => {
-          busy = false;
+          releasing = false;
+          disengage();
+          prevY = window.scrollY;
         },
       });
     };
     const advance = (dir: 1 | -1) => {
-      if (busy) return;
+      if (busy || releasing || !locked) return;
       const next = index + dir;
       if (next < 0 || next > last) release(dir);
       else goTo(dir);
     };
 
+    // ── Input (window level, live only while locked) ───────────────────────────────────────────────────────
     // One touch = at most one decision. "idle" until the threshold, then "taken" (rest of the touch, momentum
-    // included, is ignored) or "pass" (not ours: native scrolling).
-    let gesture: "idle" | "taken" | "pass" = "idle";
+    // included, is ignored) or "pass" (not ours: it began before the lock, or it is a pinch).
+    let gesture: "idle" | "taken" | "pass" = "pass";
     let startX = 0;
     let startY = 0;
     const onTouchStart = (e: TouchEvent) => {
       const t = e.touches[0]!;
       startX = t.clientX;
       startY = t.clientY;
-      gesture = e.touches.length > 1 || !zone.isActive ? "pass" : "idle";
+      gesture = e.touches.length > 1 || !locked || releasing ? "pass" : "idle";
     };
     const onTouchMove = (e: TouchEvent) => {
-      if (gesture === "pass") return;
+      if (!locked) return;
       if (e.touches.length > 1) {
         gesture = "pass";
         return;
       }
       if (e.cancelable) e.preventDefault();
-      if (gesture === "taken") return;
+      if (gesture !== "idle") return;
       const t = e.touches[0]!;
       const dy = startY - t.clientY;
       const dx = startX - t.clientX;
@@ -188,59 +226,71 @@ export function mountServicesMobile(list: HTMLUListElement, onChange: (index: nu
       if (Math.abs(dx) > Math.abs(dy)) return;
       advance(dy > 0 ? 1 : -1);
     };
-    // A finger that dragged the page into the range natively could not be parked mid-drag; do it on release.
-    const onTouchEnd = () => {
-      touching = false;
-      if (gesture === "pass" && zone.isActive) park();
-    };
-    const onWindowTouchStart = () => {
-      touching = true;
-    };
 
     let lastWheel = -Infinity;
     const onWheel = (e: WheelEvent) => {
-      if (!zone.isActive || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      if (!locked || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
       e.preventDefault();
+      e.stopPropagation();
       const fresh = e.timeStamp - lastWheel > WHEEL_GAP_MS;
       lastWheel = e.timeStamp;
       if (fresh) advance(e.deltaY > 0 ? 1 : -1);
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
+      if (!locked) return;
       const dir =
-        e.key === "ArrowDown" || e.key === "PageDown" ? 1 : e.key === "ArrowUp" || e.key === "PageUp" ? -1 : 0;
-      if (!dir || index + dir < 0 || index + dir > last) return;
+        e.key === "ArrowDown" || e.key === "PageDown" || e.key === " "
+          ? 1
+          : e.key === "ArrowUp" || e.key === "PageUp"
+            ? -1
+            : 0;
+      if (!dir || (e.target instanceof HTMLElement && e.target.closest("a, button") && e.key === " ")) return;
       e.preventDefault();
-      goTo(dir);
+      advance(dir);
     };
 
-    window.addEventListener("touchstart", onWindowTouchStart, { passive: true });
-    window.addEventListener("touchend", onTouchEnd, { passive: true });
-    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
-    stage.addEventListener("touchstart", onTouchStart, { passive: true });
-    stage.addEventListener("touchmove", onTouchMove, { passive: false });
-    stage.addEventListener("wheel", onWheel, { passive: false });
-    stage.addEventListener("keydown", onKeyDown);
+    // Keyboard focus leaving the stage (Tab past the last link) hands the page back instead of fighting the lock.
+    const onFocusIn = (e: FocusEvent) => {
+      if (locked && !releasing && e.target instanceof Node && !stage.contains(e.target)) {
+        disengage();
+        prevY = window.scrollY;
+      }
+    };
 
-    controls = { goNext: () => goTo(1), goPrevious: () => goTo(-1) };
+    // Rotation / resize: the wrapper moves, so the lock follows it.
+    const onResize = () => {
+      if (!locked || releasing) return;
+      lockY = wrapTop();
+      window.scrollTo({ top: lockY, behavior: "instant" });
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("wheel", onWheel, { passive: false, capture: true });
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onResize);
+    document.addEventListener("focusin", onFocusIn);
+
+    controls = { goNext: () => advance(1), goPrevious: () => advance(-1) };
     list.dataset.motion = "ready";
 
     return () => {
       alive = false;
       controls = null;
       cancelIdle();
-      zone.kill();
+      gsap.ticker.remove(gate);
+      window.removeEventListener("scroll", gate);
       visible.kill();
       tl?.kill();
       scrollTween?.kill();
-      own(false);
-      window.removeEventListener("touchstart", onWindowTouchStart);
-      window.removeEventListener("touchend", onTouchEnd);
-      window.removeEventListener("touchcancel", onTouchEnd);
-      stage.removeEventListener("touchstart", onTouchStart);
-      stage.removeEventListener("touchmove", onTouchMove);
-      stage.removeEventListener("wheel", onWheel);
-      stage.removeEventListener("keydown", onKeyDown);
+      disengage();
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("wheel", onWheel, { capture: true });
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("focusin", onFocusIn);
       gsap.set(cards, { clearProps: "all" });
     };
   });

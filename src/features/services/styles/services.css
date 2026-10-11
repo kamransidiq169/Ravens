@@ -456,46 +456,154 @@
   }
 }
 
-/* Phone stack (motion allowed): the stage is CSS-sticky inside a short wrapper; the cards change by gesture, never
-   * by scroll position (animation/services.mobile.ts). The wrapper is the stage plus one viewport of "stuck" range
-   * the page is parked in the middle of, so a swipe past either end has room to hand over. Fixed vh units, so iOS
-   * Safari's dynamic address bar cannot move anything while scrolling.
+/* Tablet / desktop (and reduced motion): the added wrappers are layout-neutral, the phone-only bits are gone. */
+.sv-tail,
+.sv-pager-mid {
+  display: contents;
+}
+.sv-hint,
+.sv-bars,
+.sv-pager {
+  display: none;
+}
+
+/* Phone stack (motion allowed): one viewport tall, one card at a time, changed only by gesture
+   * (animation/services.mobile.ts). The controller snaps the page to this block's top edge and locks <html> while the
+   * stack is being explored, so scroll distance or momentum can never decide what is shown.
+   * Height is the *large* viewport (stable while the browser bars move); the content is laid out inside the *small*
+   * one, so nothing is ever hidden behind the bars.
    */
 @media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  html[data-sv-locked] {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  .sv-page {
+    padding: 0;
+  }
   .sv-pin {
-    height: 200vh;
+    height: 100vh;
+    height: 100lvh;
+    --sv-card-radius: 1.5rem;
   }
   .sv-stage {
-    position: sticky;
-    top: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    height: 100vh;
-    padding-top: var(--header-height, 3.5rem);
+    height: 100%;
+    padding: calc(var(--header-height, 3.5rem) + 0.25rem) 0 calc(100lvh - 100svh + 0.9rem);
     box-sizing: border-box;
     overflow: clip;
-    contain: layout style;
-  }
-  /* While the stage owns the gesture the browser must not pan from it (pinch-zoom stays available). */
-  .sv-stage[data-owned] {
     touch-action: pinch-zoom;
+  }
+  .sv-head {
+    flex: none;
+    padding: 0 1.25rem;
+  }
+  .sv-title {
+    font-size: clamp(2rem, 9vw, 2.5rem);
+  }
+  .sv-sub {
+    display: none;
+  }
+  .sv-gallery {
+    flex: 1 1 0;
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    margin: 0.9rem 0 0;
+    padding: 0 1.25rem;
+    box-sizing: border-box;
+    overflow: clip;
+  }
+  .sv-item {
+    display: flex;
+    min-height: 0;
+    will-change: transform, opacity;
   }
   /* Waiting cards stay hidden until the controller poses them. */
   .sv-item:not(:first-child) {
     visibility: hidden;
   }
+  .sv-enter {
+    position: relative;
+    display: flex;
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+  }
+  .sv-photo {
+    flex: 1;
+    aspect-ratio: auto;
+    border-radius: var(--sv-card-radius);
+    overflow: hidden;
+    box-shadow: 0 1.25rem 2.5rem -1.25rem rgb(27 16 48 / 0.45);
+  }
+  .sv-photo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(14 8 28 / 0.72), rgb(14 8 28 / 0) 48%);
+    pointer-events: none;
+  }
+  /* Caption sits on the photograph: small index above the label. */
+  .sv-caption {
+    position: absolute;
+    left: 1.25rem;
+    right: 1.25rem;
+    bottom: 1.1rem;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    color: #fff;
+  }
+  .sv-num {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    opacity: 0.75;
+  }
+  .sv-num::after {
+    content: none;
+  }
   .sv-pager {
     display: flex;
+    flex: none;
     align-items: center;
-    justify-content: center;
-    gap: 1.25rem;
-    margin-top: 0.35rem;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0 1.25rem;
+    margin-top: 0.9rem;
+  }
+  .sv-pager-mid {
+    display: grid;
+    flex: 1;
+    gap: 0.45rem;
+    justify-items: center;
+  }
+  .sv-bars {
+    display: flex;
+    gap: 0.3rem;
+    width: 100%;
+    max-width: 11rem;
+  }
+  .sv-bar {
+    flex: 1;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--sv-ink);
+    opacity: 0.16;
+    transition: opacity 0.45s var(--ease-out-expo);
+  }
+  .sv-bar[data-on] {
+    opacity: 0.9;
   }
   .sv-pager-count {
-    min-width: 4.5rem;
     margin: 0;
-    text-align: center;
     font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.16em;
@@ -516,15 +624,66 @@
   .sv-pager-btn:disabled {
     opacity: 0.25;
   }
+  /* Hint and CTA share one cell and cross-fade: the CTA belongs to the last card only. */
+  .sv-tail {
+    display: grid;
+    flex: none;
+    place-items: center;
+    min-height: 2.75rem;
+    margin-top: 0.7rem;
+  }
+  .sv-tail > * {
+    grid-area: 1 / 1;
+    transition:
+      opacity 0.4s var(--ease-out-expo),
+      visibility 0.4s;
+  }
+  .sv-hint {
+    display: block;
+    margin: 0;
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--sv-label);
+  }
+  .sv-bars {
+    display: flex;
+  }
+  .sv-foot {
+    margin: 0;
+    padding: 0 1.25rem;
+    opacity: 0;
+    visibility: hidden;
+  }
+  .sv-foot > p,
+  .sv-links .sv-btn:not(.sv-btn--solid) {
+    display: none;
+  }
+  .sv-links {
+    margin: 0;
+  }
+  .sv-btn {
+    min-height: 2.75rem;
+    padding: 0 1.5rem;
+  }
+  .sv-stage[data-last] .sv-foot {
+    opacity: 1;
+    visibility: visible;
+  }
+  .sv-stage[data-last] .sv-hint {
+    opacity: 0;
+    visibility: hidden;
+  }
 }
 
-/* Pager exists only for the phone stack. */
-.sv-pager {
-  display: none;
-}
-@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
-  .sv-pager {
-    display: flex;
+/* Short phones: the heading gives way to the card. */
+@media (max-width: 767px) and (max-height: 700px) and (prefers-reduced-motion: no-preference) {
+  .sv-title {
+    font-size: 1.75rem;
+  }
+  .sv-eyebrow::after {
+    display: none;
   }
 }
 

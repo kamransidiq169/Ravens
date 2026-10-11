@@ -57,7 +57,7 @@ export function ServicesGallery({ before, after }: { before?: ReactNode; after?:
 
   return (
     <div className="sv-pin">
-      <div className="sv-stage">
+      <div className="sv-stage" data-last={active === panels.length - 1 ? "" : undefined}>
         {before}
         <ul ref={root} id="services-gallery" className="sv-gallery" aria-label="Our services" data-motion="pending">
           {panels.map((p, i) => (
@@ -92,9 +92,16 @@ export function ServicesGallery({ before, after }: { before?: ReactNode; after?:
           >
             <PagerArrow up />
           </button>
-          <p className="sv-pager-count" aria-live="polite">
-            {pad(active + 1)} / {pad(panels.length)}
-          </p>
+          <div className="sv-pager-mid">
+            <span className="sv-bars" aria-hidden="true">
+              {panels.map((p, i) => (
+                <span key={p.label} className="sv-bar" data-on={i <= active ? "" : undefined} />
+              ))}
+            </span>
+            <p className="sv-pager-count" aria-live="polite">
+              {pad(active + 1)} / {pad(panels.length)}
+            </p>
+          </div>
           <button
             type="button"
             className="sv-pager-btn"
@@ -105,7 +112,12 @@ export function ServicesGallery({ before, after }: { before?: ReactNode; after?:
             <PagerArrow />
           </button>
         </div>
-        {after}
+        <div className="sv-tail">
+          <p className="sv-hint" aria-hidden="true">
+            Swipe up
+          </p>
+          {after}
+        </div>
       </div>
     </div>
   );
