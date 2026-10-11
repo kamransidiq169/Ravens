@@ -20,6 +20,7 @@ import { getQualityTier } from "@/webgl/quality";
 import { enterpriseProgress, sequenceAt, type SequenceState } from "../animation/journey";
 import { journeyStore } from "../animation/journey.store";
 
+import { phoneFrame } from "./framing";
 import { createRoughnessTexture, createSoftShadowTexture } from "./orbGeometry";
 import { FragmentGeometry } from "./OrbScene";
 import { CH, StackMotion } from "./stackMotion";
@@ -356,9 +357,10 @@ export function Stack() {
     const t = clock.elapsedTime;
     const compact = journeyStore.layout.compact;
     const fit = Math.min(1, viewport.width / FIT_WIDTH);
-    const scale = BASE_SCALE * fit * (compact ? 0.92 : 1);
+    const frame = phoneFrame(state);
+    const scale = BASE_SCALE * fit * (compact ? 0.92 : 1) * (frame?.sceneFit ?? 1);
     g.scale.setScalar(scale);
-    g.position.y = compact ? 0.75 : 0.35;
+    g.position.y = (compact ? 0.75 : 0.35) + (frame?.lift.stack ?? 0);
     motion.update(delta, t, pointer.x, pointer.y);
     const px = motion.pointer.x;
 

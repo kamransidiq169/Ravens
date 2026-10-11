@@ -46,15 +46,15 @@ const INTRO_SVH = 340;
 const EXT_SVH = 240;
 const END_SVH = 160;
 /** Intro as a share of the hero + Northlight + INTERACTIVE span, and so on up the nest. */
-export const INTRO_SHARE = INTRO_SVH / (INTRO_SVH + EXT_SVH);
-export const CHAPTERS_SHARE = (INTRO_SVH + EXT_SVH) / (INTRO_SVH + 2 * EXT_SVH);
-export const FOUR_SHARE = (INTRO_SVH + 2 * EXT_SVH) / (INTRO_SVH + 3 * EXT_SVH);
+const INTRO_SHARE = INTRO_SVH / (INTRO_SVH + EXT_SVH);
+const CHAPTERS_SHARE = (INTRO_SVH + EXT_SVH) / (INTRO_SVH + 2 * EXT_SVH);
+const FOUR_SHARE = (INTRO_SVH + 2 * EXT_SVH) / (INTRO_SVH + 3 * EXT_SVH);
 export const FIVE_SHARE = (INTRO_SVH + 3 * EXT_SVH) / (INTRO_SVH + 3 * EXT_SVH + END_SVH);
 /** Total scroll length in svh (keep `--journey-length` in hero.css equal to this). */
 export const JOURNEY_SVH = INTRO_SVH + 3 * EXT_SVH + END_SVH;
 
 /** Windows inside each extension (shares of it). The outgoing title leaves before the incoming one arrives. */
-export const EXT = {
+const EXT = {
   exit: [0.1, 0.52],
   ledeOut: [0.1, 0.3],
   scene: [0.1, 0.56],
@@ -66,6 +66,14 @@ export const EXT = {
   actionsIn: [0.92, 0.99],
   phase: 0.66,
 } as const;
+/** Progress at which each chapter is fully settled (title and paragraph in, nothing leaving): the sequence's resting states. */
+export const SETTLED = {
+  project: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * INTRO_SHARE,
+  next: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * 0.985,
+  last: FIVE_SHARE * FOUR_SHARE * 0.985,
+  bespoke: FIVE_SHARE * (FOUR_SHARE + (1 - FOUR_SHARE) * EXT.actionsIn[1]),
+} as const;
+
 /**
  * The final extension has no incoming phase: the last title morphs (lib/morph.ts) over `exit`, fades only once it has
  * filled the frame (`fadeFrom`, a share of the morph), and then the stage is released.

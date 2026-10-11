@@ -341,7 +341,7 @@
 .journey__copy {
   position: absolute;
   inset-inline: var(--journey-gutter);
-  top: calc(50% + var(--j-half) + var(--j-gap));
+  top: calc(50% + var(--j-shift, 0px) + var(--j-half) + var(--j-gap));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -822,6 +822,86 @@
 .journey__visual[data-gl="ready"] .journey__orb,
 .journey__visual[data-gl="ready"] .journey__stack {
   display: none;
+}
+
+/* ---- Phone composition (portrait) -------------------------------------------------------------------------------
+   One idea for every phone size: the scene owns the upper part of the stage, the copy the lower part. `--j-shift` moves
+   the copy's centre line down by a share of the stage height (the 3D scenes are lifted by matching fractions in
+   scenes/framing.ts), and everything is sized from vw / svh, so 320 px and 430 px, short and tall phones, all get the
+   same composition. The closing phase has no scene, so its copy keeps the centre. Phase animations are untouched: they
+   transform the same elements about the same origins. */
+@media (max-width: 767px) and (orientation: portrait) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .journey {
+    --journey-gutter: max(6vw, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  }
+
+  /* Hero: three centred lines that fit the width with margin to spare ("WHAT BRANDS" ~ 78% of it), then the paragraph. */
+  .journey__hero {
+    --j-size: min(10.8vw, 6.75rem, 6.6svh);
+    --j-half: calc(var(--j-size) * var(--ravens-display-leading) * 1.5);
+    --j-shift: 14svh;
+    --j-gap: clamp(0.85rem, 2.4svh, 1.4rem);
+  }
+  .journey__headline {
+    margin-top: calc(var(--j-shift) * 2);
+  }
+  .journey__sprite {
+    /* The first-paint jellyfish sits where the 3D one will: centred in the upper region. */
+    margin-bottom: 34svh;
+    height: min(46svh, 84vw);
+  }
+  .journey__lede {
+    font-size: clamp(0.95rem, 0.3vw + 0.85rem, 1.0625rem);
+    line-height: 1.5;
+    color: var(--ravens-ink);
+    max-width: min(100%, 24rem);
+  }
+
+  /* Phases 2-4: a two-line, balanced title at a real display size instead of one line shrunk to fit. */
+  .journey__chapter:not(.journey__chapter--closing) {
+    --j-size: min(11vw, 6.2svh);
+    --j-lines: 2;
+    --j-half: calc(var(--j-size) * var(--ravens-display-leading) * var(--j-lines) / 2);
+    --j-shift: 14svh;
+    --j-gap: clamp(0.85rem, 2.4svh, 1.4rem);
+  }
+  .journey__chapter:not(.journey__chapter--closing) .journey__title--line {
+    top: var(--j-shift);
+    bottom: calc(var(--j-shift) * -1);
+    white-space: normal;
+    text-wrap: balance;
+  }
+  .journey__chapter:not(.journey__chapter--closing) .journey__copy {
+    gap: 0;
+  }
+  [data-j="lede-last"] {
+    font-size: clamp(0.82rem, 0.3vw + 0.74rem, 0.9375rem);
+    line-height: 1.45;
+  }
+
+  /* The module field's calm zone follows the copy, so the sentence never sits on the moving bars. */
+  .journey__modules {
+    --veil-bottom: 36%;
+  }
+  .journey__modules::after {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--color-bg) 82%, transparent) 0%, transparent 16%),
+      linear-gradient(0deg, color-mix(in srgb, var(--color-bg) 92%, transparent) 0%, transparent var(--veil-bottom)),
+      radial-gradient(
+        ellipse 110% 26% at 50% 68%,
+        color-mix(in srgb, var(--color-bg) 94%, transparent) 0%,
+        color-mix(in srgb, var(--color-bg) 78%, transparent) 60%,
+        transparent 100%
+      );
+  }
+
+  /* No-WebGL stand-ins sit in the same upper region. */
+  .journey__orb {
+    padding-bottom: 20svh;
+  }
+  .journey__stack {
+    padding-bottom: 12svh;
+  }
 }
 
 /* ---- No motion / no script: the same two chapters, stacked in normal flow ------------------------------------- */

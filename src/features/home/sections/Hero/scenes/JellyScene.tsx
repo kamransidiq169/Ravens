@@ -10,6 +10,7 @@ import { getQualityTier } from "@/webgl/quality";
 import { sequenceAt } from "../animation/journey";
 import { closingPhase, journeyStore } from "../animation/journey.store";
 
+import { phoneFrame } from "./framing";
 import { createJellyfish } from "./jellyfish";
 import { Orb, Studio } from "./OrbScene";
 import { Stack } from "./StackScene";
@@ -49,9 +50,10 @@ function Jelly({ onReady }: { onReady: () => void }) {
     g.visible = s.visual.y < 1.05;
     if (!g.visible) return;
 
-    const fit = Math.min(1, viewport.width / FIT_WIDTH);
+    const frame = phoneFrame(state);
+    const fit = frame ? frame.jellyFit : Math.min(1, viewport.width / FIT_WIDTH);
     g.scale.setScalar(BASE_SCALE * fit * s.visual.scale);
-    g.position.y = -s.visual.y * viewport.height + Math.sin(time * 0.8) * 0.07;
+    g.position.y = -s.visual.y * viewport.height + Math.sin(time * 0.8) * 0.07 + (frame?.lift.jelly ?? 0);
     g.rotation.z += (s.visual.tilt - pointer.x * 0.08 - g.rotation.z) * Math.min(1, delta * 4);
     g.rotation.x += (pointer.y * 0.06 - g.rotation.x) * Math.min(1, delta * 4);
     g.rotation.y = Math.sin(time * 0.3) * 0.45;

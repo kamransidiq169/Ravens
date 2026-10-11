@@ -10,6 +10,7 @@ import { getQualityTier } from "@/webgl/quality";
 import { sequenceAt, type SequenceState } from "../animation/journey";
 import { journeyStore } from "../animation/journey.store";
 
+import { phoneFrame } from "./framing";
 import { createBasketball, createSlabGeometry, createSoftShadowTexture } from "./orbGeometry";
 import { TitlePlane } from "./TitlePlane";
 
@@ -132,8 +133,9 @@ export function Orb() {
     const t = clock.elapsedTime;
     const compact = journeyStore.layout.compact;
     const fit = Math.min(1, viewport.width / FIT_WIDTH);
-    g.scale.setScalar(BASE_SCALE * fit * (compact ? 0.92 : 1));
-    g.position.y = compact ? 0.7 : 0.5;
+    const frame = phoneFrame(state);
+    g.scale.setScalar(BASE_SCALE * fit * (compact ? 0.92 : 1) * (frame?.sceneFit ?? 1));
+    g.position.y = (compact ? 0.7 : 0.5) + (frame?.lift.orb ?? 0);
 
     // Entrance (unchanged in spirit): the platform rises, then the sphere settles onto it.
     const rise = easeOut(clamp01(enter / 0.8));

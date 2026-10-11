@@ -1,16 +1,9 @@
 import { useEffect, type RefObject } from "react";
 
-import {
-  CHAPTERS_SHARE,
-  EXT,
-  FIVE_SHARE,
-  FOUR_SHARE,
-  INTRO_SHARE,
-  sequenceAt,
-  type JourneyPhase,
-} from "../animation/journey";
+import { sequenceAt, SETTLED, type JourneyPhase } from "../animation/journey";
 import { closingPhase, journeyStore } from "../animation/journey.store";
 import { morphChar, morphScale } from "../animation/morph";
+import { JOURNEY_TRIGGER } from "../animation/steps";
 
 // matchMedia only runs its callback when at least one named condition matches, so both sides are listed.
 const CONDITIONS = { compact: "(max-width: 767px)", wide: "(min-width: 768px)" };
@@ -164,6 +157,7 @@ export function useJourney(
         const timeline = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: {
+            id: JOURNEY_TRIGGER,
             trigger: wrapper,
             start: "top top",
             end: "bottom bottom",
@@ -182,14 +176,7 @@ export function useJourney(
         release.current = (chapter) => {
           const trigger = timeline.scrollTrigger;
           if (!trigger) return;
-          // Where each chapter is fully settled, as a fraction of the whole sequence.
-          const settled = {
-            project: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * INTRO_SHARE,
-            next: FIVE_SHARE * FOUR_SHARE * CHAPTERS_SHARE * 0.985,
-            last: FIVE_SHARE * FOUR_SHARE * 0.985,
-            bespoke: FIVE_SHARE * (FOUR_SHARE + (1 - FOUR_SHARE) * EXT.actionsIn[1]),
-          };
-          const target = settled[chapter];
+          const target = SETTLED[chapter];
           if (Math.abs(proxy.p - target) < 0.04) return;
           const top = trigger.start + (trigger.end - trigger.start) * target;
           window.scrollTo({ top, behavior: "instant" });
