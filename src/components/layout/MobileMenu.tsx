@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type CSSProperties } from "react";
 
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
 
@@ -8,7 +8,6 @@ import { cn } from "@/lib/cn";
 
 import { publicSite } from "@/config/navigation";
 
-import { RavensLogo } from "../brand/RavensLogo";
 import { useSmoothScroll } from "../providers/SmoothScrollProvider";
 import { Link } from "../ui/Link";
 
@@ -18,10 +17,18 @@ interface MobileMenuProps {
   open: boolean;
   onClose: () => void;
   id: string;
+  /** Viewport point (`"x y"`) the circular reveal grows from: the header's toggle. */
+  origin?: string;
 }
 
-/** Full-screen navigation overlay: focus-trapped, Esc-dismissible, locks page scroll while open. */
-export function MobileMenu({ open, onClose, id }: MobileMenuProps) {
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * Full-screen navigation overlay: a circular reveal from the toggle, numbered links that arrive with a staggered blur
+ * and slide, hover shifts the link and dims the rest. Focus-trapped, Esc-dismissible, locks page scroll while open.
+ * The header bar (and its close button) stays above it.
+ */
+export function MobileMenu({ open, onClose, id, origin }: MobileMenuProps) {
   const panel = useRef<HTMLDivElement>(null);
   const lenis = useSmoothScroll();
 
@@ -37,13 +44,17 @@ export function MobileMenu({ open, onClose, id }: MobileMenuProps) {
     };
   }, [open, lenis]);
 
-  // Focus management: move focus in, trap Tab, close on Esc, restore focus on close.
+  // Focus management: move focus in, trap Tab (including the header's close button), close on Esc, restore on close.
   useIsomorphicLayoutEffect(() => {
     if (!open || !panel.current) return;
     const container = panel.current;
     const opener = document.activeElement as HTMLElement | null;
-    const focusables = () => Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE));
-    focusables()[0]?.focus();
+    const toggle = document.querySelector<HTMLElement>(`[aria-controls="${id}"]`);
+    const focusables = () => [
+      ...(toggle ? [toggle] : []),
+      ...Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)),
+    ];
+    container.focus({ preventScroll: true });
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -57,21 +68,22 @@ export function MobileMenu({ open, onClose, id }: MobileMenuProps) {
       const last = items[items.length - 1];
       if (!first || !last) return;
       const active = document.activeElement;
-      if (event.shiftKey && (active === first || !container.contains(active))) {
+      const inside = container.contains(active) || active === toggle;
+      if (event.shiftKey && (active === first || !inside)) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && (active === last || !container.contains(active))) {
+      } else if (!event.shiftKey && (active === last || !inside || active === container)) {
         event.preventDefault();
-        first.focus();
+        (active === container ? (container.querySelector<HTMLElement>(FOCUSABLE) ?? first) : first).focus();
       }
     };
 
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      opener?.focus();
+      opener?.focus({ preventScroll: true });
     };
-  }, [open, onClose]);
+  }, [open, onClose, id]);
 
   return (
     <div
@@ -80,65 +92,48 @@ export function MobileMenu({ open, onClose, id }: MobileMenuProps) {
       role="dialog"
       aria-modal="true"
       aria-label="Site menu"
+      tabIndex={-1}
       inert={!open}
-      // Visibility flips instantly on open (so focus() works at once) and after the fade on close.
-      style={{
-        transitionProperty: "opacity, visibility",
-        transitionDuration: "0.5s, 0s",
-        transitionDelay: open ? "0s, 0s" : "0s, 0.5s",
-      }}
-      className={cn(
-        "fixed inset-0 z-(--z-menu) flex flex-col bg-bg-top px-gutter pt-8 pb-12 ease-out-expo",
-        open ? "visible opacity-100" : "invisible opacity-0",
-      )}
+      className={cn("menu", open && "menu--open")}
+      style={{ "--menu-origin": origin ?? "calc(100% - 4.6vw - 14px) clamp(2rem, 6.5svh, 4rem)" } as CSSProperties}
     >
-      <div className="flex items-center justify-between">
-        <Link href="/" onClick={onClose} aria-label={`${publicSite.name} — home`}>
-          <RavensLogo className="h-5 w-auto text-ink" title="" aria-hidden="true" role="presentation" />
-        </Link>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex items-center gap-4 py-3 font-display text-xs font-medium tracking-label text-ink uppercase"
-        >
-          Close
-          <span aria-hidden="true" className="h-px w-10 bg-ink" />
-        </button>
-      </div>
+      <div className="menu__inner">
+        <nav aria-label="Primary" className="menu__nav">
+          <ul className="menu__list">
+            {publicSite.nav.map((item, index) => (
+              <li key={item.href} className="menu__item" style={{ "--i": index } as CSSProperties}>
+                <Link href={item.href} onClick={onClose} className="menu__link">
+                  <span className="menu__num" aria-hidden="true">
+                    {pad(index + 1)}
+                  </span>
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-      <nav aria-label="Primary" className="my-auto">
-        <ul className="flex flex-col gap-2">
-          {publicSite.nav.map((item, index) => (
-            <li key={item.href} className="overflow-hidden">
-              <Link
-                href={item.href}
-                onClick={onClose}
-                className={cn(
-                  "block py-2 text-display-md leading-tight font-extralight tracking-display text-ink transition-[transform,opacity] duration-700 ease-out-expo hover:text-ink-soft",
-                  open ? "translate-y-0 opacity-100" : "translate-y-full opacity-0",
-                )}
-                style={{ transitionDelay: open ? `${index * 60 + 120}ms` : "0ms" }}
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <div className="flex flex-wrap items-center justify-between gap-6 text-sm text-ink-soft">
-        <Link href={`mailto:${publicSite.email}`} variant="inline">
-          {publicSite.email}
-        </Link>
-        <ul className="flex gap-6">
-          {publicSite.socials.map((social) => (
-            <li key={social.href}>
-              <Link href={social.href} className="hover:text-ink">
-                {social.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="menu__footer" style={{ "--n": publicSite.nav.length } as CSSProperties}>
+          <span className="menu__divider" aria-hidden="true" />
+          <div className="menu__meta">
+            <Link
+              href={`mailto:${publicSite.email}`}
+              className="menu__sec menu__sec--note"
+              style={{ "--j": 0 } as CSSProperties}
+            >
+              {publicSite.email}
+            </Link>
+            <ul className="menu__socials" aria-label="Social">
+              {publicSite.socials.map((social, j) => (
+                <li key={social.href} style={{ "--j": j + 1 } as CSSProperties}>
+                  <Link href={social.href} className="menu__sec">
+                    {social.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -2,11 +2,8 @@
 
 import { useRef, type ReactNode } from "react";
 
-import { useSmoothScroll } from "@/components/providers/SmoothScrollProvider";
-
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
-import { useHeroSteps } from "../hooks/useHeroSteps";
 import { useJourney } from "../hooks/useJourney";
 
 /**
@@ -19,7 +16,6 @@ export function HeroStage({ children }: { children: ReactNode }) {
   const reduced = useReducedMotion();
 
   useJourney(root, reduced, release);
-  useHeroSteps(root, reduced, useSmoothScroll());
 
   return (
     <div

@@ -1,8 +1,7 @@
 import { SETTLED } from "./journey";
 
-/** ScrollTrigger ids: the hero timeline, and the Selected Work gallery that follows it (see useSelectedWorkScroll). */
+/** ScrollTrigger id of the hero timeline. */
 export const JOURNEY_TRIGGER = "hero-journey";
-export const SELECTED_WORK_TRIGGER = "selected-work";
 
 /** The hero's resting states as sequence progress (0 = headline). The last stop after these is Selected Work's first project. */
 export const HERO_STOPS = [0, SETTLED.project, SETTLED.next, SETTLED.last, SETTLED.bespoke] as const;
@@ -18,9 +17,6 @@ export function stepFrom(stops: readonly number[], position: number, direction: 
   if (direction === 1) return stops.find((stop) => stop > position + tolerance) ?? null;
   return [...stops].reverse().find((stop) => stop < position - tolerance) ?? null;
 }
-
-/** The phone layout (same query the journey's matchMedia uses). */
-export const COMPACT_QUERY = "(max-width: 767px)";
 
 /**
  * Seconds for a transition covering `distance` px at viewport height `viewport`: brisk, but long enough to read the

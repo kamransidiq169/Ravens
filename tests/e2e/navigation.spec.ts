@@ -29,7 +29,6 @@ test.describe("routes", () => {
       ["Work", "/work"],
       ["Services", "/services"],
       ["About", "/about"],
-      ["Insights", "/insights"],
       ["Contact", "/contact"],
     ] as const) {
       await page.getByRole("button", { name: "Menu" }).click();

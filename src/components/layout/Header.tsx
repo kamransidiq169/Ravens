@@ -1,8 +1,14 @@
 "use client";
 
+import "./styles/menu.css";
+
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+
+import { useDarkBackdrop } from "@/hooks/useDarkBackdrop";
+
+import { cn } from "@/lib/cn";
 
 import { publicSite } from "@/config/navigation";
 
@@ -12,50 +18,65 @@ import { MobileMenu } from "./MobileMenu";
 
 const MENU_ID = "site-menu";
 
+/**
+ * Logo on the left, a bare two-line menu icon on the right that morphs into an X. The header stays above the overlay
+ * while it is open (switching to light ink), so the same icon closes it.
+ */
 export function Header() {
   const [open, setOpen] = useState(false);
+  const [origin, setOrigin] = useState<string>();
+  const toggle = useRef<HTMLButtonElement>(null);
   const close = useCallback(() => setOpen(false), []);
+  const pathname = usePathname();
+  // Over a dark section (the /about tunnel) the ink flips to white so the logo and icon stay visible.
+  const light = useDarkBackdrop(pathname);
+
+  const onToggle = () => {
+    if (!open && toggle.current) {
+      // The overlay's circular reveal grows out of the icon.
+      const r = toggle.current.getBoundingClientRect();
+      setOrigin(`${Math.round(r.left + r.width / 2)}px ${Math.round(r.top + r.height / 2)}px`);
+    }
+    setOpen((value) => !value);
+  };
 
   // /services ships its own minimal top controls.
-  if (usePathname() === "/services") return null;
+  if (pathname === "/services") return null;
+
+  const dark = light || open;
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-(--z-header) flex h-[clamp(4rem,13svh,8rem)] items-center justify-between pr-[4.6vw] pl-[3.9vw]">
-        <Link
-          href="/"
-          aria-label={`${publicSite.name} — home`}
-          className="relative block h-[clamp(14px,1.02vw,20px)] w-[clamp(70px,6vw,120px)]"
-        >
-          <div className="relative h-[clamp(42px,3.6vw,64px)] w-[clamp(200px,16vw,320px)]">
+      <header className={cn("nav", open && "nav--open")} data-tone={dark ? "dark" : "light"}>
+        <div className="nav__bar">
+          <Link href="/" aria-label={`${publicSite.name} — home`} className="nav__brand" onClick={close}>
             <Image
               src="/images/brand/ravens-logo.png"
-              alt={`${publicSite.name} — home`}
-              fill
+              alt=""
+              width={612}
+              height={408}
               priority
-              sizes="(max-width: 768px) 200px, 320px"
-              className="object-contain object-left"
+              sizes="96px"
+              className={cn("nav__logo", dark && "nav__logo--invert")}
             />
-          </div>
-        </Link>
+          </Link>
 
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-controls={MENU_ID}
-          onClick={() => setOpen(true)}
-          className="group flex items-center gap-[clamp(14px,1.3vw,24px)] py-3 font-display text-[clamp(10px,0.62vw,12px)] font-medium tracking-[0.32em] text-ink uppercase"
-        >
-          <span className="transition-transform duration-300 ease-out-expo group-hover:-translate-x-1">Menu</span>
-
-          <span
-            aria-hidden="true"
-            className="h-px w-[clamp(24px,1.95vw,40px)] origin-right bg-ink transition-transform duration-300 ease-out-expo group-hover:scale-x-[1.3]"
-          />
-        </button>
+          <button
+            ref={toggle}
+            type="button"
+            className="nav__toggle"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            aria-controls={MENU_ID}
+            onClick={onToggle}
+          >
+            <span className="nav__line nav__line--top" aria-hidden="true" />
+            <span className="nav__line nav__line--bottom" aria-hidden="true" />
+          </button>
+        </div>
       </header>
 
-      <MobileMenu id={MENU_ID} open={open} onClose={close} />
+      <MobileMenu id={MENU_ID} open={open} onClose={close} origin={origin} />
     </>
   );
 }

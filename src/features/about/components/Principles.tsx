@@ -1,23 +1,28 @@
-import { FadeUp } from "@/components/motion/FadeUp";
-import { Section } from "@/components/ui/Section";
-import { SectionHeader } from "@/components/ui/SectionHeader";
+import "../styles/wormhole.css";
 
 import { aboutConfig } from "../about.config";
 
+import { WormholeStage } from "./WormholeStage";
+
+/**
+ * The whole About page: the principles as cards on the walls of a scroll-driven tunnel (see `WormholeStage` /
+ * `WormholeScene`). The page heading is kept for assistive tech and search; the tunnel is the visual.
+ */
 export function Principles() {
   return (
-    <Section aria-labelledby="principles-heading">
-      <SectionHeader id="principles-heading" eyebrow="Principles" title={aboutConfig.principlesTitle} />
-      <ul className="mt-16 grid gap-px bg-ink/15 md:grid-cols-2">
-        {aboutConfig.principles.map((principle) => (
-          <li key={principle.title} className="bg-bg p-8 md:p-10">
-            <FadeUp>
-              <h3 className="text-2xl font-light text-ink">{principle.title}</h3>
-              <p className="mt-3 text-ink-soft">{principle.description}</p>
-            </FadeUp>
+    <section aria-labelledby="about-heading" className="relative z-(--z-content)">
+      <h1 id="about-heading" className="sr-only">
+        {aboutConfig.title}
+      </h1>
+      <WormholeStage>
+        {aboutConfig.principles.map((principle, i) => (
+          <li key={principle.title} className="wormhole__card" data-wh-card>
+            <span className="wormhole__tag">{`${String(i + 1).padStart(2, "0")} / Principle`}</span>
+            <h2 className="wormhole__title">{principle.title}</h2>
+            <p className="wormhole__body">{principle.description}</p>
           </li>
         ))}
-      </ul>
-    </Section>
+      </WormholeStage>
+    </section>
   );
 }

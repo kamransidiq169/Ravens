@@ -1,11 +1,5 @@
 export const aboutConfig = {
-  eyebrow: "About",
   title: "A small studio with a long view",
-  intro: [
-    "Ravens is an independent design and development studio. We work with a handful of ambitious teams at a time, so every project gets senior attention from first conversation to final commit.",
-    "We believe the best digital work is quiet, precise and built to last: considered typography, honest motion, and code you'll be glad to inherit.",
-  ],
-  principlesTitle: "How we think",
   principles: [
     { title: "Restraint over decoration", description: "We remove until only what matters is left, then polish that." },
     {
@@ -15,6 +9,22 @@ export const aboutConfig = {
     {
       title: "Performance is design",
       description: "Speed and accessibility are requirements, set in the first review, not the last sprint.",
+    },
+    {
+      title: "Honest motion",
+      description: "Movement earns its place: it explains, guides or delights, and never just decorates.",
+    },
+    {
+      title: "Senior hands, small teams",
+      description: "We take on a handful of projects at a time, so the people you meet are the people who build.",
+    },
+    {
+      title: "Code worth inheriting",
+      description: "Clear structure, typed edges and tests, so your team is glad to pick it up after us.",
+    },
+    {
+      title: "Measured, then shipped",
+      description: "We test with real devices and real people, and let the numbers settle the debates.",
     },
     {
       title: "Partnership, not handoff",

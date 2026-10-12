@@ -11,7 +11,6 @@ export const publicSite = {
     { label: "Work", href: "/work" },
     { label: "Services", href: "/services" },
     { label: "About", href: "/about" },
-    { label: "Insights", href: "/insights" },
     { label: "Contact", href: "/contact" },
   ] satisfies NavItem[],
   footerNav: [

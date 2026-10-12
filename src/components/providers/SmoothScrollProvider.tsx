@@ -46,7 +46,14 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
       ]);
       if (cancelled) return;
 
-      const lenis = new LenisClass({ autoRaf: false, anchors: true, lerp: 0.1 });
+      // Calmer than Lenis's defaults: each wheel notch / swipe travels less, and the glide settles more slowly.
+      const lenis = new LenisClass({
+        autoRaf: false,
+        anchors: true,
+        lerp: 0.075,
+        wheelMultiplier: 0.7,
+        touchMultiplier: 0.8,
+      });
       lenis.on("scroll", ScrollTrigger.update);
 
       const onTick = (time: number) => lenis.raf(time * 1000);

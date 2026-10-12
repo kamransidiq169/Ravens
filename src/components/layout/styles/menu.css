@@ -1,0 +1,423 @@
+/* Site navigation: logo on the left, a bare two-line icon on the right (no bar behind them), and a full-screen overlay.
+   Motion: the icon's two lines meet in the middle, then rotate into an X (and reverse on close); the overlay opens as a
+   circle growing out of the icon; links arrive one after another with a blur and slide. Transitions only, so closing
+   plays the same path back. */
+
+.nav {
+  --nav-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --nav-ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+  --nav-icon-ms: 260ms;
+  --nav-fg: var(--ravens-ink);
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: var(--z-header);
+  pointer-events: none;
+}
+
+/* Over dark sections, and above the open overlay: light ink. */
+.nav[data-tone="dark"] {
+  --nav-fg: #fafafa;
+}
+
+/* Above the overlay so the same icon closes it. */
+.nav--open {
+  z-index: calc(var(--z-menu) + 1);
+}
+
+.nav__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: clamp(4rem, 13svh, 8rem);
+  padding: 0 4.6vw 0 3.9vw;
+  color: var(--nav-fg);
+  transition: color 0.45s var(--nav-ease);
+}
+
+.nav__brand,
+.nav__toggle {
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav__brand {
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav__logo {
+  display: block;
+  width: auto;
+  height: clamp(42px, 3.6vw, 64px);
+  transition: filter 0.3s;
+}
+
+.nav__logo--invert {
+  filter: brightness(0) invert(1);
+}
+
+/* ---- Toggle ---------------------------------------------------------------------------------------------------- */
+
+/* Just the lines: the box is only a comfortable hit area, with nothing drawn around it. */
+.nav__toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 7px;
+  width: 44px;
+  height: 44px;
+  margin-right: -8px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.nav__toggle:focus {
+  outline: none;
+}
+
+.nav__toggle:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Two phases on separate properties: closed → open moves first, then rotates; open → closed rotates back first. */
+.nav__line {
+  display: block;
+  width: 28px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition:
+    translate var(--nav-icon-ms) var(--nav-ease-smooth) var(--nav-icon-ms),
+    rotate var(--nav-icon-ms) var(--nav-ease-smooth) 0s,
+    width 0.35s var(--nav-ease);
+}
+
+.nav__line--bottom {
+  width: 18px;
+}
+
+.nav__toggle:hover .nav__line--bottom,
+.nav--open .nav__line--bottom {
+  width: 28px;
+}
+
+.nav--open .nav__line {
+  transition:
+    translate var(--nav-icon-ms) var(--nav-ease-smooth) 0s,
+    rotate var(--nav-icon-ms) var(--nav-ease-smooth) var(--nav-icon-ms),
+    width 0.35s var(--nav-ease);
+}
+
+.nav--open .nav__line--top {
+  translate: 0 4.5px;
+  rotate: 45deg;
+}
+
+.nav--open .nav__line--bottom {
+  translate: 0 -4.5px;
+  rotate: -45deg;
+}
+
+/* ---- Overlay --------------------------------------------------------------------------------------------------- */
+
+.menu {
+  --menu-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --menu-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --menu-d: 0.8s;
+  --menu-stagger: 70ms;
+  --menu-text: #fafafa;
+  --menu-accent: #9d8fc4;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-menu);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  outline: none;
+  background: radial-gradient(720px 520px at 88% 12%, rgb(124 77 255 / 0.18), transparent 70%), rgb(14 9 26 / 0.96);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  color: var(--menu-text);
+  clip-path: circle(0% at var(--menu-origin));
+  visibility: hidden;
+  transition:
+    clip-path calc(var(--menu-d) * 1.1) var(--menu-ease-in),
+    visibility 0s linear calc(var(--menu-d) * 1.1);
+}
+
+.menu--open {
+  clip-path: circle(150% at var(--menu-origin));
+  visibility: visible;
+  transition:
+    clip-path calc(var(--menu-d) * 1.1) var(--menu-ease),
+    visibility 0s;
+}
+
+.menu__inner {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  /* Same side insets as the header, so the list lines up under the logo and the footer ends under the icon. */
+  padding: calc(clamp(4rem, 13svh, 8rem) + 1.5rem) 4.6vw 2.5rem 3.9vw;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.menu__inner::-webkit-scrollbar {
+  display: none;
+}
+
+.menu__nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: 2rem;
+}
+
+.menu__list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, min(8vw, 11svh), 4.5rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+/* Enter: staggered rise out of a blur, after the circle has started to open. Exit: a quick fade; the item drops back to
+   its resting pose only once it is invisible, ready for the next open. */
+.menu__item {
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateY(28px);
+  transition:
+    opacity calc(var(--menu-d) * 0.35) var(--menu-ease-in),
+    transform 0s linear calc(var(--menu-d) * 0.35),
+    filter 0s linear calc(var(--menu-d) * 0.35);
+}
+
+.menu--open .menu__item {
+  --menu-delay: calc(var(--menu-d) * 0.3 + var(--i) * var(--menu-stagger));
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+  transition:
+    opacity var(--menu-d) var(--menu-ease) var(--menu-delay),
+    transform var(--menu-d) var(--menu-ease) var(--menu-delay),
+    filter var(--menu-d) var(--menu-ease) var(--menu-delay);
+}
+
+.menu__link {
+  display: inline-flex;
+  align-items: baseline;
+  padding: 0.02em 0;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 0.45s var(--menu-ease),
+    opacity 0.35s var(--menu-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) {
+  .menu__link:hover {
+    transform: translateX(16px);
+  }
+
+  .menu__list:has(.menu__link:hover) .menu__link:not(:hover) {
+    opacity: 0.32;
+  }
+}
+
+.menu__link:focus-visible,
+.menu__sec:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 6px;
+  border-radius: 6px;
+}
+
+.menu__num {
+  display: inline-block;
+  flex: none;
+  width: clamp(2rem, 3vw, 2.75rem);
+  color: var(--menu-accent);
+  font-size: max(11px, 0.18em);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  transform: translateY(-0.9em);
+}
+
+/* ---- Overlay footer -------------------------------------------------------------------------------------------- */
+
+.menu__footer {
+  --menu-footer-delay: calc(var(--menu-d) * 0.3 + var(--n) * var(--menu-stagger) + 0.05s);
+  flex: none;
+}
+
+.menu__divider {
+  display: block;
+  height: 1px;
+  margin-bottom: 1.25rem;
+  background: color-mix(in srgb, var(--menu-text) 14%, transparent);
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition:
+    opacity calc(var(--menu-d) * 0.3) var(--menu-ease-in),
+    transform 0s linear calc(var(--menu-d) * 0.3);
+}
+
+.menu--open .menu__divider {
+  opacity: 1;
+  transform: scaleX(1);
+  transition:
+    opacity var(--menu-d) var(--menu-ease) var(--menu-footer-delay),
+    transform var(--menu-d) var(--menu-ease) var(--menu-footer-delay);
+}
+
+.menu__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.menu__socials {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu__meta > a,
+.menu__socials > li {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity calc(var(--menu-d) * 0.3) var(--menu-ease-in),
+    transform 0s linear calc(var(--menu-d) * 0.3);
+}
+
+.menu--open .menu__meta > a,
+.menu--open .menu__socials > li {
+  --menu-delay: calc(var(--menu-footer-delay) + 0.1s + var(--j) * 0.06s);
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity calc(var(--menu-d) * 0.8) var(--menu-ease) var(--menu-delay),
+    transform calc(var(--menu-d) * 0.8) var(--menu-ease) var(--menu-delay);
+}
+
+.menu__sec {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 3px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.menu__sec--note {
+  color: var(--menu-accent);
+}
+
+.menu__sec::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--menu-ease);
+}
+
+.menu__sec:hover::after,
+.menu__sec:focus-visible::after {
+  transform: scaleX(1);
+}
+
+@media (max-width: 639px) {
+  .menu__inner {
+    padding-top: calc(clamp(4rem, 13svh, 8rem) + 4svh);
+  }
+
+  .menu__nav {
+    justify-content: flex-start;
+  }
+
+  .menu__list {
+    gap: 0.22em;
+    font-size: clamp(2.5rem, 13vw, 4rem);
+  }
+
+  .menu__meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .menu__socials {
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu {
+    --menu-d: 0.2s;
+    --menu-stagger: 0ms;
+  }
+
+  .nav {
+    --nav-icon-ms: 0ms;
+  }
+
+  .menu,
+  .menu--open {
+    clip-path: none;
+    opacity: 0;
+    transition:
+      opacity 0.2s,
+      visibility 0s linear 0.2s;
+  }
+
+  .menu--open {
+    opacity: 1;
+    transition:
+      opacity 0.2s,
+      visibility 0s;
+  }
+
+  .menu__item,
+  .menu--open .menu__item,
+  .menu__link:hover {
+    filter: none;
+    transform: none;
+  }
+
+  .menu__sec::after {
+    transition: none;
+  }
+}

@@ -1,0 +1,113 @@
+/* Principles tunnel, in the Framer original's palette. `data-gl="off"` is the server-rendered card grid (also the
+   no-WebGL / reduced-motion state); `data-gl="on"` turns the block into a scroll track whose sticky stage the WebGL
+   tunnel fills (the scene paints its own black background, so the block itself stays transparent over the canvas). */
+.wormhole {
+  --wh-bg: #030305;
+  --wh-grid: #2a4fbd;
+  --wh-text: #fff;
+
+  position: relative;
+  min-height: 100svh;
+  padding-block: calc(var(--header-height) + var(--spacing-section-sm)) var(--spacing-section);
+  background: var(--wh-bg);
+  color: var(--wh-text);
+}
+
+.wormhole__cards {
+  display: grid;
+  gap: 1rem;
+  width: min(100% - 2 * var(--spacing-gutter), var(--container-site));
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .wormhole__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.wormhole__card {
+  padding: 24px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 5%);
+  box-shadow:
+    0 8px 32px 0 rgb(0 0 0 / 37%),
+    inset 0 1px 0 0 rgb(255 255 255 / 10%);
+  color: var(--wh-text);
+  font-family: var(--font-ui);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.wormhole__tag {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.wormhole__title {
+  margin: 0 0 140px;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
+
+.wormhole__body {
+  margin: 0;
+  color: rgb(255 255 255 / 80%);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* The page behind the (transparent, live) track is black too, so nothing lavender shows before the tunnel's first
+   frame or around the sticky stage. */
+html:has(.wormhole) {
+  background-color: #030305;
+}
+
+/* The footer is transparent with ink text (it relies on the lavender page colour); give it that colour back here. */
+html:has(.wormhole) footer {
+  background-color: var(--color-bg);
+}
+
+/* Live: a long scroll runway with a viewport-sized sticky stage. */
+.wormhole[data-gl="on"] {
+  /* Scroll runway: long enough for a slow flight past all the cards. */
+  height: 800svh;
+  padding: 0;
+  background: transparent;
+}
+
+.wormhole[data-gl="on"] .wormhole__stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.wormhole__view {
+  position: absolute;
+  inset: 0;
+}
+
+.wormhole[data-gl="on"] .wormhole__cards {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: auto;
+  pointer-events: none;
+}
+
+.wormhole[data-gl="on"] .wormhole__card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 280px;
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform, opacity;
+}

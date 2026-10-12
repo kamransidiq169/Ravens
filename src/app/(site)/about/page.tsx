@@ -1,6 +1,4 @@
-import { AboutIntro, Principles } from "@/features/about";
-import { ContactCta } from "@/features/contact";
-import { ProcessSection } from "@/features/process";
+import { Principles } from "@/features/about";
 
 import { createMetadata } from "@/lib/metadata";
 
@@ -11,12 +9,5 @@ export const metadata = createMetadata({
 });
 
 export default function AboutPage() {
-  return (
-    <>
-      <AboutIntro />
-      <Principles />
-      <ProcessSection />
-      <ContactCta />
-    </>
-  );
+  return <Principles />;
 }

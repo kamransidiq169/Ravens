@@ -86,7 +86,6 @@ export function useSelectedWorkScroll(root: RefObject<HTMLElement | null>) {
         const timeline = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: {
-            // The hero's step controller hands off to this trigger's start (Project 1), see Hero/hooks/useHeroSteps.
             id: "selected-work",
             trigger: wrapper,
             start: "top top",

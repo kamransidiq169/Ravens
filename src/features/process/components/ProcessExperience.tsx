@@ -11,14 +11,16 @@ import { WHISPER, type ProcessStage as Stage } from "../lib/process.data";
 import { FloatingFeathers } from "./FloatingFeathers";
 import { ProcessStage } from "./ProcessStage";
 
-const RAVEN = "/hero/images/ravenprocess.png";
+/** 3072px master (upscaled from the 1536px original) so large and high-DPR screens are not stretching a small photo. */
+const RAVEN = "/hero/images/raven-process-hd.webp";
+const QUALITY = 90;
 const SIZES = "(min-width: 768px) 92vw, 100vw";
 
 /** The raven. Drawn twice from one photo: the whole bird between the type layers, and a feathered wing piece above all. */
 function Raven({ layer }: { layer: "back" | "front" }) {
   return (
     <div className={`proc__rig proc__rig--${layer}`} data-p={`rig-${layer}`} aria-hidden="true">
-      <Image src={RAVEN} alt="" fill sizes={SIZES} draggable={false} loading="eager" />
+      <Image src={RAVEN} alt="" fill sizes={SIZES} quality={QUALITY} draggable={false} loading="eager" />
     </div>
   );
 }
@@ -29,7 +31,7 @@ function Raven({ layer }: { layer: "back" | "front" }) {
  * opacity and clip-path only.
  *
  * Layers, back to front: atmosphere → feathers → type → raven → intro → type (selected letters) → wing piece → guides →
- * labels. The raven is `rav.png`, drawn twice from the one photograph; the feathers are separate vector shapes.
+ * labels. The raven is drawn twice from the one photograph; the feathers are separate vector shapes.
  */
 export function ProcessExperience({ stages, intro }: { stages: Stage[]; intro: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
@@ -67,7 +69,7 @@ export function ProcessExperience({ stages, intro }: { stages: Stage[]; intro: R
         </p>
 
         <figure className="proc__still" aria-hidden="true">
-          <Image src={RAVEN} alt="" width={1536} height={1024} sizes="(min-width: 768px) 80vw, 100vw" />
+          <Image src={RAVEN} alt="" width={3072} height={2048} sizes="(min-width: 768px) 80vw, 100vw" quality={QUALITY} />
           <FloatingFeathers className="proc__feathers--still" />
         </figure>
 
